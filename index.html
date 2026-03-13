@@ -1,0 +1,1091 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Copper Tech Sports | Amazon Data Reporting</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap');
+
+    :root {
+      --bg: #eef2fa;
+      --panel: #f7f9fe;
+      --white: #ffffff;
+      --ink: #1b2743;
+      --muted: #667696;
+      --line: #d6dff1;
+      --accent: #4f6dff;
+      --accent-soft: #e7ecff;
+      --copper-1: #d08154;
+      --copper-2: #a95f3a;
+      --good: #198754;
+      --warn: #d45454;
+      --shadow: 0 18px 40px rgba(35, 58, 122, 0.12);
+      --radius-lg: 20px;
+      --radius-md: 14px;
+      --sidebar-width: 300px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Manrope", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(1200px 520px at -20% -20%, #ffffff, transparent 60%),
+        radial-gradient(1100px 500px at 120% 0%, #deebff, transparent 55%),
+        var(--bg);
+      min-height: 100vh;
+    }
+
+    .app {
+      display: grid;
+      grid-template-columns: var(--sidebar-width) 1fr;
+      min-height: 100vh;
+      gap: 1.15rem;
+      padding: 1rem;
+    }
+
+    .sidebar {
+      background: linear-gradient(180deg, #f6f8fe 0%, #edf2fc 100%);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      padding: 1rem 0.9rem;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .brand {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 0.75rem;
+      align-items: center;
+      padding: 0.45rem 0.4rem;
+    }
+
+    .brand-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      color: #fff;
+      font-weight: 800;
+      font-size: 0.88rem;
+      letter-spacing: 0.03em;
+      background: linear-gradient(135deg, var(--copper-1), var(--copper-2));
+      box-shadow: 0 10px 22px rgba(169, 95, 58, 0.35);
+    }
+
+    .brand h1 {
+      margin: 0;
+      font-size: 1.04rem;
+      line-height: 1.15;
+    }
+
+    .brand p {
+      margin: 0.15rem 0 0;
+      color: var(--muted);
+      font-size: 0.8rem;
+    }
+
+    .nav-title {
+      margin: 0;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-size: 0.7rem;
+      padding: 0 0.5rem;
+    }
+
+    .main-tabs,
+    .subtabs {
+      display: grid;
+      gap: 0.35rem;
+    }
+
+    .tab-btn,
+    .subtab-btn {
+      appearance: none;
+      border: 1px solid transparent;
+      background: transparent;
+      text-align: left;
+      cursor: pointer;
+      color: var(--ink);
+      border-radius: 11px;
+      transition: 0.22s ease;
+      font: inherit;
+      width: 100%;
+    }
+
+    .tab-btn {
+      padding: 0.72rem 0.65rem;
+      font-weight: 700;
+    }
+
+    .tab-btn:hover {
+      background: rgba(79, 109, 255, 0.08);
+    }
+
+    .tab-btn.active {
+      background: #fff;
+      border-color: #ced8ee;
+      color: #3047be;
+      box-shadow: 0 8px 16px rgba(70, 98, 194, 0.14);
+    }
+
+    .module-group {
+      padding: 0.3rem;
+      border-radius: 12px;
+      border: 1px solid transparent;
+    }
+
+    .module-group.active {
+      border-color: #d5ddf0;
+      background: rgba(255, 255, 255, 0.5);
+    }
+
+    .subtabs {
+      padding-left: 0.35rem;
+      margin-top: 0.2rem;
+      display: none;
+    }
+
+    .module-group.active .subtabs {
+      display: grid;
+      animation: fadeIn 0.28s ease;
+    }
+
+    .subtab-btn {
+      font-size: 0.86rem;
+      color: #4a5977;
+      padding: 0.5rem 0.55rem;
+    }
+
+    .subtab-btn:hover {
+      background: rgba(79, 109, 255, 0.1);
+    }
+
+    .subtab-btn.active {
+      background: var(--accent-soft);
+      border-color: #d5ddff;
+      color: #2f45b7;
+      font-weight: 700;
+    }
+
+    .sidebar-foot {
+      margin-top: auto;
+      background: #fff;
+      border: 1px solid #d5deef;
+      border-radius: 12px;
+      padding: 0.7rem;
+    }
+
+    .sidebar-foot p {
+      margin: 0;
+      font-size: 0.76rem;
+      color: var(--muted);
+      line-height: 1.35;
+    }
+
+    .sidebar-foot strong {
+      display: block;
+      margin-bottom: 0.18rem;
+      color: var(--ink);
+      font-size: 0.82rem;
+    }
+
+    .main {
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0.9rem;
+      padding-right: 0.2rem;
+    }
+
+    .topbar {
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      background: #f8faff;
+      box-shadow: var(--shadow);
+      padding: 0.75rem;
+      display: flex;
+      gap: 0.8rem;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+    }
+
+    .search {
+      flex: 1 1 360px;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: #fff;
+      border: 1px solid #d6dff1;
+      border-radius: 11px;
+      padding: 0.55rem 0.65rem;
+    }
+
+    .search input {
+      border: none;
+      outline: none;
+      width: 100%;
+      font: inherit;
+      color: var(--ink);
+    }
+
+    .top-actions {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .chip {
+      border: 1px solid #d3def5;
+      background: #fff;
+      color: #3551c6;
+      border-radius: 999px;
+      padding: 0.38rem 0.7rem;
+      font-size: 0.78rem;
+      font-weight: 700;
+    }
+
+    .workspace {
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      background: linear-gradient(180deg, #f8faff 0%, #f2f6fe 100%);
+      box-shadow: var(--shadow);
+      padding: 1rem;
+      min-height: 620px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .workspace::before {
+      content: "";
+      position: absolute;
+      width: 360px;
+      height: 360px;
+      border-radius: 50%;
+      right: -160px;
+      top: -180px;
+      background: radial-gradient(circle, rgba(119, 149, 255, 0.24), transparent 65%);
+      pointer-events: none;
+    }
+
+    .view {
+      display: none;
+      position: relative;
+      z-index: 1;
+      animation: slideIn 0.28s ease;
+    }
+
+    .view.active {
+      display: grid;
+      gap: 0.85rem;
+    }
+
+    .view-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 0.6rem;
+      flex-wrap: wrap;
+      margin-bottom: 0.1rem;
+    }
+
+    .view h2 {
+      margin: 0;
+      font-size: 1.35rem;
+      line-height: 1.15;
+    }
+
+    .view p {
+      margin: 0.25rem 0 0;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .content-grid {
+      display: grid;
+      grid-template-columns: 1.25fr 1fr;
+      gap: 0.85rem;
+    }
+
+    .card {
+      border: 1px solid #d5def2;
+      background: var(--white);
+      border-radius: 14px;
+      padding: 0.8rem;
+      box-shadow: 0 8px 24px rgba(39, 62, 128, 0.08);
+      min-width: 0;
+    }
+
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(120px, 1fr));
+      gap: 0.65rem;
+    }
+
+    .kpi {
+      border: 1px solid #d9e1f3;
+      border-radius: 12px;
+      padding: 0.7rem;
+      background: #fbfcff;
+    }
+
+    .kpi small {
+      display: block;
+      color: var(--muted);
+      font-size: 0.74rem;
+      margin-bottom: 0.2rem;
+    }
+
+    .kpi strong {
+      display: block;
+      font-size: 1.08rem;
+      margin-bottom: 0.2rem;
+    }
+
+    .trend {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--good);
+    }
+
+    .trend.down {
+      color: var(--warn);
+    }
+
+    .card h3 {
+      margin: 0 0 0.35rem;
+      font-size: 0.95rem;
+    }
+
+    .mini-note {
+      margin: 0 0 0.55rem;
+      color: var(--muted);
+      font-size: 0.78rem;
+    }
+
+    .chart-wrap {
+      border: 1px solid #dce5f5;
+      border-radius: 12px;
+      padding: 0.6rem;
+      background: #f9fbff;
+    }
+
+    .chart-wrap svg {
+      width: 100%;
+      height: 220px;
+      display: block;
+    }
+
+    .chart-axes {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 0.35rem;
+      color: #7a8db3;
+      font-size: 0.68rem;
+      font-family: "JetBrains Mono", monospace;
+    }
+
+    .raw-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.82rem;
+    }
+
+    .raw-table th,
+    .raw-table td {
+      text-align: left;
+      padding: 0.45rem 0.38rem;
+      border-bottom: 1px solid #e3e9f7;
+      white-space: nowrap;
+    }
+
+    .raw-table th {
+      color: #6b7da4;
+      font-size: 0.71rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .raw-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .code {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.73rem;
+      padding: 0.15rem 0.35rem;
+      border-radius: 7px;
+      background: #edf2ff;
+      color: #3552bf;
+      border: 1px solid #d6e0ff;
+      width: fit-content;
+    }
+
+    .status {
+      border-radius: 999px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      display: inline-block;
+      padding: 0.18rem 0.46rem;
+      border: 1px solid;
+    }
+
+    .status.ok {
+      color: #2b7d5a;
+      border-color: #b7e4d0;
+      background: #ebfff5;
+    }
+
+    .status.warn {
+      color: #9c5e2f;
+      border-color: #f2d7bc;
+      background: #fff5ea;
+    }
+
+    .stack {
+      display: grid;
+      gap: 0.75rem;
+    }
+
+    .import-zone {
+      border: 2px dashed #bfd0f2;
+      border-radius: 12px;
+      padding: 1.2rem;
+      text-align: center;
+      background: #fbfcff;
+    }
+
+    .import-zone h3 {
+      margin: 0;
+      font-size: 1rem;
+    }
+
+    .import-zone p {
+      margin: 0.32rem 0 0.7rem;
+      color: var(--muted);
+      font-size: 0.82rem;
+    }
+
+    .btn {
+      border: 1px solid #3d5ae0;
+      background: #4f6dff;
+      color: #fff;
+      border-radius: 10px;
+      font: inherit;
+      font-weight: 700;
+      font-size: 0.82rem;
+      padding: 0.5rem 0.75rem;
+      cursor: pointer;
+    }
+
+    .warehouse-grid,
+    .analysis-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(120px, 1fr));
+      gap: 0.65rem;
+    }
+
+    .tile {
+      border: 1px solid #d7e0f3;
+      border-radius: 12px;
+      padding: 0.68rem;
+      background: #fff;
+    }
+
+    .tile small {
+      color: var(--muted);
+      display: block;
+      margin-bottom: 0.15rem;
+      font-size: 0.73rem;
+    }
+
+    .tile strong {
+      font-size: 1.08rem;
+    }
+
+    .insight {
+      border: 1px solid #d8e1f7;
+      border-radius: 12px;
+      padding: 0.7rem;
+      background: #fff;
+    }
+
+    .insight h3 {
+      margin: 0 0 0.3rem;
+      font-size: 0.89rem;
+    }
+
+    .insight p {
+      margin: 0;
+      font-size: 0.8rem;
+      color: #506284;
+      line-height: 1.4;
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(8px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+      }
+      to {
+        opacity: 1;
+      }
+    }
+
+    @media (max-width: 1120px) {
+      :root {
+        --sidebar-width: 270px;
+      }
+
+      .kpi-grid {
+        grid-template-columns: repeat(2, minmax(120px, 1fr));
+      }
+
+      .content-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .warehouse-grid,
+      .analysis-grid {
+        grid-template-columns: repeat(2, minmax(120px, 1fr));
+      }
+    }
+
+    @media (max-width: 860px) {
+      .app {
+        grid-template-columns: 1fr;
+        padding: 0.75rem;
+      }
+
+      .sidebar {
+        padding: 0.8rem;
+      }
+
+      .main-tabs {
+        gap: 0.55rem;
+      }
+
+      .module-group {
+        border: 1px solid #d6dff1;
+        background: rgba(255, 255, 255, 0.7);
+      }
+
+      .workspace {
+        min-height: auto;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .kpi-grid,
+      .warehouse-grid,
+      .analysis-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .top-actions {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-icon">CTS</div>
+        <div>
+          <h1>Copper Tech Sports</h1>
+          <p>Amazon Data Reporting</p>
+        </div>
+      </div>
+
+      <p class="nav-title">Navigation</p>
+
+      <nav class="main-tabs" aria-label="Main tabs">
+        <section class="module-group active" data-module="search">
+          <button class="tab-btn active" data-module="search">Search Query Performance</button>
+          <div class="subtabs" aria-label="Search Query Performance subtabs">
+            <button class="subtab-btn active" data-module="search" data-subtab="dashboard">Dashboard</button>
+            <button class="subtab-btn" data-module="search" data-subtab="import">Import</button>
+            <button class="subtab-btn" data-module="search" data-subtab="warehouse">Warehouse</button>
+            <button class="subtab-btn" data-module="search" data-subtab="analysis">Analysis</button>
+          </div>
+        </section>
+
+        <section class="module-group" data-module="asin">
+          <button class="tab-btn" data-module="asin">ASIN Profitability</button>
+          <div class="subtabs" aria-label="ASIN Profitability subtabs">
+            <button class="subtab-btn" data-module="asin" data-subtab="dashboard">Dashboard</button>
+            <button class="subtab-btn" data-module="asin" data-subtab="import">Import</button>
+            <button class="subtab-btn" data-module="asin" data-subtab="warehouse">Warehouse</button>
+            <button class="subtab-btn" data-module="asin" data-subtab="analysis">Analysis</button>
+          </div>
+        </section>
+      </nav>
+
+      <div class="sidebar-foot">
+        <strong>Workspace</strong>
+        <p>Switch tabs and subtabs to view each reporting function: dashboard, import, warehouse, and analysis.</p>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <label class="search" aria-label="Search">
+          <span>Find</span>
+          <input type="text" placeholder="Search metrics, ASIN, or query..." />
+        </label>
+        <div class="top-actions">
+          <span class="chip">Last 30 Days</span>
+          <span class="chip">Amazon US</span>
+          <span class="chip">Updated 5m ago</span>
+        </div>
+      </header>
+
+      <section class="workspace">
+        <article class="view active" id="view-search-dashboard">
+          <div class="view-head">
+            <div>
+              <h2>Search Query Performance Dashboard</h2>
+              <p>Raw search-term data plus trend visualizations and conversion diagnostics.</p>
+            </div>
+            <div class="code">SEARCH / DASHBOARD</div>
+          </div>
+
+          <div class="kpi-grid">
+            <article class="kpi"><small>Impressions</small><strong>1,204,300</strong><span class="trend">+8.7%</span></article>
+            <article class="kpi"><small>Clicks</small><strong>84,992</strong><span class="trend">+5.1%</span></article>
+            <article class="kpi"><small>CTR</small><strong>7.06%</strong><span class="trend down">-0.4pt</span></article>
+            <article class="kpi"><small>CVR</small><strong>13.9%</strong><span class="trend">+1.2pt</span></article>
+          </div>
+
+          <div class="content-grid">
+            <section class="card">
+              <h3>Clicks Trend</h3>
+              <p class="mini-note">Daily click volume for top queries (sample data).</p>
+              <div class="chart-wrap">
+                <svg id="searchTrendChart" viewBox="0 0 760 220" preserveAspectRatio="none"></svg>
+                <div class="chart-axes">
+                  <span>Day 1</span><span>Day 8</span><span>Day 15</span><span>Day 22</span><span>Day 30</span>
+                </div>
+              </div>
+            </section>
+
+            <section class="card stack">
+              <div>
+                <h3>Top Query Mix</h3>
+                <p class="mini-note">CTR and CVR intensity for high-impact terms.</p>
+                <table class="raw-table" id="searchTopQueryTable"></table>
+              </div>
+              <div>
+                <h3>Raw Query Rows</h3>
+                <table class="raw-table" id="searchRawTable"></table>
+              </div>
+            </section>
+          </div>
+        </article>
+
+        <article class="view" id="view-search-import">
+          <div class="view-head">
+            <div>
+              <h2>Search Query Performance Import</h2>
+              <p>Upload sponsored search-term files and map fields before ingestion.</p>
+            </div>
+            <div class="code">SEARCH / IMPORT</div>
+          </div>
+
+          <div class="content-grid">
+            <section class="card">
+              <div class="import-zone">
+                <h3>Drop CSV Files</h3>
+                <p>Expected fields: query, impressions, clicks, spend, orders, sales.</p>
+                <button class="btn" type="button">Select File</button>
+              </div>
+            </section>
+
+            <section class="card">
+              <h3>Recent Imports</h3>
+              <table class="raw-table">
+                <thead><tr><th>Filename</th><th>Status</th><th>Rows</th></tr></thead>
+                <tbody>
+                  <tr><td>search_terms_2026-03-03.csv</td><td><span class="status ok">Complete</span></td><td>42,118</td></tr>
+                  <tr><td>search_terms_2026-03-02.csv</td><td><span class="status ok">Complete</span></td><td>39,704</td></tr>
+                  <tr><td>search_terms_2026-03-01.csv</td><td><span class="status warn">Review</span></td><td>37,220</td></tr>
+                </tbody>
+              </table>
+            </section>
+          </div>
+        </article>
+
+        <article class="view" id="view-search-warehouse">
+          <div class="view-head">
+            <div>
+              <h2>Search Query Performance Warehouse</h2>
+              <p>Storage, freshness, and table-level health for search data pipelines.</p>
+            </div>
+            <div class="code">SEARCH / WAREHOUSE</div>
+          </div>
+
+          <div class="warehouse-grid">
+            <article class="tile"><small>Total Rows</small><strong>12.4M</strong></article>
+            <article class="tile"><small>Freshness</small><strong>5 min</strong></article>
+            <article class="tile"><small>Partitions</small><strong>120</strong></article>
+          </div>
+
+          <section class="card">
+            <h3>Warehouse Tables</h3>
+            <table class="raw-table">
+              <thead><tr><th>Table</th><th>Last Load</th><th>Size</th><th>Status</th></tr></thead>
+              <tbody>
+                <tr><td>fact_search_queries</td><td>2026-03-04 19:55</td><td>5.1 GB</td><td><span class="status ok">Healthy</span></td></tr>
+                <tr><td>dim_keywords</td><td>2026-03-04 19:50</td><td>1.8 GB</td><td><span class="status ok">Healthy</span></td></tr>
+                <tr><td>fact_query_ads</td><td>2026-03-04 19:52</td><td>2.2 GB</td><td><span class="status ok">Healthy</span></td></tr>
+              </tbody>
+            </table>
+          </section>
+        </article>
+
+        <article class="view" id="view-search-analysis">
+          <div class="view-head">
+            <div>
+              <h2>Search Query Performance Analysis</h2>
+              <p>Actionable recommendations generated from current search behavior.</p>
+            </div>
+            <div class="code">SEARCH / ANALYSIS</div>
+          </div>
+
+          <div class="analysis-grid">
+            <article class="insight"><h3>Bid Expansion</h3><p>Increase bids on terms with CVR above 14% but impression share below 25%.</p></article>
+            <article class="insight"><h3>Waste Cut</h3><p>Reduce spend on broad terms with CTR below 2.8% and zero assisted orders.</p></article>
+            <article class="insight"><h3>Keyword Harvest</h3><p>Add exact match for three high-converting long-tail terms from auto campaigns.</p></article>
+          </div>
+        </article>
+
+        <article class="view" id="view-asin-dashboard">
+          <div class="view-head">
+            <div>
+              <h2>ASIN Profitability Dashboard</h2>
+              <p>Raw ASIN-level economics with margin and contribution trend charts.</p>
+            </div>
+            <div class="code">ASIN / DASHBOARD</div>
+          </div>
+
+          <div class="kpi-grid">
+            <article class="kpi"><small>Revenue</small><strong>$184,260</strong><span class="trend">+9.4%</span></article>
+            <article class="kpi"><small>COGS</small><strong>$123,010</strong><span class="trend down">+3.1%</span></article>
+            <article class="kpi"><small>Ad Spend</small><strong>$21,506</strong><span class="trend down">+1.2%</span></article>
+            <article class="kpi"><small>Net Profit</small><strong>$39,114</strong><span class="trend">+4.8%</span></article>
+          </div>
+
+          <div class="content-grid">
+            <section class="card">
+              <h3>Profit Trend</h3>
+              <p class="mini-note">Daily net profit trend for top ASIN portfolio.</p>
+              <div class="chart-wrap">
+                <svg id="asinTrendChart" viewBox="0 0 760 220" preserveAspectRatio="none"></svg>
+                <div class="chart-axes">
+                  <span>Day 1</span><span>Day 8</span><span>Day 15</span><span>Day 22</span><span>Day 30</span>
+                </div>
+              </div>
+            </section>
+
+            <section class="card stack">
+              <div>
+                <h3>Top ASIN Margins</h3>
+                <table class="raw-table" id="asinTopTable"></table>
+              </div>
+              <div>
+                <h3>Raw ASIN Rows</h3>
+                <table class="raw-table" id="asinRawTable"></table>
+              </div>
+            </section>
+          </div>
+        </article>
+
+        <article class="view" id="view-asin-import">
+          <div class="view-head">
+            <div>
+              <h2>ASIN Profitability Import</h2>
+              <p>Upload sales, fees, COGS, and ad-spend records for ASIN rollups.</p>
+            </div>
+            <div class="code">ASIN / IMPORT</div>
+          </div>
+
+          <div class="content-grid">
+            <section class="card">
+              <div class="import-zone">
+                <h3>Drop Profitability Files</h3>
+                <p>Expected fields: asin, units, revenue, cogs, ad_spend, fees, returns.</p>
+                <button class="btn" type="button">Select File</button>
+              </div>
+            </section>
+
+            <section class="card">
+              <h3>Recent Imports</h3>
+              <table class="raw-table">
+                <thead><tr><th>Filename</th><th>Status</th><th>Rows</th></tr></thead>
+                <tbody>
+                  <tr><td>asin_profit_2026-03-03.csv</td><td><span class="status ok">Complete</span></td><td>18,042</td></tr>
+                  <tr><td>asin_profit_2026-03-02.csv</td><td><span class="status ok">Complete</span></td><td>17,938</td></tr>
+                  <tr><td>asin_profit_2026-03-01.csv</td><td><span class="status warn">Review</span></td><td>17,511</td></tr>
+                </tbody>
+              </table>
+            </section>
+          </div>
+        </article>
+
+        <article class="view" id="view-asin-warehouse">
+          <div class="view-head">
+            <div>
+              <h2>ASIN Profitability Warehouse</h2>
+              <p>Warehouse health for profitability models, dimensions, and materialized tables.</p>
+            </div>
+            <div class="code">ASIN / WAREHOUSE</div>
+          </div>
+
+          <div class="warehouse-grid">
+            <article class="tile"><small>Total Rows</small><strong>8.6M</strong></article>
+            <article class="tile"><small>Freshness</small><strong>7 min</strong></article>
+            <article class="tile"><small>Partitions</small><strong>92</strong></article>
+          </div>
+
+          <section class="card">
+            <h3>Warehouse Tables</h3>
+            <table class="raw-table">
+              <thead><tr><th>Table</th><th>Last Load</th><th>Size</th><th>Status</th></tr></thead>
+              <tbody>
+                <tr><td>fact_asin_profitability</td><td>2026-03-04 19:54</td><td>4.4 GB</td><td><span class="status ok">Healthy</span></td></tr>
+                <tr><td>dim_asin</td><td>2026-03-04 19:49</td><td>1.2 GB</td><td><span class="status ok">Healthy</span></td></tr>
+                <tr><td>fact_fee_breakdown</td><td>2026-03-04 19:52</td><td>1.6 GB</td><td><span class="status ok">Healthy</span></td></tr>
+              </tbody>
+            </table>
+          </section>
+        </article>
+
+        <article class="view" id="view-asin-analysis">
+          <div class="view-head">
+            <div>
+              <h2>ASIN Profitability Analysis</h2>
+              <p>Margin optimization and fee reduction opportunities across your catalog.</p>
+            </div>
+            <div class="code">ASIN / ANALYSIS</div>
+          </div>
+
+          <div class="analysis-grid">
+            <article class="insight"><h3>Fee Pressure</h3><p>ASIN B0D2E3G4H5 has the lowest margin due to fee-to-revenue ratio above 28%.</p></article>
+            <article class="insight"><h3>Pricing Lift</h3><p>Raise price by 3% on two stable-conversion ASINs to improve blended margin by 1.1pt.</p></article>
+            <article class="insight"><h3>Restock Priority</h3><p>Prioritize high-margin ASIN B09X1A2M3Q inventory to avoid stockout-driven profit loss.</p></article>
+          </div>
+        </article>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const state = {
+      module: "search",
+      subtab: "dashboard"
+    };
+
+    const asinData = [
+      { asin: "B09X1A2M3Q", units: 812, revenue: 32580, cogs: 18720, adSpend: 3680, fees: 1440, profit: 8740, margin: 26.8 },
+      { asin: "B0B7K8L9R1", units: 623, revenue: 27412, cogs: 16320, adSpend: 2904, fees: 1792, profit: 6396, margin: 23.3 },
+      { asin: "B0C4N5P6S7", units: 931, revenue: 40793, cogs: 25940, adSpend: 4920, fees: 2660, profit: 7273, margin: 17.8 },
+      { asin: "B08H2J4D5F", units: 504, revenue: 19320, cogs: 10850, adSpend: 2140, fees: 1220, profit: 5110, margin: 26.4 },
+      { asin: "B0D2E3G4H5", units: 281, revenue: 10870, cogs: 6120, adSpend: 860, fees: 2670, profit: 1220, margin: 11.2 }
+    ];
+
+    const searchData = [
+      { query: "wireless barcode scanner", impressions: 242300, clicks: 27138, ctr: 11.2, cvr: 18.4, spend: 3210, sales: 12430 },
+      { query: "bluetooth scanner for inventory", impressions: 196100, clicks: 18826, ctr: 9.6, cvr: 15.1, spend: 2498, sales: 9630 },
+      { query: "portable qr scanner", impressions: 165800, clicks: 12932, ctr: 7.8, cvr: 13.9, spend: 1935, sales: 7081 },
+      { query: "handheld barcode reader", impressions: 148200, clicks: 10819, ctr: 7.3, cvr: 12.8, spend: 1514, sales: 6034 },
+      { query: "usb barcode scanner", impressions: 137900, clicks: 8412, ctr: 6.1, cvr: 10.4, spend: 1218, sales: 4882 }
+    ];
+
+    const searchTrend = [18, 22, 24, 20, 27, 31, 29, 35, 34, 30, 32, 28, 25, 26, 38, 41, 36, 39, 33, 35, 40, 37, 39, 36, 34, 31, 33, 30, 32, 34];
+    const asinTrend = [9, 10, 11, 9, 12, 14, 13, 15, 14, 16, 15, 14, 17, 18, 19, 17, 16, 15, 18, 17, 19, 20, 18, 19, 17, 18, 16, 15, 17, 18];
+
+    const money = new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+      maximumFractionDigits: 0
+    });
+
+    function makeSparkline(svgId, series, lineColor, fillColor) {
+      const svg = document.getElementById(svgId);
+      if (!svg) return;
+
+      const width = 760;
+      const height = 220;
+      const pad = 14;
+      const maxVal = Math.max(...series);
+      const minVal = Math.min(...series);
+      const range = maxVal - minVal || 1;
+
+      const points = series.map((v, i) => {
+        const x = pad + (i * (width - pad * 2)) / (series.length - 1);
+        const y = height - pad - ((v - minVal) / range) * (height - pad * 2);
+        return `${x},${y}`;
+      });
+
+      const areaPoints = [
+        `${pad},${height - pad}`,
+        ...points,
+        `${width - pad},${height - pad}`
+      ].join(" ");
+
+      svg.innerHTML = `
+        <defs>
+          <linearGradient id="${svgId}Fill" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="${fillColor}" stop-opacity="0.45" />
+            <stop offset="100%" stop-color="${fillColor}" stop-opacity="0.05" />
+          </linearGradient>
+        </defs>
+        <polyline points="${areaPoints}" fill="url(#${svgId}Fill)" stroke="none"></polyline>
+        <polyline points="${points.join(" ")}" fill="none" stroke="${lineColor}" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"></polyline>
+      `;
+    }
+
+    function fillSearchTables() {
+      const top = document.getElementById("searchTopQueryTable");
+      const raw = document.getElementById("searchRawTable");
+      if (!top || !raw) return;
+
+      top.innerHTML = `
+        <thead>
+          <tr><th>Query</th><th>CTR</th><th>CVR</th><th>Sales</th></tr>
+        </thead>
+        <tbody>
+          ${searchData.map((row) => `
+            <tr>
+              <td>${row.query}</td>
+              <td>${row.ctr}%</td>
+              <td>${row.cvr}%</td>
+              <td>${money.format(row.sales)}</td>
+            </tr>
+          `).join("")}
+        </tbody>
+      `;
+
+      raw.innerHTML = `
+        <thead>
+          <tr><th>Query</th><th>Imp.</th><th>Clicks</th><th>Spend</th></tr>
+        </thead>
+        <tbody>
+          ${searchData.map((row) => `
+            <tr>
+              <td>${row.query}</td>
+              <td>${row.impressions.toLocaleString()}</td>
+              <td>${row.clicks.toLocaleString()}</td>
+              <td>${money.format(row.spend)}</td>
+            </tr>
+          `).join("")}
+        </tbody>
+      `;
+    }
+
+    function fillAsinTables() {
+      const top = document.getElementById("asinTopTable");
+      const raw = document.getElementById("asinRawTable");
+      if (!top || !raw) return;
+
+      top.innerHTML = `
+        <thead>
+          <tr><th>ASIN</th><th>Revenue</th><th>Profit</th><th>Margin</th></tr>
+        </thead>
+        <tbody>
+          ${asinData.map((row) => `
+            <tr>
+              <td>${row.asin}</td>
+              <td>${money.format(row.revenue)}</td>
+              <td>${money.format(row.profit)}</td>
+              <td>${row.margin}%</td>
+            </tr>
+          `).join("")}
+        </tbody>
+      `;
+
+      raw.innerHTML = `
+        <thead>
+          <tr><th>ASIN</th><th>Units</th><th>COGS</th><th>Ad Spend</th><th>Fees</th></tr>
+        </thead>
+        <tbody>
+          ${asinData.map((row) => `
+            <tr>
+              <td>${row.asin}</td>
+              <td>${row.units.toLocaleString()}</td>
+              <td>${money.format(row.cogs)}</td>
+              <td>${money.format(row.adSpend)}</td>
+              <td>${money.format(row.fees)}</td>
+            </tr>
+          `).join("")}
+        </tbody>
+      `;
+    }
+
+    function render() {
+      document.querySelectorAll(".module-group").forEach((group) => {
+        group.classList.toggle("active", group.dataset.module === state.module);
+      });
+
+      document.querySelectorAll(".tab-btn").forEach((btn) => {
+        btn.classList.toggle("active", btn.dataset.module === state.module);
+      });
+
+      document.querySelectorAll(".subtab-btn").forEach((btn) => {
+        const isActive = btn.dataset.module === state.module && btn.dataset.subtab === state.subtab;
+        btn.classList.toggle("active", isActive);
+      });
+
+      document.querySelectorAll(".view").forEach((view) => {
+        const expected = `view-${state.module}-${state.subtab}`;
+        view.classList.toggle("active", view.id === expected);
+      });
+    }
+
+    document.querySelectorAll(".tab-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        state.module = btn.dataset.module;
+        state.subtab = "dashboard";
+        render();
+      });
+    });
+
+    document.querySelectorAll(".subtab-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        state.module = btn.dataset.module;
+        state.subtab = btn.dataset.subtab;
+        render();
+      });
+    });
+
+    makeSparkline("searchTrendChart", searchTrend, "#4f6dff", "#4f6dff");
+    makeSparkline("asinTrendChart", asinTrend, "#cf7f49", "#cf7f49");
+    fillSearchTables();
+    fillAsinTables();
+    render();
+  </script>
+</body>
+</html>

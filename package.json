@@ -1,0 +1,9 @@
+{
+  "name": "cts-reporting",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Amazon reporting dashboard with JSON-backed persistent storage",
+  "scripts": {
+    "start": "node server.js"
+  }
+}
