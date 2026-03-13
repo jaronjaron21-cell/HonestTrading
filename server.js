@@ -3,6 +3,7 @@
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 const { URL } = require('url');
 
 const ROOT_DIR = __dirname;
@@ -12,6 +13,9 @@ const DATA_DIR = process.env.DATA_DIR
 const STORE_PATH = path.join(DATA_DIR, 'storage.json');
 const PORT = Number(process.env.PORT || 4173);
 const MAX_BODY_BYTES = 20 * 1024 * 1024;
+const AUTH_USERNAME = String(process.env.APP_USERNAME || 'HonestTrading');
+const AUTH_PASSWORD = String(process.env.APP_PASSWORD || 'smw08083');
+const AUTH_REALM = String(process.env.AUTH_REALM || 'HonestTrading');
 
 const DEFAULT_STORE = {
   asin_master: null,
@@ -89,6 +93,60 @@ function sendText(res, statusCode, text) {
     'Cache-Control': 'no-store'
   });
   res.end(text);
+}
+
+function secureEquals(left, right) {
+  const a = Buffer.from(String(left || ''));
+  const b = Buffer.from(String(right || ''));
+  if (a.length !== b.length) return false;
+  try {
+    return crypto.timingSafeEqual(a, b);
+  } catch (error) {
+    return false;
+  }
+}
+
+function parseBasicAuthHeader(headerValue) {
+  const raw = String(headerValue || '');
+  if (!raw) return null;
+  const parts = raw.split(/\s+/);
+  if (parts.length < 2 || String(parts[0]).toLowerCase() !== 'basic') return null;
+
+  let decoded = '';
+  try {
+    decoded = Buffer.from(parts[1], 'base64').toString('utf8');
+  } catch (error) {
+    return null;
+  }
+  const sepIndex = decoded.indexOf(':');
+  if (sepIndex < 0) return null;
+
+  return {
+    username: decoded.slice(0, sepIndex),
+    password: decoded.slice(sepIndex + 1)
+  };
+}
+
+function isAuthenticatedRequest(req, urlObj) {
+  if (urlObj.pathname === '/api/health') return true;
+  const credentials = parseBasicAuthHeader(req.headers.authorization);
+  if (!credentials) return false;
+  return secureEquals(credentials.username, AUTH_USERNAME)
+    && secureEquals(credentials.password, AUTH_PASSWORD);
+}
+
+function sendAuthChallenge(req, res, urlObj) {
+  const isApiRequest = String(urlObj.pathname || '').startsWith('/api/');
+  if (isApiRequest) {
+    sendJson(res, 401, { ok: false, error: 'Authentication required.' });
+    return;
+  }
+  res.writeHead(401, {
+    'WWW-Authenticate': `Basic realm="${AUTH_REALM}", charset="UTF-8"`,
+    'Content-Type': 'text/plain; charset=utf-8',
+    'Cache-Control': 'no-store'
+  });
+  res.end('Authentication required.');
 }
 
 function normalizeStoreKey(key) {
@@ -260,6 +318,11 @@ function handleStatic(req, res, urlObj) {
 
 const server = http.createServer((req, res) => {
   const urlObj = new URL(req.url || '/', `http://${req.headers.host || 'localhost'}`);
+
+  if (!isAuthenticatedRequest(req, urlObj)) {
+    sendAuthChallenge(req, res, urlObj);
+    return;
+  }
 
   if (handleApi(req, res, urlObj)) return;
   handleStatic(req, res, urlObj);

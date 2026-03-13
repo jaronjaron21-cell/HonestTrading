@@ -30,6 +30,9 @@ git push -u origin main
 4. Mount path: `/data`
 5. Ensure env var `DATA_DIR=/data` is set.
 6. In Networking, click **Generate Domain**.
+7. Add auth env vars (optional if using defaults):
+   - `APP_USERNAME=HonestTrading`
+   - `APP_PASSWORD=smw08083`
 
 Your peers will use that generated Railway URL.
 
