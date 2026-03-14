@@ -1659,10 +1659,16 @@
     #cts-shopify-reporting [data-table='sqp-dashboard-top'] td:nth-child(n+2),
     #cts-shopify-reporting [data-table='asin-analysis-matrix'] td:nth-child(n+2),
     #cts-shopify-reporting [data-table='sqp-analysis-matrix'] td:nth-child(n+2),
-    #cts-shopify-reporting [data-table='asin-warehouse-metrics'] td:nth-child(n+2),
+    #cts-shopify-reporting [data-table='asin-warehouse-metrics'] td:nth-child(n+3),
     #cts-shopify-reporting [data-table='sqp-warehouse-table'] td:nth-child(n+5) {
       text-align: right;
       font-variant-numeric: tabular-nums;
+    }
+
+    #cts-shopify-reporting [data-table='asin-warehouse-metrics'] th:nth-child(2),
+    #cts-shopify-reporting [data-table='asin-warehouse-metrics'] td:nth-child(2) {
+      text-align: left;
+      white-space: nowrap;
     }
 
     #cts-shopify-reporting .cts-palette-backdrop {
@@ -4022,6 +4028,27 @@
         return formatter.format(startDate) + " – " + formatter.format(endDate);
       }
 
+      function getFortnightDateCovered(fortnightNumber) {
+        var numericFortnight = Number(fortnightNumber);
+        if (!(numericFortnight >= 1 && numericFortnight <= 26)) return "";
+
+        var baseStartUtc = Date.UTC(2025, 11, 28);
+        var startDate = new Date(baseStartUtc);
+        startDate.setUTCDate(startDate.getUTCDate() + ((numericFortnight - 1) * 14));
+
+        var endDate = new Date(startDate.getTime());
+        endDate.setUTCDate(endDate.getUTCDate() + 13);
+
+        var formatter = new Intl.DateTimeFormat("en-US", {
+          month: "short",
+          day: "numeric",
+          year: "numeric",
+          timeZone: "UTC"
+        });
+
+        return formatter.format(startDate) + " – " + formatter.format(endDate);
+      }
+
       function ensureSqpWeekOptions(select, includeAll) {
         if (!select) return;
         var options = [];
@@ -6172,11 +6199,13 @@
       function renderAsinWarehouseTable(selectedAsin) {
         var table = root.querySelector("[data-table='asin-warehouse-metrics']");
         var rows = buildWarehouseRowsForAsinCode(selectedAsin);
-        var headers = ["Fortnight"].concat(asinWarehouseColumns.map(function (col) {
+        var headers = ["Fortnight", "Date Covered"].concat(asinWarehouseColumns.map(function (col) {
           return col.label;
         }));
         renderUniformWarehouseTable(table, headers, rows, function (row) {
+          var fortnightNumber = parseFortnightIndex(row && row.fortnight) + 1;
           return "<tr><td>" + escapeHtml(row.fortnight) + "</td>"
+            + "<td>" + escapeHtml(getFortnightDateCovered(fortnightNumber)) + "</td>"
             + asinWarehouseColumns.map(function (col) {
               return "<td>" + escapeHtml(formatWarehouseValue(col.type, row[col.key])) + "</td>";
             }).join("")
