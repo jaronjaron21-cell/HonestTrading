@@ -1189,77 +1189,6 @@
       overflow-x: auto;
     }
 
-    #cts-shopify-reporting [data-table='sqp-warehouse-table'].cts-table-uniform {
-      width: 100%;
-      min-width: 2030px;
-      table-layout: fixed;
-    }
-
-    #cts-shopify-reporting [data-table='sqp-warehouse-table'] th,
-    #cts-shopify-reporting [data-table='sqp-warehouse-table'] td {
-      white-space: nowrap;
-      overflow-wrap: normal;
-      word-break: normal;
-      vertical-align: middle;
-      background: #ffffff;
-    }
-
-    #cts-shopify-reporting [data-table='sqp-warehouse-table'] thead th {
-      position: sticky;
-      top: 0;
-      z-index: 30;
-      background: #ffffff;
-    }
-
-    #cts-shopify-reporting [data-table='sqp-warehouse-table'] th:nth-child(1),
-    #cts-shopify-reporting [data-table='sqp-warehouse-table'] td:nth-child(1) {
-      width: 110px;
-      min-width: 110px;
-      max-width: 110px;
-      position: sticky;
-      left: 0;
-      z-index: 20;
-      background: #ffffff;
-    }
-
-    #cts-shopify-reporting [data-table='sqp-warehouse-table'] th:nth-child(2),
-    #cts-shopify-reporting [data-table='sqp-warehouse-table'] td:nth-child(2) {
-      width: 190px;
-      min-width: 190px;
-      max-width: 190px;
-      position: sticky;
-      left: 110px;
-      z-index: 20;
-      background: #ffffff;
-    }
-
-    #cts-shopify-reporting [data-table='sqp-warehouse-table'] th:nth-child(3),
-    #cts-shopify-reporting [data-table='sqp-warehouse-table'] td:nth-child(3) {
-      width: 280px;
-      min-width: 280px;
-      max-width: 280px;
-      position: sticky;
-      left: 300px;
-      z-index: 20;
-      background: #ffffff;
-      border-right: 1px solid #dfe6df;
-      box-shadow: 4px 0 8px rgba(20, 37, 26, 0.06);
-    }
-
-    #cts-shopify-reporting [data-table='sqp-warehouse-table'] th:nth-child(4),
-    #cts-shopify-reporting [data-table='sqp-warehouse-table'] td:nth-child(4) {
-      width: 140px;
-      min-width: 140px;
-      max-width: 140px;
-    }
-
-    #cts-shopify-reporting [data-table='sqp-warehouse-table'] thead th:nth-child(1),
-    #cts-shopify-reporting [data-table='sqp-warehouse-table'] thead th:nth-child(2),
-    #cts-shopify-reporting [data-table='sqp-warehouse-table'] thead th:nth-child(3) {
-      z-index: 40;
-      background: #ffffff;
-    }
-
     #cts-shopify-reporting .cts-analysis-wrap {
       overflow: auto;
       border: 1px solid var(--cts-line);
@@ -1658,9 +1587,7 @@
     #cts-shopify-reporting [data-table='asin-dashboard-top'] td:nth-child(n+2),
     #cts-shopify-reporting [data-table='sqp-dashboard-top'] td:nth-child(n+2),
     #cts-shopify-reporting [data-table='asin-analysis-matrix'] td:nth-child(n+2),
-    #cts-shopify-reporting [data-table='sqp-analysis-matrix'] td:nth-child(n+2),
-    #cts-shopify-reporting [data-table='asin-warehouse-metrics'] td:nth-child(n+3),
-    #cts-shopify-reporting [data-table='sqp-warehouse-table'] td:nth-child(n+5) {
+    #cts-shopify-reporting [data-table='sqp-analysis-matrix'] td:nth-child(n+2) {
       text-align: right;
       font-variant-numeric: tabular-nums;
     }
@@ -1671,63 +1598,106 @@
       padding: 0;
     }
 
-    #cts-shopify-reporting [data-table='asin-warehouse-metrics'] {
+    #cts-shopify-reporting .cts-warehouse-shared-table {
       width: 100%;
-      min-width: 2140px;
+      min-width: 1730px;
       table-layout: fixed;
     }
 
-    #cts-shopify-reporting [data-table='asin-warehouse-metrics'] th,
-    #cts-shopify-reporting [data-table='asin-warehouse-metrics'] td {
+    #cts-shopify-reporting [data-table='asin-warehouse-metrics'].cts-warehouse-shared-table {
+      min-width: 2430px;
+    }
+
+    #cts-shopify-reporting .cts-warehouse-shared-table th,
+    #cts-shopify-reporting .cts-warehouse-shared-table td {
       padding: 8px 12px;
       line-height: 1.25;
+      text-align: center;
+      vertical-align: middle;
       white-space: nowrap;
       overflow-wrap: normal;
       word-break: normal;
       border-bottom: 1px solid #e6ebe7;
     }
 
-    #cts-shopify-reporting [data-table='asin-warehouse-metrics'] thead th {
+    #cts-shopify-reporting .cts-warehouse-shared-table thead th {
+      position: sticky;
+      top: 0;
+      z-index: 40;
       font-size: 11px;
-      font-weight: 600;
+      font-weight: 700;
       letter-spacing: 0.06em;
       text-transform: uppercase;
       background: #f7faf6;
       color: var(--cts-muted);
     }
 
-    #cts-shopify-reporting [data-table='asin-warehouse-metrics'] tbody tr:nth-child(even) td {
+    #cts-shopify-reporting .cts-warehouse-shared-table tbody tr:nth-child(even) td {
       background: #fcfdfb;
     }
 
-    #cts-shopify-reporting [data-table='asin-warehouse-metrics'] tbody tr:hover td {
+    #cts-shopify-reporting .cts-warehouse-shared-table tbody tr:hover td {
       background: #f5f9f2;
     }
 
-    #cts-shopify-reporting [data-table='asin-warehouse-metrics'] th:nth-child(1),
-    #cts-shopify-reporting [data-table='asin-warehouse-metrics'] td:nth-child(1) {
-      width: 120px;
-      min-width: 120px;
-      max-width: 120px;
-      text-align: left;
+    #cts-shopify-reporting .cts-warehouse-shared-table th:nth-child(1),
+    #cts-shopify-reporting .cts-warehouse-shared-table td:nth-child(1) {
+      width: 110px;
+      min-width: 110px;
+      max-width: 110px;
+      position: sticky;
+      left: 0;
+      z-index: 30;
+      background: #ffffff;
     }
 
-    #cts-shopify-reporting [data-table='asin-warehouse-metrics'] th:nth-child(2),
-    #cts-shopify-reporting [data-table='asin-warehouse-metrics'] td:nth-child(2) {
+    #cts-shopify-reporting .cts-warehouse-shared-table th:nth-child(2),
+    #cts-shopify-reporting .cts-warehouse-shared-table td:nth-child(2) {
       width: 220px;
       min-width: 220px;
       max-width: 220px;
-      text-align: left;
+      position: sticky;
+      left: 110px;
+      z-index: 30;
+      background: #ffffff;
       white-space: nowrap;
+      box-shadow: 4px 0 8px rgba(20, 37, 26, 0.06);
     }
 
-    #cts-shopify-reporting [data-table='asin-warehouse-metrics'] th:nth-child(n+3),
-    #cts-shopify-reporting [data-table='asin-warehouse-metrics'] td:nth-child(n+3) {
-      width: 120px;
-      min-width: 120px;
-      max-width: 120px;
-      text-align: right;
+    #cts-shopify-reporting .cts-warehouse-shared-table thead th:nth-child(1) {
+      z-index: 50;
+      background: #f7faf6;
+    }
+
+    #cts-shopify-reporting .cts-warehouse-shared-table thead th:nth-child(2) {
+      z-index: 50;
+      background: #f7faf6;
+    }
+
+    #cts-shopify-reporting .cts-warehouse-shared-table tbody tr:nth-child(even) td:nth-child(1),
+    #cts-shopify-reporting .cts-warehouse-shared-table tbody tr:nth-child(even) td:nth-child(2) {
+      background: #fcfdfb;
+    }
+
+    #cts-shopify-reporting .cts-warehouse-shared-table tbody tr:hover td:nth-child(1),
+    #cts-shopify-reporting .cts-warehouse-shared-table tbody tr:hover td:nth-child(2) {
+      background: #f5f9f2;
+    }
+
+    #cts-shopify-reporting .cts-warehouse-shared-table th:nth-child(n+3),
+    #cts-shopify-reporting .cts-warehouse-shared-table td:nth-child(n+3) {
+      width: 140px;
+      min-width: 140px;
+      max-width: 140px;
       font-variant-numeric: tabular-nums;
+    }
+
+    #cts-shopify-reporting [data-table='sqp-warehouse-table'].cts-warehouse-shared-table th:nth-child(3),
+    #cts-shopify-reporting [data-table='sqp-warehouse-table'].cts-warehouse-shared-table td:nth-child(3) {
+      position: static;
+      left: auto;
+      z-index: auto;
+      box-shadow: none;
     }
 
     #cts-shopify-reporting .cts-palette-backdrop {
@@ -2342,8 +2312,8 @@
 
           <section class="cts-card">
             <h4>Weekly Keyword Warehouse</h4>
-            <div class="overflow-x-auto">
-              <table class="cts-table cts-table-uniform" data-table="sqp-warehouse-table"></table>
+            <div class="cts-warehouse-table-wrap">
+              <table class="cts-table cts-table-uniform cts-warehouse-shared-table" data-table="sqp-warehouse-table"></table>
             </div>
           </section>
         </article>
@@ -2598,7 +2568,7 @@
           <section class="cts-card">
             <h4>Fortnight Warehouse Data</h4>
             <div class="cts-warehouse-table-wrap">
-              <table class="cts-table cts-table-uniform" data-table="asin-warehouse-metrics"></table>
+              <table class="cts-table cts-table-uniform cts-warehouse-shared-table" data-table="asin-warehouse-metrics"></table>
             </div>
           </section>
         </article>
