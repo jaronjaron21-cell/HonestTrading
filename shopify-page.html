@@ -4962,32 +4962,7 @@
       }
 
       function buildFallbackSearchRows() {
-        var selectedWeek = searchImportSelection.selectedWarehouseWeek === SQP_ALL_WEEKS_VALUE
-          ? toSqpWeekLabel(searchImportSelection.selectedWeek)
-          : toSqpWeekLabel(searchImportSelection.selectedWarehouseWeek);
-        if (!selectedWeek) selectedWeek = "Week 1";
-        return searchData.map(function (row) {
-          var queryVolume = toNumber(row.impressions);
-          var impressionsTotal = toNumber(row.impressions);
-          var clicksTotal = toNumber(row.clicks);
-          var purchasesTotal = Math.round(clicksTotal * (toNumber(row.cvr) / 100));
-          return {
-            week: selectedWeek,
-            keyword: collapseWhitespace(row.query) || "Unknown Keyword",
-            search_query_volume: queryVolume,
-            impressions_total: impressionsTotal,
-            impressions_brand_share_pct: 0,
-            clicks_total: clicksTotal,
-            purchases_total: purchasesTotal,
-            ctr_pct: safeDivide(clicksTotal, queryVolume),
-            cvr_pct: safeDivide(purchasesTotal, clicksTotal),
-            purchase_rate_pct: safeDivide(purchasesTotal, queryVolume),
-            source_filename: "Sample Data",
-            uploaded_at: "",
-            market: "",
-            extra_metrics: {}
-          };
-        });
+        return [];
       }
 
       function aggregateSearchRowsByKeyword(rows) {
@@ -5083,9 +5058,7 @@
           }
         }
 
-        if (!rows.length && !hasImports) {
-          rows = buildFallbackSearchRows();
-        }
+        if (!rows.length && !hasImports) rows = [];
 
         return {
           rows: rows,
@@ -5812,53 +5785,7 @@
       }
 
       function buildAsinWarehouseData() {
-        var map = {};
-
-        asinData.forEach(function (asinRow, asinIndex) {
-          var rows = Array.from({ length: 26 }, function (_, idx) {
-            var fortnight = idx + 1;
-            var wave = ((idx % 5) - 2) * 0.035;
-            var growth = 1 + idx * 0.012;
-
-            var sales = Math.round((asinRow.revenue / 8.2) * growth * (1 + wave));
-            var adSales = Math.round(sales * (0.29 + ((idx + asinIndex) % 4) * 0.018));
-            var promotion = Math.round(sales * (0.038 + (idx % 3) * 0.004));
-            var refundCost = Math.round(sales * (0.016 + (idx % 4) * 0.0025));
-            var cogs = Math.round(sales * (0.51 + (asinIndex % 3) * 0.016));
-            var amazonFees = Math.round(sales * (0.137 + (idx % 2) * 0.01));
-            var adCost = Math.round(adSales * (0.33 + (idx % 3) * 0.012));
-            var sessions = Math.round((sales / 3.65) * (0.91 + (idx % 3) * 0.04));
-            var totalOrders = Math.max(1, Math.round(sessions * (0.108 + asinIndex * 0.005)));
-            var totalUnitsSold = Math.max(totalOrders, Math.round(totalOrders * (1.06 + (idx % 3) * 0.02)));
-            var returnsUnits = Math.round(totalUnitsSold * (0.041 + (idx % 4) * 0.003));
-            var sellableReturns = Math.min(returnsUnits, Math.round(returnsUnits * (0.62 + (idx % 3) * 0.06)));
-            var reviewRating = Number(clamp(4.08 + asinIndex * 0.11 + (idx % 5) * 0.03 - (idx % 6 === 0 ? 0.05 : 0), 3.8, 4.95).toFixed(1));
-            var organicRank = Math.max(1, Math.round(92 - asinIndex * 8 - idx * 1.6 + (idx % 4) * 2.4));
-
-            return {
-              fortnight: "Fortnight " + fortnight,
-              sales: sales,
-              adSales: adSales,
-              promotion: promotion,
-              refundCost: refundCost,
-              cogs: cogs,
-              amazonFees: amazonFees,
-              adCost: adCost,
-              sessions: sessions,
-              totalOrders: totalOrders,
-              totalUnitsSold: totalUnitsSold,
-              returnsUnits: returnsUnits,
-              sellableReturns: sellableReturns,
-              reviewRating: reviewRating,
-              organicRank: organicRank,
-              organicRankingScreenshot: "Available"
-            };
-          });
-
-          map[asinRow.asin] = rows;
-        });
-
-        return map;
+        return {};
       }
 
       function buildWarehouseRowsForAsinCode(code) {
