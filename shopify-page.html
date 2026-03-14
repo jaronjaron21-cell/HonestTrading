@@ -3,21 +3,35 @@
     @import url("https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Outfit:wght@400;500;600;700&display=swap");
 
     #cts-shopify-reporting {
-      --cts-bg: #e6ede4;
-      --cts-panel: #f6f4ec;
-      --cts-card: #fffdfa;
-      --cts-ink: #14251a;
-      --cts-muted: #5a6f60;
-      --cts-line: #d6decf;
-      --cts-accent: #1f6a45;
-      --cts-accent-soft: #e5f2ea;
-      --cts-copper-1: #cf8756;
-      --cts-copper-2: #9b5b34;
+      --bg: #F6F8FB;
+      --surface: #FFFFFF;
+      --border: rgba(15, 23, 42, 0.10);
+      --text: #0F172A;
+      --muted: rgba(15, 23, 42, 0.60);
+      --primary-700: #1846BF;
+      --primary-600: #1A4FD6;
+      --primary-500: #1E56E6;
+      --primary-400: #3A6EF0;
+      --primary-200: #AFC6FF;
+      --primary-100: #E8F0FF;
+      --primary-50: #F4F8FF;
+      --primary: var(--primary-500);
+      --primary-grad: linear-gradient(135deg, #1846BF 0%, #1E56E6 55%, #3A6EF0 100%);
+      --cts-bg: var(--bg);
+      --cts-panel: var(--surface);
+      --cts-card: var(--surface);
+      --cts-ink: var(--text);
+      --cts-muted: var(--muted);
+      --cts-line: var(--border);
+      --cts-accent: var(--primary);
+      --cts-accent-soft: var(--primary-100);
+      --cts-copper-1: var(--primary-500);
+      --cts-copper-2: var(--primary-700);
       --cts-good: #1f8755;
       --cts-warn: #b14f43;
       --cts-radius-lg: 18px;
       --cts-radius-md: 12px;
-      --cts-shadow: 0 16px 34px rgba(22, 42, 30, 0.14);
+      --cts-shadow: 0 16px 34px rgba(30, 86, 230, 0.12);
       --cts-sidebar-width: 280px;
       --cts-sidebar-collapsed-width: 84px;
       color: var(--cts-ink);
@@ -793,7 +807,7 @@
       display: none;
       pointer-events: none;
       max-width: min(320px, calc(100% - 16px));
-      border: 1px solid var(--cts-line);
+      border: 1px solid var(--primary-200);
       background: var(--cts-card);
       border-radius: 12px;
       box-shadow: 0 10px 18px rgba(20, 39, 28, 0.12);
@@ -986,7 +1000,7 @@
     #cts-shopify-reporting .cts-import-msg {
       font-size: 12px;
       font-weight: 700;
-      color: #6b7da4;
+      color: var(--cts-muted);
     }
 
     #cts-shopify-reporting .cts-import-msg.is-ok {
@@ -1077,7 +1091,7 @@
     #cts-shopify-reporting .cts-import-file-list summary {
       cursor: pointer;
       font-weight: 600;
-      color: #4f627f;
+      color: var(--primary-700);
     }
 
     #cts-shopify-reporting .cts-import-file-list ul {
@@ -1254,19 +1268,19 @@
 
     /* Minimalist Full-Space UI Override (logic unchanged) */
     #cts-shopify-reporting {
-      --cts-bg: #f5f7f4;
-      --cts-panel: #ffffff;
-      --cts-card: #ffffff;
-      --cts-ink: #1f2823;
-      --cts-muted: #66736b;
-      --cts-line: #dbe2dc;
-      --cts-accent: #2f5d45;
-      --cts-accent-soft: #eef3ef;
-      --cts-copper-1: #c78355;
-      --cts-copper-2: #c78355;
-      --cts-shadow: none;
+      --cts-bg: var(--bg);
+      --cts-panel: var(--surface);
+      --cts-card: var(--surface);
+      --cts-ink: var(--text);
+      --cts-muted: var(--muted);
+      --cts-line: var(--border);
+      --cts-accent: var(--primary);
+      --cts-accent-soft: var(--primary-100);
+      --cts-copper-1: var(--primary-500);
+      --cts-copper-2: var(--primary-700);
+      --cts-shadow: 0 10px 28px rgba(30, 86, 230, 0.10);
       min-height: 100vh;
-      background: var(--cts-bg);
+      background: linear-gradient(180deg, var(--primary-50), var(--cts-bg));
     }
 
     #cts-shopify-reporting .cts-shell {
@@ -1285,29 +1299,30 @@
     }
 
     #cts-shopify-reporting .cts-sidebar {
-      background: #ffffff;
-      border: 1px solid var(--cts-line);
-      box-shadow: none;
+      background: linear-gradient(180deg, var(--surface), var(--primary-50));
+      border: 1px solid var(--primary-200);
+      box-shadow: 0 10px 24px rgba(30, 86, 230, 0.10);
       padding: 12px;
       width: var(--cts-sidebar-width);
       transition: width 200ms ease, padding 200ms ease;
     }
 
     #cts-shopify-reporting .cts-sidebar-toggle {
-      border-color: var(--cts-line);
-      background: #ffffff;
+      border-color: var(--primary-200);
+      background: var(--surface);
       color: var(--cts-muted);
     }
 
     #cts-shopify-reporting .cts-sidebar-toggle:hover,
     #cts-shopify-reporting .cts-sidebar-toggle:focus-visible {
       background: var(--cts-accent-soft);
-      border-color: var(--cts-line);
+      border-color: var(--primary-400);
       color: var(--cts-accent);
     }
 
     #cts-shopify-reporting .cts-nav-icon {
-      background: #eef3ef;
+      background: var(--primary-100);
+      border: 1px solid var(--primary-200);
     }
 
     #cts-shopify-reporting .cts-brand-icon {
@@ -1316,8 +1331,8 @@
       color: #ffffff;
       font-size: 12px;
       letter-spacing: 0.03em;
-      background: var(--cts-copper-1);
-      box-shadow: none;
+      background: var(--primary-grad);
+      box-shadow: 0 8px 18px rgba(30, 86, 230, 0.22);
     }
 
     #cts-shopify-reporting .cts-brand h2 {
@@ -1334,8 +1349,8 @@
     }
 
     #cts-shopify-reporting .cts-group.is-active {
-      border-color: var(--cts-line);
-      background: #fafcfb;
+      border-color: var(--primary-200);
+      background: var(--primary-100);
     }
 
     #cts-shopify-reporting .cts-tab,
@@ -1359,13 +1374,17 @@
     #cts-shopify-reporting .cts-tab.is-active,
     #cts-shopify-reporting .cts-subtab.is-active {
       background: var(--cts-accent-soft);
-      border-color: var(--cts-line);
-      color: var(--cts-accent);
+      border-color: var(--primary-200);
+      color: var(--primary-700);
       box-shadow: none;
     }
 
     #cts-shopify-reporting .cts-subtab {
       color: var(--cts-muted);
+    }
+
+    #cts-shopify-reporting .cts-subtabs::before {
+      background: var(--primary-200);
     }
 
     #cts-shopify-reporting .cts-shell {
@@ -1390,7 +1409,7 @@
       height: 40px;
       border: 1px solid var(--cts-line);
       border-radius: 12px;
-      background: #ffffff;
+      background: var(--surface);
       color: var(--cts-ink);
       display: inline-flex;
       align-items: center;
@@ -1406,7 +1425,7 @@
     #cts-shopify-reporting .cts-global-search-trigger:focus-visible {
       outline: none;
       border-color: var(--cts-accent);
-      box-shadow: 0 0 0 3px rgba(31, 106, 69, 0.16);
+      box-shadow: 0 0 0 3px rgba(30, 86, 230, 0.22);
     }
 
     #cts-shopify-reporting .cts-global-search-label {
@@ -1427,7 +1446,7 @@
       color: var(--cts-muted);
       font-size: 11px;
       line-height: 1;
-      background: #fafcfb;
+      background: var(--primary-50);
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
     }
 
@@ -1458,9 +1477,9 @@
     }
 
     #cts-shopify-reporting .cts-code {
-      border: 1px solid var(--cts-line);
-      background: #ffffff;
-      color: var(--cts-muted);
+      border: 1px solid var(--primary-200);
+      background: var(--primary-100);
+      color: var(--primary-700);
       box-shadow: none;
       padding: 3px 8px;
     }
@@ -1509,20 +1528,33 @@
 
     #cts-shopify-reporting .cts-table th,
     #cts-shopify-reporting .cts-table td {
-      border-bottom: 1px solid #e6ebe7;
+      border-bottom: 1px solid var(--cts-line);
       padding: 12px 16px;
       line-height: 1.4;
     }
 
     #cts-shopify-reporting .cts-btn {
       border: 1px solid var(--cts-accent);
-      background: var(--cts-accent);
+      background: var(--primary);
       color: #ffffff;
       box-shadow: none;
       border-radius: 12px;
       height: 40px;
       min-height: 40px;
       padding: 0 14px;
+    }
+
+    #cts-shopify-reporting .cts-btn:hover,
+    #cts-shopify-reporting .cts-btn:focus-visible {
+      background: var(--primary-600);
+      border-color: var(--primary-600);
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(30, 86, 230, 0.22);
+    }
+
+    #cts-shopify-reporting .cts-btn:active {
+      background: var(--primary-700);
+      border-color: var(--primary-700);
     }
 
     #cts-shopify-reporting button.cts-code {
@@ -1535,11 +1567,24 @@
       justify-content: center;
     }
 
+    #cts-shopify-reporting button.cts-code:hover,
+    #cts-shopify-reporting button.cts-code:focus-visible {
+      border-color: var(--primary-400);
+      background: var(--primary-100);
+      color: var(--primary-700);
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(30, 86, 230, 0.22);
+    }
+
+    #cts-shopify-reporting a {
+      color: var(--primary);
+    }
+
     #cts-shopify-reporting .cts-select,
     #cts-shopify-reporting .cts-text-input,
     #cts-shopify-reporting .cts-file-field input[type="file"] {
       border: 1px solid var(--cts-line);
-      background: #ffffff;
+      background: var(--surface);
       color: var(--cts-ink);
       min-height: 40px;
       height: 40px;
@@ -1551,7 +1596,7 @@
     #cts-shopify-reporting .cts-file-field input[type="file"]:focus-visible {
       outline: none;
       border-color: var(--cts-accent);
-      box-shadow: 0 0 0 3px rgba(31, 106, 69, 0.16);
+      box-shadow: 0 0 0 3px rgba(30, 86, 230, 0.22);
     }
 
     #cts-shopify-reporting .cts-home-filter-grid,
@@ -1614,7 +1659,7 @@
       line-height: 1.25;
       text-align: center;
       vertical-align: middle;
-      border-bottom: 1px solid #e6ebe7;
+      border-bottom: 1px solid var(--cts-line);
     }
 
     #cts-shopify-reporting .cts-warehouse-shared-table td {
@@ -1631,7 +1676,7 @@
       font-weight: 700;
       letter-spacing: 0.06em;
       text-transform: uppercase;
-      background: #f7faf6;
+      background: var(--primary-50);
       color: var(--cts-muted);
       line-height: 1.15;
       white-space: normal !important;
@@ -1655,11 +1700,11 @@
     }
 
     #cts-shopify-reporting .cts-warehouse-shared-table tbody tr:nth-child(even) td {
-      background: #fcfdfb;
+      background: var(--primary-50);
     }
 
     #cts-shopify-reporting .cts-warehouse-shared-table tbody tr:hover td {
-      background: #f5f9f2;
+      background: var(--primary-100);
     }
 
     #cts-shopify-reporting .cts-warehouse-shared-table th:nth-child(1),
@@ -1670,7 +1715,7 @@
       position: sticky;
       left: 0;
       z-index: 30;
-      background: #ffffff;
+      background: var(--surface);
     }
 
     #cts-shopify-reporting .cts-warehouse-shared-table th:nth-child(2),
@@ -1681,7 +1726,7 @@
       position: sticky;
       left: 110px;
       z-index: 30;
-      background: #ffffff;
+      background: var(--surface);
       box-shadow: 4px 0 8px rgba(20, 37, 26, 0.06);
     }
 
@@ -1691,22 +1736,22 @@
 
     #cts-shopify-reporting .cts-warehouse-shared-table thead th:nth-child(1) {
       z-index: 50;
-      background: #f7faf6;
+      background: var(--primary-50);
     }
 
     #cts-shopify-reporting .cts-warehouse-shared-table thead th:nth-child(2) {
       z-index: 50;
-      background: #f7faf6;
+      background: var(--primary-50);
     }
 
     #cts-shopify-reporting .cts-warehouse-shared-table tbody tr:nth-child(even) td:nth-child(1),
     #cts-shopify-reporting .cts-warehouse-shared-table tbody tr:nth-child(even) td:nth-child(2) {
-      background: #fcfdfb;
+      background: var(--primary-50);
     }
 
     #cts-shopify-reporting .cts-warehouse-shared-table tbody tr:hover td:nth-child(1),
     #cts-shopify-reporting .cts-warehouse-shared-table tbody tr:hover td:nth-child(2) {
-      background: #f5f9f2;
+      background: var(--primary-100);
     }
 
     #cts-shopify-reporting .cts-warehouse-shared-table th:nth-child(n+3),
@@ -1776,7 +1821,7 @@
     #cts-shopify-reporting .cts-palette-input-wrap {
       padding: 14px;
       border-bottom: 1px solid var(--cts-line);
-      background: #f8fbf9;
+      background: var(--primary-50);
     }
 
     #cts-shopify-reporting .cts-palette-input {
@@ -1794,7 +1839,7 @@
     #cts-shopify-reporting .cts-palette-input:focus-visible {
       outline: none;
       border-color: var(--cts-accent);
-      box-shadow: 0 0 0 3px rgba(31, 106, 69, 0.16);
+      box-shadow: 0 0 0 3px rgba(30, 86, 230, 0.22);
     }
 
     #cts-shopify-reporting .cts-palette-results {
@@ -1838,7 +1883,7 @@
     #cts-shopify-reporting .cts-palette-row:hover,
     #cts-shopify-reporting .cts-palette-row.is-active {
       background: var(--cts-accent-soft);
-      border-color: #d5e5db;
+      border-color: var(--primary-200);
     }
 
     #cts-shopify-reporting .cts-palette-icon {
@@ -1887,7 +1932,7 @@
 
     #cts-shopify-reporting .cts-palette-highlight {
       font-weight: 700;
-      color: #163224;
+      color: var(--primary-700);
     }
 
     #cts-shopify-reporting .cts-palette-empty {
@@ -3017,7 +3062,7 @@
         hideChartTooltip(svg);
         svg.innerHTML = ""
           + "<rect x='0' y='0' width='760' height='210' fill='transparent'></rect>"
-          + "<text x='380' y='106' text-anchor='middle' fill='#7a8b80' font-size='14' font-family='Outfit, sans-serif'>"
+          + "<text x='380' y='106' text-anchor='middle' fill='var(--cts-muted)' font-size='14' font-family='Outfit, sans-serif'>"
           + escapeHtml(label || "No data")
           + "</text>";
       }
@@ -3062,7 +3107,7 @@
         if (opts.showGrid) {
           for (var g = 0; g <= gridCount; g++) {
             var yPos = pad + ((height - pad * 2) * g) / gridCount;
-            gridHtml += "<line x1='" + pad + "' y1='" + yPos + "' x2='" + (width - pad) + "' y2='" + yPos + "' stroke='#dce5d9' stroke-width='1' opacity='0.8'></line>";
+            gridHtml += "<line x1='" + pad + "' y1='" + yPos + "' x2='" + (width - pad) + "' y2='" + yPos + "' stroke='var(--cts-line)' stroke-width='1' opacity='0.8'></line>";
           }
         }
 
@@ -3171,13 +3216,13 @@
 
         var step = innerWidth / Math.max(rows.length, 1);
         var barWidth = Math.max(4, Math.min(44, step * 0.66));
-        var barColor = opts.barColor || "#2d7a51";
-        var negativeColor = opts.negativeBarColor || "#a74646";
+        var barColor = opts.barColor || "var(--primary)";
+        var negativeColor = opts.negativeBarColor || "var(--cts-warn)";
         var gridHtml = "";
         var gridCount = Number(opts.gridCount) > 0 ? Number(opts.gridCount) : 4;
         for (var gridIdx = 0; gridIdx <= gridCount; gridIdx++) {
           var y = padTop + (innerHeight * gridIdx) / gridCount;
-          gridHtml += "<line x1='" + padLeft + "' y1='" + y + "' x2='" + (width - padRight) + "' y2='" + y + "' stroke='#dce5d9' stroke-width='1' opacity='0.8'></line>";
+          gridHtml += "<line x1='" + padLeft + "' y1='" + y + "' x2='" + (width - padRight) + "' y2='" + y + "' stroke='var(--cts-line)' stroke-width='1' opacity='0.8'></line>";
         }
 
         var barsHtml = rows.map(function (row, idx) {
@@ -3195,7 +3240,7 @@
 
         var baselineHtml = "";
         if (minValue < 0 && maxValue > 0) {
-          baselineHtml = "<line x1='" + padLeft + "' y1='" + zeroY.toFixed(2) + "' x2='" + (width - padRight) + "' y2='" + zeroY.toFixed(2) + "' stroke='#8fa296' stroke-width='1.1' opacity='0.9'></line>";
+          baselineHtml = "<line x1='" + padLeft + "' y1='" + zeroY.toFixed(2) + "' x2='" + (width - padRight) + "' y2='" + zeroY.toFixed(2) + "' stroke='var(--cts-muted)' stroke-width='1.1' opacity='0.9'></line>";
         }
 
         svg.innerHTML = gridHtml + baselineHtml + barsHtml;
@@ -5338,8 +5383,8 @@
         }
 
         renderBarChart(svg, series, {
-          barColor: "#2d7a51",
-          negativeBarColor: "#a74646",
+          barColor: "var(--primary)",
+          negativeBarColor: "var(--cts-warn)",
           gridCount: 4,
           noDataLabel: "No data for selected range",
           tooltipFormatter: function (item) {
@@ -5471,7 +5516,7 @@
           return lines.join("\n");
         });
         if (!trendSeries.length) trendSeries = [0];
-        sparkline(root.querySelector("[data-chart='sqp-dashboard']"), trendSeries, "#2d7a51", "#2d7a51", {
+        sparkline(root.querySelector("[data-chart='sqp-dashboard']"), trendSeries, "var(--primary)", "var(--primary)", {
           pointTitles: trendPointTitles,
           noDataLabel: "No data for selected range"
         });
@@ -8862,8 +8907,8 @@
         }
 
         renderBarChart(svg, series, {
-          barColor: "#b96f41",
-          negativeBarColor: "#a74646",
+          barColor: "var(--primary)",
+          negativeBarColor: "var(--cts-warn)",
           gridCount: 4,
           noDataLabel: "No data for selected range",
           tooltipFormatter: function (item) {
@@ -8899,7 +8944,7 @@
             + "\nCM3%: " + formatDashboardPercent(entry.metrics.cm3Pct);
         });
         if (!trendSeries.length) trendSeries = [0];
-        sparkline(root.querySelector("[data-chart='asin-dashboard']"), trendSeries, "#b96f41", "#b96f41", {
+        sparkline(root.querySelector("[data-chart='asin-dashboard']"), trendSeries, "var(--primary)", "var(--primary)", {
           pointTitles: trendPointTitles,
           noDataLabel: "No data for selected range"
         });
@@ -9879,8 +9924,8 @@
         sparkline(
           svg,
           values,
-          config.stroke || "#2d7a51",
-          config.fill || config.stroke || "#2d7a51",
+          config.stroke || "var(--primary)",
+          config.fill || config.stroke || "var(--primary)",
           {
             showGrid: true,
             gridCount: 4,
@@ -10050,8 +10095,8 @@
           })
           : [];
         renderBarChart(root.querySelector("[data-chart='home-asin-cm3']"), homeAsinBarSeries, {
-          barColor: "#b96f41",
-          negativeBarColor: "#a74646",
+          barColor: "var(--primary)",
+          negativeBarColor: "var(--cts-warn)",
           gridCount: 4,
           noDataLabel: "No data for selected range",
           tooltipFormatter: function (item) {
@@ -10087,8 +10132,8 @@
           })
           : [];
         renderBarChart(root.querySelector("[data-chart='home-sqp-purchases']"), homeSqpBarSeries, {
-          barColor: "#2d7a51",
-          negativeBarColor: "#a74646",
+          barColor: "var(--primary)",
+          negativeBarColor: "var(--cts-warn)",
           gridCount: 4,
           noDataLabel: "No data for selected range",
           tooltipFormatter: function (item) {
