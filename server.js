@@ -52,6 +52,19 @@ const MIME_TYPES = {
   '.txt': 'text/plain; charset=utf-8'
 };
 
+function logStorageConfiguration() {
+  const resolvedDataDir = path.resolve(DATA_DIR);
+  const resolvedStorePath = path.resolve(STORE_PATH);
+  const nodeEnv = String(process.env.NODE_ENV || '').toLowerCase();
+
+  console.log(`[storage] DATA_DIR=${resolvedDataDir}`);
+  console.log(`[storage] STORAGE_PATH=${resolvedStorePath}`);
+
+  if (nodeEnv === 'production' && resolvedDataDir !== '/data') {
+    console.warn('[storage] WARNING: NODE_ENV=production but DATA_DIR is not /data. Volume persistence may be misconfigured.');
+  }
+}
+
 function ensureStoreFile() {
   if (!fs.existsSync(DATA_DIR)) {
     fs.mkdirSync(DATA_DIR, { recursive: true });
@@ -826,5 +839,6 @@ const server = http.createServer((req, res) => {
 
 server.listen(PORT, () => {
   ensureStoreFile();
+  logStorageConfiguration();
   console.log(`CTS reporting server running at http://127.0.0.1:${PORT}`);
 });
