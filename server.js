@@ -13,6 +13,7 @@ const DATA_DIR = process.env.DATA_DIR
 const STORE_PATH = path.join(DATA_DIR, 'storage.json');
 const PORT = Number(process.env.PORT || 4173);
 const MAX_BODY_BYTES = 20 * 1024 * 1024;
+const AUTH_ENABLED = String(process.env.AUTH_ENABLED || 'false').toLowerCase() === 'true';
 
 const AUTH_USERNAME = String(process.env.APP_USERNAME || 'HonestTrading');
 const AUTH_PASSWORD = String(process.env.APP_PASSWORD || 'smw08083');
@@ -596,6 +597,14 @@ function isPublicRoute(pathname) {
 function handleAuthRoutes(req, res, urlObj) {
   const pathname = String(urlObj.pathname || '');
 
+  if (!AUTH_ENABLED) {
+    if (pathname === '/login' || pathname === '/auth/login' || pathname === '/auth/logout') {
+      sendRedirect(res, DEFAULT_LOGIN_REDIRECT, 302);
+      return true;
+    }
+    return false;
+  }
+
   if (pathname === '/login') {
     if (req.method !== 'GET') {
       sendText(res, 405, 'Method Not Allowed');
@@ -692,6 +701,7 @@ function handleAuthRoutes(req, res, urlObj) {
 }
 
 function enforceAuth(req, res, urlObj) {
+  if (!AUTH_ENABLED) return false;
   if (isPublicRoute(urlObj.pathname)) return false;
 
   const session = getSessionFromRequest(req);
