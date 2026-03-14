@@ -1665,10 +1665,69 @@
       font-variant-numeric: tabular-nums;
     }
 
+    #cts-shopify-reporting .cts-warehouse-table-wrap {
+      width: 100%;
+      overflow-x: auto;
+      padding: 0;
+    }
+
+    #cts-shopify-reporting [data-table='asin-warehouse-metrics'] {
+      width: 100%;
+      min-width: 2140px;
+      table-layout: fixed;
+    }
+
+    #cts-shopify-reporting [data-table='asin-warehouse-metrics'] th,
+    #cts-shopify-reporting [data-table='asin-warehouse-metrics'] td {
+      padding: 8px 12px;
+      line-height: 1.25;
+      white-space: nowrap;
+      overflow-wrap: normal;
+      word-break: normal;
+      border-bottom: 1px solid #e6ebe7;
+    }
+
+    #cts-shopify-reporting [data-table='asin-warehouse-metrics'] thead th {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      background: #f7faf6;
+      color: var(--cts-muted);
+    }
+
+    #cts-shopify-reporting [data-table='asin-warehouse-metrics'] tbody tr:nth-child(even) td {
+      background: #fcfdfb;
+    }
+
+    #cts-shopify-reporting [data-table='asin-warehouse-metrics'] tbody tr:hover td {
+      background: #f5f9f2;
+    }
+
+    #cts-shopify-reporting [data-table='asin-warehouse-metrics'] th:nth-child(1),
+    #cts-shopify-reporting [data-table='asin-warehouse-metrics'] td:nth-child(1) {
+      width: 120px;
+      min-width: 120px;
+      max-width: 120px;
+      text-align: left;
+    }
+
     #cts-shopify-reporting [data-table='asin-warehouse-metrics'] th:nth-child(2),
     #cts-shopify-reporting [data-table='asin-warehouse-metrics'] td:nth-child(2) {
+      width: 220px;
+      min-width: 220px;
+      max-width: 220px;
       text-align: left;
       white-space: nowrap;
+    }
+
+    #cts-shopify-reporting [data-table='asin-warehouse-metrics'] th:nth-child(n+3),
+    #cts-shopify-reporting [data-table='asin-warehouse-metrics'] td:nth-child(n+3) {
+      width: 120px;
+      min-width: 120px;
+      max-width: 120px;
+      text-align: right;
+      font-variant-numeric: tabular-nums;
     }
 
     #cts-shopify-reporting .cts-palette-backdrop {
@@ -2538,7 +2597,7 @@
 
           <section class="cts-card">
             <h4>Fortnight Warehouse Data</h4>
-            <div style="overflow:auto;">
+            <div class="cts-warehouse-table-wrap">
               <table class="cts-table cts-table-uniform" data-table="asin-warehouse-metrics"></table>
             </div>
           </section>
