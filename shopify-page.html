@@ -1725,6 +1725,33 @@
       box-shadow: none;
     }
 
+    #cts-shopify-reporting [data-table='sqp-warehouse-table'].cts-warehouse-shared-table {
+      --cts-sqp-keyword-col-w: 320px;
+      table-layout: auto;
+      min-width: calc(1590px + var(--cts-sqp-keyword-col-w));
+    }
+
+    #cts-shopify-reporting [data-table='sqp-warehouse-table'].cts-warehouse-shared-table th,
+    #cts-shopify-reporting [data-table='sqp-warehouse-table'].cts-warehouse-shared-table td {
+      overflow: hidden;
+    }
+
+    #cts-shopify-reporting [data-table='sqp-warehouse-table'].cts-warehouse-shared-table th:nth-child(3),
+    #cts-shopify-reporting [data-table='sqp-warehouse-table'].cts-warehouse-shared-table td:nth-child(3) {
+      width: var(--cts-sqp-keyword-col-w);
+      min-width: var(--cts-sqp-keyword-col-w);
+      max-width: var(--cts-sqp-keyword-col-w);
+      white-space: nowrap;
+    }
+
+    #cts-shopify-reporting [data-table='sqp-warehouse-table'].cts-warehouse-shared-table .cts-sqp-keyword-ellipsis {
+      display: block;
+      width: 100%;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
     #cts-shopify-reporting .cts-palette-backdrop {
       position: fixed;
       top: 0;
@@ -5643,6 +5670,7 @@
 
       function renderSqpWarehouseTable(rows) {
         var table = root.querySelector("[data-table='sqp-warehouse-table']");
+        if (!table) return;
         var selectedKeyword = String(searchImportSelection.selectedKeyword || SQP_ALL_KEYWORDS_VALUE);
         var selectedKeywordType = normalizeSqpKeywordType(searchImportSelection.selectedKeywordType);
         var selectedWeek = String(searchImportSelection.selectedWarehouseWeek || SQP_ALL_WEEKS_VALUE);
@@ -5660,6 +5688,13 @@
           }
           return String(a.keyword).localeCompare(String(b.keyword), undefined, { sensitivity: "base" });
         });
+
+        var maxKeywordLen = filteredRows.reduce(function (maxLen, row) {
+          var keyword = collapseWhitespace(row && row.keyword);
+          return Math.max(maxLen, keyword.length);
+        }, 0);
+        var keywordWidthPx = clamp(maxKeywordLen * 8 + 40, 240, 520);
+        table.style.setProperty("--cts-sqp-keyword-col-w", keywordWidthPx + "px");
 
         var headers = [
           "Week",
@@ -5689,6 +5724,8 @@
 
         renderUniformWarehouseTable(table, headers, filteredRows, function (row) {
           var keyword = collapseWhitespace(row && row.keyword);
+          var safeKeyword = escapeHtml(keyword || "");
+          var keywordTitle = escapeAttr(keyword || "");
           var weekLabel = toSqpWeekLabel(row && (row.week != null ? row.week : row.fortnight))
             || toSqpWeekLabel(searchImportSelection.selectedWeek)
             || "Week 1";
@@ -5696,7 +5733,7 @@
           return "<tr>"
             + "<td>" + escapeHtml(weekLabel) + "</td>"
             + "<td>" + escapeHtml(dateCovered) + "</td>"
-            + "<td>" + escapeHtml(keyword || "") + "</td>"
+            + "<td title='" + keywordTitle + "'><span class='cts-sqp-keyword-ellipsis'>" + safeKeyword + "</span></td>"
             + "<td>" + getSqpKeywordTypeLabel(keyword) + "</td>"
             + "<td>" + Math.round(toNumber(row.search_query_volume)).toLocaleString() + "</td>"
             + "<td>" + Math.round(toNumber(row.impressions_total)).toLocaleString() + "</td>"
