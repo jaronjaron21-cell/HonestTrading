@@ -2113,6 +2113,121 @@
       align-items: center;
     }
 
+    /* Sitewide containment and overflow stability */
+    #cts-shopify-reporting .cts-main,
+    #cts-shopify-reporting .cts-workspace,
+    #cts-shopify-reporting .cts-view,
+    #cts-shopify-reporting .cts-view.is-active,
+    #cts-shopify-reporting .cts-card,
+    #cts-shopify-reporting .cts-kpi,
+    #cts-shopify-reporting .cts-tile,
+    #cts-shopify-reporting .cts-insight,
+    #cts-shopify-reporting .cts-file-field,
+    #cts-shopify-reporting .cts-chart-wrap,
+    #cts-shopify-reporting .cts-analysis-wrap,
+    #cts-shopify-reporting .cts-warehouse-table-wrap,
+    #cts-shopify-reporting .cts-import-queue-wrap,
+    #cts-shopify-reporting .cts-palette-modal {
+      width: 100%;
+      max-width: 100%;
+      min-width: 0;
+    }
+
+    #cts-shopify-reporting .cts-view.is-active > *,
+    #cts-shopify-reporting .cts-card > *,
+    #cts-shopify-reporting .cts-content-grid > *,
+    #cts-shopify-reporting .cts-home-grid > *,
+    #cts-shopify-reporting .cts-home-filter-grid > *,
+    #cts-shopify-reporting .cts-dashboard-main-grid > *,
+    #cts-shopify-reporting .cts-dashboard-filter-grid > *,
+    #cts-shopify-reporting .cts-kpi-grid > *,
+    #cts-shopify-reporting .cts-kpi-grid-primary > *,
+    #cts-shopify-reporting .cts-kpi-grid-secondary > *,
+    #cts-shopify-reporting .cts-home-kpi-grid > *,
+    #cts-shopify-reporting .cts-small-grid > *,
+    #cts-shopify-reporting .cts-file-grid > *,
+    #cts-shopify-reporting .cts-filter-row > *,
+    #cts-shopify-reporting .cts-form-meta > *,
+    #cts-shopify-reporting .cts-view-head > *,
+    #cts-shopify-reporting .cts-view-head-actions > * {
+      min-width: 0;
+      max-width: 100%;
+    }
+
+    #cts-shopify-reporting .cts-card,
+    #cts-shopify-reporting .cts-kpi,
+    #cts-shopify-reporting .cts-tile,
+    #cts-shopify-reporting .cts-insight,
+    #cts-shopify-reporting .cts-file-field {
+      overflow: hidden;
+    }
+
+    #cts-shopify-reporting .cts-analysis-wrap,
+    #cts-shopify-reporting .cts-warehouse-table-wrap,
+    #cts-shopify-reporting .cts-import-queue-wrap,
+    #cts-shopify-reporting .cts-card > div[style*='overflow:auto'] {
+      max-width: 100%;
+      min-width: 0;
+      overflow-x: auto;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+    }
+
+    #cts-shopify-reporting .cts-table {
+      max-width: 100%;
+    }
+
+    #cts-shopify-reporting .cts-table th,
+    #cts-shopify-reporting .cts-table td {
+      max-width: 100%;
+      overflow-wrap: anywhere;
+    }
+
+    #cts-shopify-reporting .cts-select,
+    #cts-shopify-reporting .cts-text-input,
+    #cts-shopify-reporting .cts-btn,
+    #cts-shopify-reporting button.cts-code {
+      max-width: 100%;
+    }
+
+    #cts-shopify-reporting .cts-chart-wrap {
+      isolation: isolate;
+    }
+
+    #cts-shopify-reporting .cts-chart-wrap svg {
+      max-width: 100%;
+      overflow: hidden;
+    }
+
+    #cts-shopify-reporting .cts-chart-axis {
+      max-width: 100%;
+      display: grid;
+      grid-auto-flow: column;
+      grid-auto-columns: minmax(0, 1fr);
+      gap: 8px;
+      align-items: center;
+      overflow: hidden;
+    }
+
+    #cts-shopify-reporting .cts-chart-axis span {
+      min-width: 0;
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      text-align: center;
+    }
+
+    #cts-shopify-reporting .cts-note,
+    #cts-shopify-reporting .cts-import-msg,
+    #cts-shopify-reporting .cts-dashboard-kpi-label,
+    #cts-shopify-reporting .cts-dashboard-kpi-value,
+    #cts-shopify-reporting .cts-field > span,
+    #cts-shopify-reporting .cts-card h4 {
+      max-width: 100%;
+      overflow-wrap: anywhere;
+    }
+
     /* ASIN Warehouse: fixed top controls, internal table scroll only */
     #cts-shopify-reporting .cts-view[data-view='asin-warehouse'].is-active {
       height: 100%;
