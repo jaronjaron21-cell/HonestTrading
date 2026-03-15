@@ -2010,6 +2010,63 @@
       min-height: 0;
     }
 
+    /* ASIN Warehouse: fixed top controls, internal table scroll only */
+    #cts-shopify-reporting .cts-view[data-view='asin-warehouse'].is-active {
+      height: 100%;
+      min-height: 0;
+      overflow: hidden;
+      display: grid;
+      grid-template-rows: auto auto minmax(0, 1fr);
+      gap: 12px;
+    }
+
+    #cts-shopify-reporting .cts-view[data-view='asin-warehouse'] .cts-warehouse-topbar {
+      position: sticky;
+      top: 0;
+      z-index: 90;
+      background: var(--surface);
+      border-bottom: 1px solid var(--cts-line);
+      padding-bottom: 8px;
+    }
+
+    #cts-shopify-reporting .cts-view[data-view='asin-warehouse'] .cts-warehouse-controls {
+      position: sticky;
+      top: 78px;
+      z-index: 80;
+      background: var(--surface);
+      box-shadow: 0 2px 0 rgba(15, 23, 42, 0.03);
+    }
+
+    #cts-shopify-reporting .cts-view[data-view='asin-warehouse'] .cts-warehouse-table-card {
+      min-height: 0;
+      height: 100%;
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
+      gap: 8px;
+    }
+
+    #cts-shopify-reporting .cts-view[data-view='asin-warehouse'] .cts-warehouse-table-wrap {
+      min-height: 0;
+      height: 100%;
+      max-height: 100%;
+      overflow: auto;
+      overscroll-behavior: contain;
+      border-radius: 14px;
+    }
+
+    #cts-shopify-reporting .cts-view[data-view='asin-warehouse'] .cts-warehouse-shared-table thead th {
+      position: sticky;
+      top: 0;
+      z-index: 60;
+      background: var(--primary-50);
+      box-shadow: inset 0 -1px 0 var(--cts-line);
+    }
+
+    #cts-shopify-reporting .cts-view[data-view='asin-warehouse'] .cts-warehouse-shared-table thead th:nth-child(1),
+    #cts-shopify-reporting .cts-view[data-view='asin-warehouse'] .cts-warehouse-shared-table thead th:nth-child(2) {
+      z-index: 70;
+    }
+
     @media (max-width: 1200px) {
       #cts-shopify-reporting .cts-kpi-grid {
         grid-template-columns: repeat(2, minmax(120px, 1fr));
@@ -2073,6 +2130,10 @@
 
       #cts-shopify-reporting.is-sidebar-collapsed .cts-sidebar {
         width: 100%;
+      }
+
+      #cts-shopify-reporting .cts-view[data-view='asin-warehouse'] .cts-warehouse-controls {
+        top: 72px;
       }
     }
 
@@ -2712,14 +2773,14 @@
         </article>
 
         <article class="cts-view" data-view="asin-warehouse">
-          <div class="cts-view-head">
+          <div class="cts-view-head cts-warehouse-topbar">
             <div>
               <h3>ASIN Profitability Warehouse</h3>
             </div>
             <div class="cts-code">ASIN / WAREHOUSE</div>
           </div>
 
-          <section class="cts-card">
+          <section class="cts-card cts-warehouse-controls">
             <div class="cts-filter-row">
               <strong>ASIN</strong>
               <select class="cts-select" data-control="asin-warehouse-filter"></select>
@@ -2729,7 +2790,7 @@
             </div>
           </section>
 
-          <section class="cts-card">
+          <section class="cts-card cts-warehouse-table-card">
             <h4>Fortnight Warehouse Data</h4>
             <div class="cts-warehouse-table-wrap">
               <table class="cts-table cts-table-uniform cts-warehouse-shared-table" data-table="asin-warehouse-metrics"></table>
