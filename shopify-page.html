@@ -2114,6 +2114,14 @@
     }
 
     /* Sitewide containment and overflow stability */
+    #cts-shopify-reporting {
+      --cts-space-xs: 8px;
+      --cts-space-sm: 12px;
+      --cts-space-md: 16px;
+      --cts-space-lg: 20px;
+      --cts-space-xl: 24px;
+    }
+
     #cts-shopify-reporting .cts-main,
     #cts-shopify-reporting .cts-workspace,
     #cts-shopify-reporting .cts-view,
@@ -2228,6 +2236,117 @@
       overflow-wrap: anywhere;
     }
 
+    /* Sitewide spacing rhythm and vertical stacking */
+    #cts-shopify-reporting .cts-view.is-active {
+      gap: var(--cts-space-xl);
+      align-content: start;
+      padding-bottom: var(--cts-space-xl);
+    }
+
+    #cts-shopify-reporting .cts-view-head {
+      padding-bottom: 2px;
+      margin: 0;
+    }
+
+    #cts-shopify-reporting .cts-view-head > div {
+      min-width: 0;
+    }
+
+    #cts-shopify-reporting .cts-card {
+      display: grid;
+      align-content: start;
+      gap: var(--cts-space-sm);
+      padding: var(--cts-space-lg) var(--cts-space-lg) calc(var(--cts-space-lg) + 2px);
+    }
+
+    #cts-shopify-reporting .cts-card h4 {
+      margin: 0 0 2px;
+      line-height: 1.2;
+    }
+
+    #cts-shopify-reporting .cts-stack {
+      gap: var(--cts-space-md);
+      align-content: start;
+    }
+
+    #cts-shopify-reporting .cts-filter-row {
+      gap: var(--cts-space-sm);
+      row-gap: var(--cts-space-sm);
+      align-items: center;
+      margin: 0;
+    }
+
+    #cts-shopify-reporting .cts-form-meta {
+      gap: var(--cts-space-sm);
+      row-gap: var(--cts-space-sm);
+      align-items: center;
+      margin-top: 2px;
+    }
+
+    #cts-shopify-reporting .cts-file-grid {
+      gap: var(--cts-space-md);
+      align-items: start;
+    }
+
+    #cts-shopify-reporting .cts-file-field {
+      gap: 10px;
+      padding: var(--cts-space-md) var(--cts-space-md) calc(var(--cts-space-md) + 2px);
+      align-content: start;
+    }
+
+    #cts-shopify-reporting .cts-file-field .cts-import-file-list {
+      margin-top: 2px;
+    }
+
+    #cts-shopify-reporting .cts-file-field .cts-import-queue-wrap {
+      margin-top: var(--cts-space-xs);
+    }
+
+    #cts-shopify-reporting .cts-import-queue-wrap table + .cts-note,
+    #cts-shopify-reporting .cts-import-queue-wrap + .cts-note {
+      margin-top: var(--cts-space-xs);
+    }
+
+    #cts-shopify-reporting .cts-dashboard-filter-grid {
+      gap: var(--cts-space-md) var(--cts-space-lg);
+      align-items: end;
+    }
+
+    #cts-shopify-reporting .cts-home-grid,
+    #cts-shopify-reporting .cts-home-filter-grid,
+    #cts-shopify-reporting .cts-dashboard-main-grid,
+    #cts-shopify-reporting .cts-kpi-grid-primary,
+    #cts-shopify-reporting .cts-kpi-grid-secondary,
+    #cts-shopify-reporting .cts-home-kpi-grid,
+    #cts-shopify-reporting .cts-small-grid {
+      gap: var(--cts-space-lg);
+      align-items: start;
+    }
+
+    #cts-shopify-reporting .cts-dashboard-main-grid > .cts-card {
+      min-height: 0;
+    }
+
+    #cts-shopify-reporting .cts-dashboard-main-grid > .cts-card > .cts-chart-wrap,
+    #cts-shopify-reporting .cts-dashboard-main-grid > .cts-card > div[style*='overflow:auto'] {
+      margin-top: 2px;
+    }
+
+    #cts-shopify-reporting .cts-chart-wrap {
+      padding: 14px 16px 16px;
+    }
+
+    #cts-shopify-reporting .cts-chart-axis {
+      margin-top: var(--cts-space-xs);
+    }
+
+    #cts-shopify-reporting .cts-view[data-view='asin-import'] section.cts-card,
+    #cts-shopify-reporting .cts-view[data-view='search-import'] section.cts-card,
+    #cts-shopify-reporting .cts-view[data-view='asin-dashboard'] section.cts-card,
+    #cts-shopify-reporting .cts-view[data-view='search-dashboard'] section.cts-card {
+      margin: 0;
+    }
+
     /* ASIN Warehouse: fixed top controls, internal table scroll only */
     #cts-shopify-reporting .cts-view[data-view='asin-warehouse'].is-active {
       height: 100%;
@@ -2322,7 +2441,7 @@
       }
 
       #cts-shopify-reporting .cts-dashboard-main-grid > .cts-card {
-        min-height: 320px;
+        min-height: 0;
       }
 
       #cts-shopify-reporting .cts-small-grid {
@@ -2339,6 +2458,10 @@
 
       #cts-shopify-reporting .cts-delete-asin {
         margin-left: 0;
+      }
+
+      #cts-shopify-reporting .cts-view[data-view='search-warehouse'] .cts-filter-row {
+        flex-wrap: wrap !important;
       }
     }
 
