@@ -2010,6 +2010,109 @@
       min-height: 0;
     }
 
+    /* Dashboard spacing and flow cleanup */
+    #cts-shopify-reporting .cts-view[data-view='home-dashboard'].is-active,
+    #cts-shopify-reporting .cts-view[data-view='asin-dashboard'].is-active,
+    #cts-shopify-reporting .cts-view[data-view='search-dashboard'].is-active {
+      display: grid;
+      grid-auto-flow: row;
+      grid-auto-rows: max-content;
+      align-content: start;
+      gap: 24px;
+    }
+
+    #cts-shopify-reporting .cts-view[data-view='home-dashboard'] .cts-card,
+    #cts-shopify-reporting .cts-view[data-view='asin-dashboard'] .cts-card,
+    #cts-shopify-reporting .cts-view[data-view='search-dashboard'] .cts-card {
+      display: grid;
+      align-content: start;
+      align-items: start;
+      gap: 12px;
+      overflow: hidden;
+    }
+
+    #cts-shopify-reporting .cts-view[data-view='home-dashboard'] .cts-card h4,
+    #cts-shopify-reporting .cts-view[data-view='asin-dashboard'] .cts-card h4,
+    #cts-shopify-reporting .cts-view[data-view='search-dashboard'] .cts-card h4 {
+      margin: 0;
+    }
+
+    #cts-shopify-reporting .cts-dashboard-filter-grid {
+      align-items: end;
+      gap: 16px 20px;
+    }
+
+    #cts-shopify-reporting .cts-dashboard-filter-grid .cts-field {
+      min-width: 0;
+      gap: 6px;
+    }
+
+    #cts-shopify-reporting .cts-dashboard-filter-grid .cts-select,
+    #cts-shopify-reporting .cts-dashboard-filter-grid .cts-text-input {
+      max-width: 100%;
+      width: 100%;
+      min-width: 0;
+    }
+
+    #cts-shopify-reporting .cts-kpi-grid-primary,
+    #cts-shopify-reporting .cts-kpi-grid-secondary,
+    #cts-shopify-reporting .cts-home-kpi-grid {
+      align-items: stretch;
+      grid-auto-rows: minmax(124px, auto);
+      gap: 16px;
+    }
+
+    #cts-shopify-reporting .cts-kpi {
+      height: 100%;
+      display: grid;
+      align-content: start;
+      gap: 8px;
+      overflow: hidden;
+    }
+
+    #cts-shopify-reporting .cts-dashboard-main-grid {
+      align-items: start;
+      gap: 20px;
+      overflow: visible;
+    }
+
+    #cts-shopify-reporting .cts-dashboard-main-grid > .cts-card {
+      min-height: 360px;
+      grid-template-rows: auto minmax(0, 1fr);
+    }
+
+    #cts-shopify-reporting .cts-dashboard-main-grid > .cts-card > div[style*='overflow:auto'] {
+      min-height: 0;
+      max-width: 100%;
+      overflow: auto !important;
+    }
+
+    #cts-shopify-reporting .cts-chart-wrap {
+      position: relative;
+      padding: 14px 16px;
+      overflow: hidden;
+    }
+
+    #cts-shopify-reporting .cts-chart-wrap svg {
+      display: block;
+      width: 100%;
+      height: 230px;
+      max-height: 230px;
+    }
+
+    #cts-shopify-reporting .cts-home-chart svg {
+      height: 220px;
+      max-height: 220px;
+    }
+
+    #cts-shopify-reporting .cts-view[data-view='asin-dashboard'] .cts-filter-row,
+    #cts-shopify-reporting .cts-view[data-view='search-dashboard'] .cts-filter-row,
+    #cts-shopify-reporting .cts-view[data-view='home-dashboard'] .cts-filter-row {
+      gap: 12px;
+      row-gap: 10px;
+      align-items: center;
+    }
+
     /* ASIN Warehouse: fixed top controls, internal table scroll only */
     #cts-shopify-reporting .cts-view[data-view='asin-warehouse'].is-active {
       height: 100%;
@@ -2076,6 +2179,10 @@
       #cts-shopify-reporting .cts-kpi-grid-secondary {
         grid-template-columns: repeat(2, minmax(120px, 1fr));
       }
+
+      #cts-shopify-reporting .cts-home-kpi-grid {
+        grid-template-columns: repeat(2, minmax(120px, 1fr));
+      }
     }
 
     @media (max-width: 1024px) {
@@ -2097,6 +2204,10 @@
 
       #cts-shopify-reporting .cts-dashboard-main-grid {
         grid-template-columns: 1fr;
+      }
+
+      #cts-shopify-reporting .cts-dashboard-main-grid > .cts-card {
+        min-height: 320px;
       }
 
       #cts-shopify-reporting .cts-small-grid {
@@ -2141,6 +2252,18 @@
       #cts-shopify-reporting .cts-kpi-grid,
       #cts-shopify-reporting .cts-small-grid {
         grid-template-columns: 1fr;
+      }
+
+      #cts-shopify-reporting .cts-kpi-grid-primary,
+      #cts-shopify-reporting .cts-kpi-grid-secondary,
+      #cts-shopify-reporting .cts-home-kpi-grid {
+        grid-template-columns: 1fr;
+      }
+
+      #cts-shopify-reporting .cts-view[data-view='home-dashboard'].is-active,
+      #cts-shopify-reporting .cts-view[data-view='asin-dashboard'].is-active,
+      #cts-shopify-reporting .cts-view[data-view='search-dashboard'].is-active {
+        gap: 18px;
       }
     }
   </style>
