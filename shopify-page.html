@@ -3432,13 +3432,15 @@
       var SQP_KEYWORDS_STORAGE_KEY = "cts_sqp_keywords_v1";
       var SQP_WAREHOUSE_STORAGE_KEY = "cts_sqp_warehouse_v1";
       var SQP_IMPORT_AUDIT_STORAGE_KEY = "cts_sqp_import_audit_v1";
+      var SQP_WEEK_CACHE_STORAGE_KEY = "cts_sqp_week_cache_v1";
       var STORAGE_API_BASE = "/api/storage";
       var STORAGE_REMOTE_KEYS = {
         asinMaster: "asin_master",
         asinWarehouse: "asin_warehouse",
         sqpKeywords: "sqp_keywords",
         sqpWarehouse: "sqp_warehouse",
-        sqpImportAudit: "sqp_import_audit"
+        sqpImportAudit: "sqp_import_audit",
+        sqpWeekCache: "sqp_week_cache"
       };
       var storageBackendState = {
         checked: false,
@@ -3469,6 +3471,7 @@
       var sqpKeywords = [];
       var sqpWarehouse = [];
       var sqpImportAudit = {};
+      var sqpWeekCache = {};
       var asinAddMessageTimer = null;
       var asinImportMessageTimer = null;
       var asinWarehouseColumns = [
@@ -4927,6 +4930,13 @@
         writeBackendStoreValue(STORAGE_REMOTE_KEYS.sqpImportAudit, sqpImportAudit);
       }
 
+      function saveSqpWeekCacheState() {
+        try {
+          window.localStorage.setItem(SQP_WEEK_CACHE_STORAGE_KEY, JSON.stringify(sqpWeekCache));
+        } catch (error) {}
+        writeBackendStoreValue(STORAGE_REMOTE_KEYS.sqpWeekCache, sqpWeekCache);
+      }
+
       async function loadSqpKeywordsState() {
         var parsed = null;
         var backend = await readBackendStoreValue(STORAGE_REMOTE_KEYS.sqpKeywords);
@@ -5096,10 +5106,80 @@
         }
       }
 
+      async function loadSqpWeekCacheState() {
+        var parsed = null;
+        var backend = await readBackendStoreValue(STORAGE_REMOTE_KEYS.sqpWeekCache);
+        var shouldHydrateBackend = false;
+        if (backend.available && backend.data && typeof backend.data === "object" && !Array.isArray(backend.data)) {
+          parsed = backend.data;
+          try {
+            window.localStorage.setItem(SQP_WEEK_CACHE_STORAGE_KEY, JSON.stringify(parsed));
+          } catch (error) {}
+        }
+
+        if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+          try {
+            var raw = window.localStorage.getItem(SQP_WEEK_CACHE_STORAGE_KEY);
+            if (raw) {
+              var localParsed = JSON.parse(raw);
+              if (localParsed && typeof localParsed === "object" && !Array.isArray(localParsed)) parsed = localParsed;
+            }
+          } catch (error) {}
+        }
+
+        if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+          sqpWeekCache = {};
+          return;
+        }
+        shouldHydrateBackend = backend.available && (!backend.data || typeof backend.data !== "object" || Array.isArray(backend.data));
+
+        try {
+          var normalized = {};
+          Object.keys(parsed).forEach(function (key) {
+            var entry = parsed[key];
+            if (!entry || typeof entry !== "object") return;
+
+            var weekLabel = toSqpWeekLabel(entry.week || String(key).replace(/^WEEK__/, ""));
+            if (!weekLabel) return;
+            var storageKey = getSearchImportStorageKey(weekLabel);
+
+            var rows = Array.isArray(entry.rows) ? entry.rows.map(function (row) {
+              var keyword = collapseWhitespace(row && row.keyword);
+              if (!keyword) return null;
+              return {
+                keyword: keyword,
+                search_query_volume: toNumber(row && (row.search_query_volume != null ? row.search_query_volume : row.searchQueryVolume)),
+                impressions_total: toNumber(row && (row.impressions_total != null ? row.impressions_total : row.impressionsTotal)),
+                impressions_brand_share_pct: toNumber(row && (row.impressions_brand_share_pct != null ? row.impressions_brand_share_pct : row.impressionsBrandSharePct)),
+                clicks_total: toNumber(row && (row.clicks_total != null ? row.clicks_total : row.clicksTotal)),
+                purchases_total: toNumber(row && (row.purchases_total != null ? row.purchases_total : row.purchasesTotal)),
+                market: row && row.market ? String(row.market) : "",
+                extra_metrics: row && row.extra_metrics && typeof row.extra_metrics === "object" ? row.extra_metrics : {}
+              };
+            }).filter(Boolean) : [];
+
+            normalized[storageKey] = {
+              week: weekLabel,
+              source_filename: entry.source_filename ? String(entry.source_filename) : "",
+              uploaded_at: entry.uploaded_at ? String(entry.uploaded_at) : "",
+              rows: rows
+            };
+          });
+          sqpWeekCache = normalized;
+        } catch (error) {
+          sqpWeekCache = {};
+        }
+
+        if (shouldHydrateBackend && sqpWeekCache && Object.keys(sqpWeekCache).length) {
+          writeBackendStoreValue(STORAGE_REMOTE_KEYS.sqpWeekCache, sqpWeekCache);
+        }
+      }
+
       async function loadSqpStores() {
         await loadSqpKeywordsState();
         await loadSqpWarehouseState();
         await loadSqpImportAuditState();
+        await loadSqpWeekCacheState();
         cleanupSqpWarehouseAgainstKeywordList();
       }
 
@@ -5142,19 +5222,35 @@
       function cleanupSqpWarehouseAgainstKeywordList() {
         var managedKeywordMap = getManagedSqpKeywordMap();
         var rows = Array.isArray(sqpWarehouse) ? sqpWarehouse : [];
+        var cacheMap = sqpWeekCache && typeof sqpWeekCache === "object" ? sqpWeekCache : {};
+        var cacheKeys = Object.keys(cacheMap);
+        var cacheWeekFlags = {};
+        cacheKeys.forEach(function (cacheKey) {
+          cacheWeekFlags[cacheKey] = true;
+        });
+
         var seenKeywords = {};
         var keptKeywords = {};
         var removedKeywords = {};
-        var keptRows = [];
+        var nextRows = [];
         var removedRowsCount = 0;
+        var existingRowSnapshot = JSON.stringify(rows || []);
 
-        rows.forEach(function (row) {
-          var keyword = collapseWhitespace(row && row.keyword);
+        function trackSeenKeyword(keywordValue) {
+          var keyword = collapseWhitespace(keywordValue);
           var key = normalizeKeywordKey(keyword);
-          if (key && !Object.prototype.hasOwnProperty.call(seenKeywords, key)) {
+          if (!key) return "";
+          if (!Object.prototype.hasOwnProperty.call(seenKeywords, key)) {
             seenKeywords[key] = keyword || key;
           }
+          return key;
+        }
 
+        function includeWarehouseRow(row, explicitWeekLabel, sourceFilename, uploadedAt) {
+          var weekLabel = toSqpWeekLabel(explicitWeekLabel || (row && (row.week != null ? row.week : row.fortnight)));
+          if (!weekLabel) return;
+          var keyword = collapseWhitespace(row && row.keyword);
+          var key = trackSeenKeyword(keyword);
           if (!key || !Object.prototype.hasOwnProperty.call(managedKeywordMap, key)) {
             removedRowsCount += 1;
             if (key && !Object.prototype.hasOwnProperty.call(removedKeywords, key)) {
@@ -5163,14 +5259,72 @@
             return;
           }
 
-          if (!Object.prototype.hasOwnProperty.call(keptKeywords, key)) {
-            keptKeywords[key] = managedKeywordMap[key];
-          }
-          keptRows.push(row);
+          keptKeywords[key] = managedKeywordMap[key];
+          nextRows.push({
+            week: weekLabel,
+            keyword: managedKeywordMap[key],
+            search_query_volume: toNumber(row && (row.search_query_volume != null ? row.search_query_volume : row.searchQueryVolume)),
+            impressions_total: toNumber(row && (row.impressions_total != null ? row.impressions_total : row.impressionsTotal)),
+            impressions_brand_share_pct: toNumber(row && (row.impressions_brand_share_pct != null ? row.impressions_brand_share_pct : row.impressionsBrandSharePct)),
+            clicks_total: toNumber(row && (row.clicks_total != null ? row.clicks_total : row.clicksTotal)),
+            purchases_total: toNumber(row && (row.purchases_total != null ? row.purchases_total : row.purchasesTotal)),
+            ctr_pct: safeDivide(
+              toNumber(row && (row.clicks_total != null ? row.clicks_total : row.clicksTotal)),
+              toNumber(row && (row.search_query_volume != null ? row.search_query_volume : row.searchQueryVolume))
+            ),
+            cvr_pct: safeDivide(
+              toNumber(row && (row.purchases_total != null ? row.purchases_total : row.purchasesTotal)),
+              toNumber(row && (row.clicks_total != null ? row.clicks_total : row.clicksTotal))
+            ),
+            purchase_rate_pct: safeDivide(
+              toNumber(row && (row.purchases_total != null ? row.purchases_total : row.purchasesTotal)),
+              toNumber(row && (row.search_query_volume != null ? row.search_query_volume : row.searchQueryVolume))
+            ),
+            source_filename: String(sourceFilename != null ? sourceFilename : (row && row.source_filename) || ""),
+            uploaded_at: String(uploadedAt != null ? uploadedAt : (row && row.uploaded_at) || ""),
+            market: row && row.market ? String(row.market) : "",
+            extra_metrics: row && row.extra_metrics && typeof row.extra_metrics === "object" ? row.extra_metrics : {}
+          });
+        }
+
+        rows.forEach(function (row) {
+          var weekLabel = toSqpWeekLabel(row && (row.week != null ? row.week : row.fortnight));
+          if (!weekLabel) return;
+          var weekKey = getSearchImportStorageKey(weekLabel);
+          if (cacheWeekFlags[weekKey]) return;
+          includeWarehouseRow(row, weekLabel, row && row.source_filename, row && row.uploaded_at);
         });
 
-        if (removedRowsCount > 0) {
-          sqpWarehouse = keptRows;
+        cacheKeys.forEach(function (cacheKey) {
+          var entry = cacheMap[cacheKey];
+          if (!entry || typeof entry !== "object") return;
+          var weekLabel = toSqpWeekLabel(entry.week || String(cacheKey).replace(/^WEEK__/, ""));
+          if (!weekLabel) return;
+          var cacheRows = Array.isArray(entry.rows) ? entry.rows : [];
+          cacheRows.forEach(function (cacheRow) {
+            includeWarehouseRow(cacheRow, weekLabel, entry.source_filename, entry.uploaded_at);
+          });
+        });
+
+        var dedupe = {};
+        nextRows.forEach(function (row) {
+          var weekLabel = toSqpWeekLabel(row && row.week);
+          var key = normalizeKeywordKey(row && row.keyword);
+          if (!weekLabel || !key) return;
+          dedupe[getSearchImportStorageKey(weekLabel) + "__" + key] = row;
+        });
+
+        var normalizedRows = Object.keys(dedupe).map(function (key) {
+          return dedupe[key];
+        }).sort(function (left, right) {
+          var weekDiff = parseSqpWeekNumber(left && left.week) - parseSqpWeekNumber(right && right.week);
+          if (weekDiff !== 0) return weekDiff;
+          return String(left && left.keyword || "").localeCompare(String(right && right.keyword || ""), undefined, { sensitivity: "base" });
+        });
+
+        var nextSnapshot = JSON.stringify(normalizedRows);
+        if (nextSnapshot !== existingRowSnapshot) {
+          sqpWarehouse = normalizedRows;
           saveSqpWarehouseState();
         }
 
@@ -5642,6 +5796,7 @@
         });
         sortSqpKeywords();
         saveSqpKeywordsState();
+        cleanupSqpWarehouseAgainstKeywordList();
         renderSqpKeywordList();
         setSqpKeywordMessage("Keyword added.", "ok");
         fillSearchTables();
@@ -5733,6 +5888,7 @@
         item.is_active = !!isActive;
         item.updated_at = new Date().toISOString();
         saveSqpKeywordsState();
+        cleanupSqpWarehouseAgainstKeywordList();
         renderSqpKeywordList();
         fillSearchTables();
       }
@@ -8979,6 +9135,17 @@
         return map;
       }
 
+      function buildSqpKeywordMapFromRows(rows, queryKey) {
+        var keywordMap = {};
+        (rows || []).forEach(function (row) {
+          var keyword = collapseWhitespace(row && row[queryKey]);
+          var key = normalizeKeywordKey(keyword);
+          if (!key || Object.prototype.hasOwnProperty.call(keywordMap, key)) return;
+          keywordMap[key] = keyword;
+        });
+        return keywordMap;
+      }
+
       function upsertSqpKeywordsFromRows(rows, queryKey) {
         var keywordMap = {};
         (rows || []).forEach(function (row) {
@@ -9026,6 +9193,11 @@
           reactivated: reactivated,
           total: keys.length
         };
+      }
+
+      function aggregateSqpRowsByAllKeywords(rows, queryKey, metricColumns) {
+        var allKeywordMap = buildSqpKeywordMapFromRows(rows, queryKey);
+        return aggregateSqpRowsByTrackedKeywords(rows, queryKey, metricColumns, allKeywordMap);
       }
 
       function aggregateSqpRowsByTrackedKeywords(rows, queryKey, metricColumns, activeKeywordMap) {
@@ -9180,6 +9352,33 @@
         });
 
         saveSqpWarehouseState();
+      }
+
+      function upsertSqpWeekCacheRows(week, aggregatedRows, filename, uploadedAt) {
+        var targetWeek = toSqpWeekLabel(week) || "Week 1";
+        var storageKey = getSearchImportStorageKey(targetWeek);
+        var safeRows = Array.isArray(aggregatedRows) ? aggregatedRows.map(function (row) {
+          return {
+            keyword: collapseWhitespace(row && row.keyword),
+            search_query_volume: toNumber(row && row.search_query_volume),
+            impressions_total: toNumber(row && row.impressions_total),
+            impressions_brand_share_pct: toNumber(row && row.impressions_brand_share_pct),
+            clicks_total: toNumber(row && row.clicks_total),
+            purchases_total: toNumber(row && row.purchases_total),
+            market: row && row.market ? String(row.market) : "",
+            extra_metrics: row && row.extra_metrics && typeof row.extra_metrics === "object" ? row.extra_metrics : {}
+          };
+        }).filter(function (row) {
+          return !!normalizeKeywordKey(row.keyword);
+        }) : [];
+
+        sqpWeekCache[storageKey] = {
+          week: targetWeek,
+          source_filename: String(filename || ""),
+          uploaded_at: String(uploadedAt || ""),
+          rows: safeRows
+        };
+        saveSqpWeekCacheState();
       }
 
       function initSqpWarehouseControls() {
@@ -9378,22 +9577,29 @@
           };
         }
 
+        var selectedWeek = toSqpWeekLabel(queueRow.week) || "Week 1";
+        var uploadedAt = new Date().toISOString();
+        var allKeywordAggregate = aggregateSqpRowsByAllKeywords(rows, queryKey, metricColumns);
+        upsertSqpWeekCacheRows(selectedWeek, allKeywordAggregate.rows, queueRow.filename, uploadedAt);
+
         var activeKeywordMap = getActiveSqpKeywordsMap();
         var trackedKeywords = Object.keys(activeKeywordMap);
         if (!trackedKeywords.length) {
+          cleanupSqpWarehouseAgainstKeywordList();
           return {
             ok: false,
             message: "No active user-listed keywords found. Add keywords in Manage Keywords before importing.",
-            rowsInFile: rows.length,
+            rowsInFile: allKeywordAggregate.totalRows,
             matchedRows: 0,
-            ignoredRows: rows.length,
-            totalUniqueKeywords: 0,
+            ignoredRows: allKeywordAggregate.totalRows,
+            totalUniqueKeywords: allKeywordAggregate.totalUniqueKeywords,
             matchedKeywordCount: 0,
-            ignoredKeywordCount: 0
+            ignoredKeywordCount: allKeywordAggregate.totalUniqueKeywords
           };
         }
 
         var aggregated = aggregateSqpRowsByTrackedKeywords(rows, queryKey, metricColumns, activeKeywordMap);
+        cleanupSqpWarehouseAgainstKeywordList();
         if (!aggregated.matchedRows || !aggregated.rows.length) {
           return {
             ok: false,
@@ -9406,10 +9612,6 @@
             ignoredKeywordCount: aggregated.ignoredKeywordCount
           };
         }
-
-        var selectedWeek = toSqpWeekLabel(queueRow.week) || "Week 1";
-        var uploadedAt = new Date().toISOString();
-        applySqpWarehouseRows(selectedWeek, aggregated.rows, queueRow.filename, uploadedAt);
 
         var unmatchedKeywords = trackedKeywords.map(function (key) {
           return activeKeywordMap[key];
