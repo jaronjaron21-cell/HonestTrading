@@ -1809,6 +1809,63 @@
       text-overflow: ellipsis;
     }
 
+    #cts-shopify-reporting [data-table='sqp-warehouse-table'].cts-warehouse-shared-table .cts-warehouse-th-filter {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      width: 100%;
+      min-width: 0;
+    }
+
+    #cts-shopify-reporting [data-table='sqp-warehouse-table'].cts-warehouse-shared-table .cts-warehouse-th-title {
+      display: block;
+      width: 100%;
+      text-align: center;
+      line-height: 1.15;
+    }
+
+    #cts-shopify-reporting [data-table='sqp-warehouse-table'].cts-warehouse-shared-table .cts-warehouse-th-select {
+      width: 100%;
+      min-height: 30px;
+      height: 30px;
+      max-width: 170px;
+      padding: 0 8px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: normal;
+      text-transform: none;
+      border-radius: 10px;
+      background: var(--surface);
+    }
+
+    #cts-shopify-reporting [data-table='sqp-warehouse-table'].cts-warehouse-shared-table th:nth-child(n+4) .cts-warehouse-th-select {
+      max-width: 130px;
+    }
+
+    #cts-shopify-reporting [data-table='sqp-warehouse-table'].cts-warehouse-shared-table .cts-warehouse-th-toggle {
+      min-height: 30px;
+      height: 30px;
+      padding: 0 10px;
+      border-radius: 10px;
+      font-size: 11px;
+      letter-spacing: normal;
+      text-transform: none;
+    }
+
+    #cts-shopify-reporting [data-table='sqp-warehouse-table'].cts-warehouse-shared-table.is-date-collapsed th:nth-child(2),
+    #cts-shopify-reporting [data-table='sqp-warehouse-table'].cts-warehouse-shared-table.is-date-collapsed td:nth-child(2) {
+      width: 64px;
+      min-width: 64px;
+      max-width: 64px;
+    }
+
+    #cts-shopify-reporting [data-table='sqp-warehouse-table'].cts-warehouse-shared-table.is-date-collapsed td:nth-child(2) .cts-date-covered-value,
+    #cts-shopify-reporting [data-table='sqp-warehouse-table'].cts-warehouse-shared-table.is-date-collapsed th:nth-child(2) .cts-warehouse-th-title {
+      display: none;
+    }
+
     #cts-shopify-reporting .cts-palette-backdrop {
       position: fixed;
       top: 0;
@@ -3025,17 +3082,6 @@
             <div class="cts-code">SEARCH / WAREHOUSE</div>
           </div>
 
-          <section class="cts-card">
-            <div class="cts-filter-row" style="flex-wrap:nowrap;width:100%;gap:8px;">
-              <strong>Week</strong>
-              <select class="cts-select" style="min-width:180px;" data-control="sqp-warehouse-week"></select>
-              <strong>Keyword</strong>
-              <select class="cts-select" style="flex:1;min-width:0;" data-control="sqp-warehouse-keyword"></select>
-              <strong>Keyword Type</strong>
-              <select class="cts-select" style="min-width:170px;" data-control="sqp-warehouse-keyword-type"></select>
-            </div>
-          </section>
-
           <div class="cts-small-grid">
             <article class="cts-tile"><small>Total Rows</small><strong data-search-warehouse-kpi="rows">12.4M</strong></article>
             <article class="cts-tile"><small>Freshness</small><strong data-search-warehouse-kpi="freshness">5 min</strong></article>
@@ -3397,7 +3443,10 @@
         selectedWeek: "Week 1",
         selectedWarehouseWeek: "__all_weeks__",
         selectedKeyword: "__all_keywords__",
-        selectedKeywordType: "__all_keyword_types__"
+        selectedKeywordType: "__all_keyword_types__",
+        warehouseSortKey: "",
+        warehouseSortDir: "",
+        warehouseDateCoveredCollapsed: false
       };
       var searchAnalysisSelection = {
         selectedKeyword: "__all_keywords__",
@@ -6693,58 +6742,128 @@
       function renderSqpWarehouseTable(rows) {
         var table = root.querySelector("[data-table='sqp-warehouse-table']");
         if (!table) return;
-        var selectedKeyword = String(searchImportSelection.selectedKeyword || SQP_ALL_KEYWORDS_VALUE);
         var selectedKeywordType = normalizeSqpKeywordType(searchImportSelection.selectedKeywordType);
         var selectedWeek = String(searchImportSelection.selectedWarehouseWeek || SQP_ALL_WEEKS_VALUE);
-        var normalizedSelectedKeyword = normalizeKeywordKey(selectedKeyword);
+        var selectedWeekLabel = selectedWeek === SQP_ALL_WEEKS_VALUE
+          ? SQP_ALL_WEEKS_VALUE
+          : (toSqpWeekLabel(selectedWeek) || SQP_ALL_WEEKS_VALUE);
+        searchImportSelection.selectedWarehouseWeek = selectedWeekLabel;
+        selectedWeek = String(searchImportSelection.selectedWarehouseWeek || SQP_ALL_WEEKS_VALUE);
+        var sortKey = String(searchImportSelection.warehouseSortKey || "");
+        var sortDir = String(searchImportSelection.warehouseSortDir || "").toLowerCase();
+        var dateCoveredCollapsed = !!searchImportSelection.warehouseDateCoveredCollapsed;
+        var metricSortKeys = {
+          search_query_volume: true,
+          impressions_total: true,
+          impressions_brand_share_pct: true,
+          clicks_total: true,
+          purchases_total: true,
+          ctr_pct: true,
+          cvr_pct: true,
+          purchase_rate_pct: true
+        };
+        if (!metricSortKeys[sortKey]) {
+          sortKey = "";
+          sortDir = "";
+        }
+        if (sortDir !== "asc" && sortDir !== "desc") {
+          sortDir = "";
+          if (sortKey) sortKey = "";
+        }
+
         var filteredRows = (rows || []).filter(function (row) {
           var keyword = collapseWhitespace(row && row.keyword);
-          if (selectedKeyword !== SQP_ALL_KEYWORDS_VALUE && normalizeKeywordKey(keyword) !== normalizedSelectedKeyword) return false;
           if (!matchesSqpKeywordType(keyword, selectedKeywordType)) return false;
           return true;
-        }).sort(function (a, b) {
+        });
+
+        function defaultWarehouseComparator(a, b) {
           if (selectedWeek === SQP_ALL_WEEKS_VALUE) {
             var weekDiff = parseSqpWeekNumber(a && (a.week != null ? a.week : a.fortnight))
               - parseSqpWeekNumber(b && (b.week != null ? b.week : b.fortnight));
             if (weekDiff !== 0) return weekDiff;
           }
           return String(a.keyword).localeCompare(String(b.keyword), undefined, { sensitivity: "base" });
+        }
+
+        var sortedRows = filteredRows.slice().sort(function (a, b) {
+          if (!sortKey) return defaultWarehouseComparator(a, b);
+          var left = toNumber(a && a[sortKey]);
+          var right = toNumber(b && b[sortKey]);
+          if (left === right) return defaultWarehouseComparator(a, b);
+          return sortDir === "asc" ? (left - right) : (right - left);
         });
 
-        var maxKeywordLen = filteredRows.reduce(function (maxLen, row) {
+        var maxKeywordLen = sortedRows.reduce(function (maxLen, row) {
           var keyword = collapseWhitespace(row && row.keyword);
           return Math.max(maxLen, keyword.length);
         }, 0);
         var keywordWidthPx = clamp(maxKeywordLen * 8 + 40, 240, 520);
         table.style.setProperty("--cts-sqp-keyword-col-w", keywordWidthPx + "px");
+        table.classList.toggle("is-date-collapsed", dateCoveredCollapsed);
 
-        var headers = [
-          "Week",
-          "Date Covered",
-          "Keyword",
-          "Type",
-          "Search Query Volume",
-          "Impressions Total",
-          "Impressions Brand Share %",
-          "Clicks Total",
-          "Purchases Total",
-          "CTR %",
-          "CVR %",
-          "Purchase Rate %"
-        ];
+        var weekOptions = ["<option value='" + SQP_ALL_WEEKS_VALUE + "'" + (selectedWeek === SQP_ALL_WEEKS_VALUE ? " selected" : "") + ">" + SQP_ALL_WEEKS_LABEL + "</option>"]
+          .concat(Array.from({ length: 52 }, function (_, idx) {
+            var weekLabel = "Week " + (idx + 1);
+            return "<option value='" + weekLabel + "'" + (selectedWeek === weekLabel ? " selected" : "") + ">" + weekLabel + "</option>";
+          })).join("");
+
+        var keywordTypeOptions = ""
+          + "<option value='" + SQP_ALL_KEYWORD_TYPES_VALUE + "'" + (selectedKeywordType === SQP_ALL_KEYWORD_TYPES_VALUE ? " selected" : "") + ">All</option>"
+          + "<option value='" + SQP_KEYWORD_TYPE_BRANDED + "'" + (selectedKeywordType === SQP_KEYWORD_TYPE_BRANDED ? " selected" : "") + ">Branded</option>"
+          + "<option value='" + SQP_KEYWORD_TYPE_GENERIC + "'" + (selectedKeywordType === SQP_KEYWORD_TYPE_GENERIC ? " selected" : "") + ">Generic</option>";
+
+        function sortOptionsFor(metricKey) {
+          var selectedValue = sortKey === metricKey ? sortDir : "";
+          return ""
+            + "<option value='' " + (selectedValue === "" ? "selected" : "") + ">Default</option>"
+            + "<option value='desc' " + (selectedValue === "desc" ? "selected" : "") + ">Highest</option>"
+            + "<option value='asc' " + (selectedValue === "asc" ? "selected" : "") + ">Lowest</option>";
+        }
+
+        function metricHeader(label, key) {
+          return "<th><div class='cts-warehouse-th-filter'>"
+            + "<span class='cts-warehouse-th-title'>" + escapeHtml(label) + "</span>"
+            + "<select class='cts-select cts-select-compact cts-warehouse-th-select' data-action='sqp-warehouse-sort' data-key='" + escapeAttr(key) + "'>"
+            + sortOptionsFor(key)
+            + "</select>"
+            + "</div></th>";
+        }
+
+        var headerHtml = ""
+          + "<th><div class='cts-warehouse-th-filter'>"
+          + "<span class='cts-warehouse-th-title'>Week</span>"
+          + "<select class='cts-select cts-select-compact cts-warehouse-th-select' data-action='sqp-warehouse-week-filter'>"
+          + weekOptions
+          + "</select></div></th>"
+          + "<th><div class='cts-warehouse-th-filter'>"
+          + "<span class='cts-warehouse-th-title'>Date Covered</span>"
+          + "<button type='button' class='cts-code cts-warehouse-th-toggle' data-action='sqp-warehouse-toggle-date'>"
+          + (dateCoveredCollapsed ? "Show" : "Collapse")
+          + "</button></div></th>"
+          + "<th><div class='cts-warehouse-th-filter'>"
+          + "<span class='cts-warehouse-th-title'>Keyword</span>"
+          + "<select class='cts-select cts-select-compact cts-warehouse-th-select' data-action='sqp-warehouse-keyword-type-filter'>"
+          + keywordTypeOptions
+          + "</select></div></th>"
+          + metricHeader("Search Query Volume", "search_query_volume")
+          + metricHeader("Impressions Total", "impressions_total")
+          + metricHeader("Impressions Brand Share %", "impressions_brand_share_pct")
+          + metricHeader("Clicks Total", "clicks_total")
+          + metricHeader("Purchases Total", "purchases_total")
+          + metricHeader("CTR %", "ctr_pct")
+          + metricHeader("CVR %", "cvr_pct")
+          + metricHeader("Purchase Rate %", "purchase_rate_pct");
+
         var emptyMessage = "No warehouse rows available.";
-        if (selectedKeyword !== SQP_ALL_KEYWORDS_VALUE && selectedWeek !== SQP_ALL_WEEKS_VALUE) {
-          emptyMessage = "No data for this keyword in this week.";
-        } else if (selectedKeyword !== SQP_ALL_KEYWORDS_VALUE) {
-          emptyMessage = "No data for this keyword across all weeks.";
-        } else if (selectedWeek !== SQP_ALL_WEEKS_VALUE) {
+        if (selectedWeek !== SQP_ALL_WEEKS_VALUE) {
           emptyMessage = "No warehouse rows for the selected Week.";
         }
         if (selectedKeywordType !== SQP_ALL_KEYWORD_TYPES_VALUE) {
           emptyMessage = "No " + (selectedKeywordType === SQP_KEYWORD_TYPE_BRANDED ? "Branded" : "Generic") + " keyword data for current filters.";
         }
 
-        renderUniformWarehouseTable(table, headers, filteredRows, function (row) {
+        var bodyHtml = sortedRows.length ? sortedRows.map(function (row) {
           var keyword = collapseWhitespace(row && row.keyword);
           var safeKeyword = escapeHtml(keyword || "");
           var keywordTitle = escapeAttr(keyword || "");
@@ -6754,9 +6873,8 @@
           var dateCovered = getWeekDateCovered(parseSqpWeekNumber(weekLabel));
           return "<tr>"
             + "<td>" + escapeHtml(weekLabel) + "</td>"
-            + "<td>" + escapeHtml(dateCovered) + "</td>"
+            + "<td><span class='cts-date-covered-value'>" + escapeHtml(dateCovered) + "</span></td>"
             + "<td title='" + keywordTitle + "'><span class='cts-sqp-keyword-ellipsis'>" + safeKeyword + "</span></td>"
-            + "<td>" + getSqpKeywordTypeLabel(keyword) + "</td>"
             + "<td>" + Math.round(toNumber(row.search_query_volume)).toLocaleString() + "</td>"
             + "<td>" + Math.round(toNumber(row.impressions_total)).toLocaleString() + "</td>"
             + "<td>" + (toNumber(row.impressions_brand_share_pct) * 100).toFixed(2) + "%</td>"
@@ -6766,7 +6884,51 @@
             + "<td>" + (toNumber(row.cvr_pct) * 100).toFixed(2) + "%</td>"
             + "<td>" + (toNumber(row.purchase_rate_pct) * 100).toFixed(2) + "%</td>"
             + "</tr>";
-        }, "<tr><td colspan='" + headers.length + "'>" + escapeHtml(emptyMessage) + "</td></tr>");
+        }).join("") : "<tr><td colspan='11'>" + escapeHtml(emptyMessage) + "</td></tr>";
+
+        table.innerHTML = "<thead><tr>" + headerHtml + "</tr></thead><tbody>" + bodyHtml + "</tbody>";
+
+        if (table.dataset.headerControlsBound !== "1") {
+          table.dataset.headerControlsBound = "1";
+          table.addEventListener("change", function (event) {
+            var target = event.target;
+            if (!target) return;
+            var action = target.getAttribute("data-action");
+            if (action === "sqp-warehouse-week-filter") {
+              var weekValue = String(target.value || SQP_ALL_WEEKS_VALUE);
+              searchImportSelection.selectedWarehouseWeek = weekValue === SQP_ALL_WEEKS_VALUE
+                ? SQP_ALL_WEEKS_VALUE
+                : (toSqpWeekLabel(weekValue) || SQP_ALL_WEEKS_VALUE);
+              fillSearchTables();
+              return;
+            }
+            if (action === "sqp-warehouse-keyword-type-filter") {
+              searchImportSelection.selectedKeywordType = normalizeSqpKeywordType(target.value);
+              fillSearchTables();
+              return;
+            }
+            if (action === "sqp-warehouse-sort") {
+              var metricKey = String(target.getAttribute("data-key") || "");
+              var direction = String(target.value || "").toLowerCase();
+              if (metricSortKeys[metricKey] && (direction === "asc" || direction === "desc")) {
+                searchImportSelection.warehouseSortKey = metricKey;
+                searchImportSelection.warehouseSortDir = direction;
+              } else {
+                searchImportSelection.warehouseSortKey = "";
+                searchImportSelection.warehouseSortDir = "";
+              }
+              fillSearchTables();
+            }
+          });
+          table.addEventListener("click", function (event) {
+            var trigger = event.target && event.target.closest
+              ? event.target.closest("[data-action='sqp-warehouse-toggle-date']")
+              : null;
+            if (!trigger) return;
+            searchImportSelection.warehouseDateCoveredCollapsed = !searchImportSelection.warehouseDateCoveredCollapsed;
+            fillSearchTables();
+          });
+        }
       }
 
       function fillSearchTables() {
