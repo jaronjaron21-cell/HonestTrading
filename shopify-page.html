@@ -2982,6 +2982,7 @@
             <div class="cts-filter-row">
               <input class="cts-text-input" style="flex:1;min-width:0;" type="text" data-control="sqp-keyword-input" placeholder="Add keyword" />
               <button class="cts-btn" type="button" data-action="sqp-keyword-add">Add</button>
+              <button class="cts-btn" type="button" data-action="sqp-keyword-delete-selected" disabled>Delete Selected</button>
             </div>
             <span class="cts-import-msg" data-search-keyword-msg></span>
             <div style="overflow:auto;">
@@ -3420,6 +3421,7 @@
       var sqpImportQueue = [];
       var searchImportBusy = false;
       var sqpCleanupSummary = null;
+      var sqpKeywordSelection = {};
       var SQP_ALL_KEYWORDS_VALUE = "__all_keywords__";
       var SQP_ALL_KEYWORDS_LABEL = "All Keywords";
       var SQP_ALL_KEYWORD_TYPES_VALUE = "__all_keyword_types__";
@@ -5536,12 +5538,44 @@
         if (customWrap) customWrap.classList.toggle("cts-hidden", mode !== "custom");
       }
 
+      function getSelectedSqpKeywordKeys() {
+        return Object.keys(sqpKeywordSelection).filter(function (key) {
+          return !!sqpKeywordSelection[key];
+        });
+      }
+
+      function syncSqpKeywordSelectionState() {
+        var validKeys = {};
+        sqpKeywords.forEach(function (item) {
+          if (!item) return;
+          var key = normalizeKeywordKey(item.keyword);
+          if (!key) return;
+          validKeys[key] = true;
+        });
+
+        Object.keys(sqpKeywordSelection).forEach(function (key) {
+          if (!validKeys[key]) delete sqpKeywordSelection[key];
+        });
+      }
+
+      function syncSqpBulkDeleteButton() {
+        var button = root.querySelector("[data-action='sqp-keyword-delete-selected']");
+        if (!button) return;
+        var selectedCount = getSelectedSqpKeywordKeys().length;
+        button.disabled = selectedCount === 0;
+        button.textContent = selectedCount > 0
+          ? ("Delete Selected (" + selectedCount + ")")
+          : "Delete Selected";
+      }
+
       function renderSqpKeywordList() {
         var table = root.querySelector("[data-table='sqp-keyword-list']");
         if (!table) return;
 
         if (!sqpKeywords.length) {
-          table.innerHTML = "<thead><tr><th>Keyword</th><th>Active</th><th>Action</th></tr></thead><tbody><tr><td colspan='3'>No keywords yet. Add at least one keyword to start SQP matching.</td></tr></tbody>";
+          sqpKeywordSelection = {};
+          table.innerHTML = "<thead><tr><th>Select</th><th>Keyword</th><th>Active</th><th>Action</th></tr></thead><tbody><tr><td colspan='4'>No keywords yet. Add at least one keyword to start SQP matching.</td></tr></tbody>";
+          syncSqpBulkDeleteButton();
           syncSqpWarehouseKeywordOptions();
           syncSqpWarehouseKeywordTypeOptions();
           syncSqpAnalysisKeywordOptions();
@@ -5551,17 +5585,27 @@
         }
 
         sortSqpKeywords();
-        table.innerHTML = "<thead><tr><th>Keyword</th><th>Active</th><th>Action</th></tr></thead><tbody>"
+        syncSqpKeywordSelectionState();
+        var totalRows = sqpKeywords.length;
+        var selectedRows = getSelectedSqpKeywordKeys().length;
+        var selectAllChecked = totalRows > 0 && selectedRows === totalRows;
+
+        table.innerHTML = "<thead><tr>"
+          + "<th><input type='checkbox' data-action='sqp-keyword-select-all'" + (selectAllChecked ? " checked" : "") + " /></th>"
+          + "<th>Keyword</th><th>Active</th><th>Action</th></tr></thead><tbody>"
           + sqpKeywords.map(function (item) {
             var key = encodeURIComponent(normalizeKeywordKey(item.keyword));
             var checked = item.is_active ? " checked" : "";
+            var selected = sqpKeywordSelection[normalizeKeywordKey(item.keyword)] ? " checked" : "";
             return "<tr>"
+              + "<td><input type='checkbox' data-action='sqp-keyword-select' data-key='" + key + "'" + selected + " /></td>"
               + "<td>" + escapeHtml(item.keyword) + "</td>"
               + "<td><input type='checkbox' data-action='sqp-keyword-toggle' data-key='" + key + "'" + checked + " /></td>"
               + "<td><button class='cts-code' type='button' data-action='sqp-keyword-delete' data-key='" + key + "' title='Delete keyword'>&#128465;</button></td>"
               + "</tr>";
           }).join("")
           + "</tbody>";
+        syncSqpBulkDeleteButton();
         syncSqpWarehouseKeywordOptions();
         syncSqpWarehouseKeywordTypeOptions();
         syncSqpAnalysisKeywordOptions();
@@ -5604,23 +5648,83 @@
         return true;
       }
 
-      function deleteSqpKeyword(keywordKey) {
-        var key = normalizeKeywordKey(keywordKey);
+      function deleteSqpKeywordsByKeys(keywordKeys) {
+        var normalizedToDelete = {};
+        (keywordKeys || []).forEach(function (item) {
+          var key = normalizeKeywordKey(item);
+          if (!key) return;
+          normalizedToDelete[key] = true;
+        });
+        var targetKeys = Object.keys(normalizedToDelete);
+        if (!targetKeys.length) {
+          return { removedKeywords: 0, removedWarehouseRecords: 0 };
+        }
+
         var before = sqpKeywords.length;
         sqpKeywords = sqpKeywords.filter(function (item) {
-          return normalizeKeywordKey(item.keyword) !== key;
+          var key = normalizeKeywordKey(item && item.keyword);
+          return !normalizedToDelete[key];
         });
-        if (sqpKeywords.length === before) return;
+        if (sqpKeywords.length === before) {
+          return { removedKeywords: 0, removedWarehouseRecords: 0 };
+        }
+
+        targetKeys.forEach(function (key) {
+          delete sqpKeywordSelection[key];
+        });
+
         saveSqpKeywordsState();
         var cleanupResult = cleanupSqpWarehouseAgainstKeywordList();
         renderSqpKeywordList();
-        var removedRecords = cleanupResult ? toNumber(cleanupResult.affectedRecordsRemoved) : 0;
+        fillSearchTables();
+
+        return {
+          removedKeywords: before - sqpKeywords.length,
+          removedWarehouseRecords: cleanupResult ? toNumber(cleanupResult.affectedRecordsRemoved) : 0
+        };
+      }
+
+      function deleteSqpKeyword(keywordKey) {
+        var result = deleteSqpKeywordsByKeys([keywordKey]);
+        if (!result || result.removedKeywords <= 0) return;
+        var removedRecords = toNumber(result.removedWarehouseRecords);
         if (removedRecords > 0) {
           setSqpKeywordMessage("Keyword deleted. Removed " + removedRecords.toLocaleString() + " SQP warehouse records not in your keyword list.", "ok");
         } else {
           setSqpKeywordMessage("Keyword deleted.", "ok");
         }
-        fillSearchTables();
+      }
+
+      function deleteSelectedSqpKeywords() {
+        var selectedKeys = getSelectedSqpKeywordKeys();
+        if (!selectedKeys.length) {
+          setSqpKeywordMessage("Select at least one keyword to delete.", "warn");
+          return;
+        }
+
+        var label = selectedKeys.length === 1 ? "keyword" : "keywords";
+        var confirmText = "Delete " + selectedKeys.length + " selected " + label + "?";
+        if (typeof window !== "undefined" && typeof window.confirm === "function" && !window.confirm(confirmText)) {
+          return;
+        }
+
+        var result = deleteSqpKeywordsByKeys(selectedKeys);
+        if (!result || result.removedKeywords <= 0) {
+          setSqpKeywordMessage("No keywords were deleted.", "warn");
+          return;
+        }
+
+        var removedRecords = toNumber(result.removedWarehouseRecords);
+        var removedKeywords = toNumber(result.removedKeywords);
+        if (removedRecords > 0) {
+          setSqpKeywordMessage(
+            "Deleted " + removedKeywords.toLocaleString() + " keywords. Removed "
+              + removedRecords.toLocaleString() + " SQP warehouse records not in your keyword list.",
+            "ok"
+          );
+        } else {
+          setSqpKeywordMessage("Deleted " + removedKeywords.toLocaleString() + " keywords.", "ok");
+        }
       }
 
       function toggleSqpKeyword(keywordKey, isActive) {
@@ -5636,6 +5740,7 @@
       function initSqpKeywordManager() {
         var input = root.querySelector("[data-control='sqp-keyword-input']");
         var addBtn = root.querySelector("[data-action='sqp-keyword-add']");
+        var bulkDeleteBtn = root.querySelector("[data-action='sqp-keyword-delete-selected']");
         var table = root.querySelector("[data-table='sqp-keyword-list']");
         if (!input || !addBtn || !table) return;
 
@@ -5647,6 +5752,11 @@
         addBtn.addEventListener("click", function () {
           submitKeyword();
         });
+        if (bulkDeleteBtn) {
+          bulkDeleteBtn.addEventListener("click", function () {
+            deleteSelectedSqpKeywords();
+          });
+        }
 
         input.addEventListener("keydown", function (event) {
           if (event.key === "Enter") {
@@ -5657,9 +5767,28 @@
 
         table.addEventListener("change", function (event) {
           var target = event.target;
-          if (!target || target.getAttribute("data-action") !== "sqp-keyword-toggle") return;
-          var decoded = decodeURIComponent(target.getAttribute("data-key") || "");
-          toggleSqpKeyword(decoded, !!target.checked);
+          if (!target) return;
+          var action = target.getAttribute("data-action");
+          if (action === "sqp-keyword-toggle") {
+            var toggleKey = decodeURIComponent(target.getAttribute("data-key") || "");
+            toggleSqpKeyword(toggleKey, !!target.checked);
+            return;
+          }
+          if (action === "sqp-keyword-select") {
+            var selectedKey = decodeURIComponent(target.getAttribute("data-key") || "");
+            if (selectedKey) sqpKeywordSelection[normalizeKeywordKey(selectedKey)] = !!target.checked;
+            syncSqpBulkDeleteButton();
+            return;
+          }
+          if (action === "sqp-keyword-select-all") {
+            var selectAll = !!target.checked;
+            sqpKeywords.forEach(function (item) {
+              var key = normalizeKeywordKey(item && item.keyword);
+              if (!key) return;
+              sqpKeywordSelection[key] = selectAll;
+            });
+            renderSqpKeywordList();
+          }
         });
 
         table.addEventListener("click", function (event) {
