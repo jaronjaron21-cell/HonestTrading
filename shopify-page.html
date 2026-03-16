@@ -1075,7 +1075,11 @@
 
     #cts-shopify-reporting .cts-asin-import-add-input {
       flex: 1 1 auto;
-      min-width: 320px;
+      min-width: 220px;
+    }
+
+    #cts-shopify-reporting .cts-asin-import-add-title-input {
+      min-width: 240px;
     }
 
     #cts-shopify-reporting .cts-asin-import-add-action {
@@ -1662,7 +1666,7 @@
     }
 
     #cts-shopify-reporting [data-table='asin-warehouse-metrics'].cts-warehouse-shared-table {
-      min-width: 2430px;
+      min-width: 2710px;
     }
 
     #cts-shopify-reporting .cts-warehouse-shared-table th,
@@ -1772,6 +1776,19 @@
       min-width: 140px;
       max-width: 140px;
       font-variant-numeric: tabular-nums;
+    }
+
+    #cts-shopify-reporting [data-table='asin-warehouse-metrics'].cts-warehouse-shared-table th:nth-child(3),
+    #cts-shopify-reporting [data-table='asin-warehouse-metrics'].cts-warehouse-shared-table td:nth-child(3) {
+      width: 280px;
+      min-width: 280px;
+      max-width: 280px;
+      font-variant-numeric: normal;
+    }
+
+    #cts-shopify-reporting [data-table='asin-warehouse-metrics'].cts-warehouse-shared-table td:nth-child(3) {
+      white-space: normal;
+      overflow-wrap: anywhere;
     }
 
     #cts-shopify-reporting [data-table='sqp-warehouse-table'].cts-warehouse-shared-table th:nth-child(3),
@@ -3319,6 +3336,7 @@
                 <div class="cts-asin-import-add-row">
                   <span class="cts-asin-import-add-label">New ASIN</span>
                   <input class="cts-text-input cts-asin-import-add-input" type="text" data-input="asin-import-inline" placeholder="ASIN Code (10 letters/numbers)" maxlength="10" />
+                  <input class="cts-text-input cts-asin-import-add-input cts-asin-import-add-title-input" type="text" data-input="asin-import-title-inline" placeholder="Product Title" maxlength="120" />
                   <button class="cts-btn cts-asin-import-add-action" type="button" data-action="asin-import-add-save">Save</button>
                   <button class="cts-code cts-asin-import-add-action" type="button" data-action="asin-import-add-cancel">Cancel</button>
                 </div>
@@ -3366,7 +3384,7 @@
 
           <section class="cts-card cts-warehouse-controls">
             <div class="cts-filter-row">
-              <strong>ASIN</strong>
+              <strong>Product</strong>
               <select class="cts-select" data-control="asin-warehouse-filter"></select>
               <button class="cts-code cts-delete-asin" type="button" data-action="delete-asin-trigger">Delete ASIN</button>
               <input class="cts-text-input cts-hidden" type="text" data-input="asin-inline" placeholder="ASIN Code" maxlength="10" />
@@ -3623,6 +3641,13 @@
       var ASIN_ALL_SELECTOR_VALUE = "__all_asins__";
       var ASIN_ALL_SELECTOR_LABEL = "All ASINs";
       var ASIN_ADD_OPTION_LABEL = "Add New ASIN...";
+      var ASIN_PRODUCT_TITLE_DEFAULTS = {
+        B0F38CWNDB: "Copper Tech Plus | Men",
+        B0FQ1LRMT8: "Copper ADV Tech 2.0 | Men",
+        B0FQ25WN7C: "Copper Tech Plus | Ladies",
+        B0GF9Y2TZG: "Copper Tech 1st Generation (2-Pack) | Men",
+        B0GFB4L4S4: "Copper Tech 1st Generation (2-Pack) | Ladies"
+      };
       var ASIN_MASTER_STORAGE_KEY = "cts_asin_master_v1";
       var ASIN_WAREHOUSE_STORAGE_KEY = "cts_asin_warehouse_state_v1";
       var asinMaster = [];
@@ -5659,7 +5684,7 @@
         var currentAsin = normalizeAsinCode(homeSnapshotSelection.asin || asinSelect.value);
         asinSelect.innerHTML = "<option value=''>All ASINs</option>"
           + asinWarehouseOrder.map(function (asinCode) {
-            return "<option value='" + asinCode + "'>" + asinCode + "</option>";
+            return "<option value='" + asinCode + "'>" + escapeHtml(getAsinDisplayLabel(asinCode)) + "</option>";
           }).join("");
         homeSnapshotSelection.asin = currentAsin && asinWarehouseOrder.indexOf(currentAsin) !== -1 ? currentAsin : "";
         asinSelect.value = homeSnapshotSelection.asin;
@@ -7081,6 +7106,39 @@
         return /^[A-Z0-9]{10}$/.test(value);
       }
 
+      function normalizeAsinProductTitle(value) {
+        return collapseWhitespace(String(value || ""));
+      }
+
+      function getAsinDefaultProductTitle(asinCode) {
+        var normalized = normalizeAsinCode(asinCode);
+        return normalizeAsinProductTitle(ASIN_PRODUCT_TITLE_DEFAULTS[normalized] || "");
+      }
+
+      function getAsinMasterRecord(asinCode) {
+        var normalized = normalizeAsinCode(asinCode);
+        return (asinMaster || []).find(function (item) {
+          return normalizeAsinCode(item && item.asin) === normalized;
+        }) || null;
+      }
+
+      function getAsinProductTitle(asinCode) {
+        var normalized = normalizeAsinCode(asinCode);
+        if (!isValidAsinCode(normalized)) return "";
+        var record = getAsinMasterRecord(normalized);
+        var storedTitle = normalizeAsinProductTitle(
+          record && (record.product_title != null ? record.product_title : (record.label != null ? record.label : ""))
+        );
+        if (storedTitle && normalizeAsinCode(storedTitle) === normalized) storedTitle = "";
+        return storedTitle || getAsinDefaultProductTitle(normalized);
+      }
+
+      function getAsinDisplayLabel(asinCode) {
+        var normalized = normalizeAsinCode(asinCode);
+        var productTitle = getAsinProductTitle(normalized);
+        return productTitle ? (productTitle + " — " + normalized) : normalized;
+      }
+
       function setAsinAddMessage(text, type) {
         var msg = root.querySelector("[data-msg='asin-add']");
         if (!msg) return;
@@ -7099,11 +7157,13 @@
         if (type === "warn") msg.classList.add("is-warn");
       }
 
-      function createAsinMasterRecord(asinCode, createdAt) {
+      function createAsinMasterRecord(asinCode, createdAt, productTitle) {
         var normalized = normalizeAsinCode(asinCode);
+        var normalizedTitle = normalizeAsinProductTitle(productTitle || getAsinDefaultProductTitle(normalized));
         return {
           asin: normalized,
-          label: normalized,
+          label: normalizedTitle || normalized,
+          product_title: normalizedTitle,
           created_at: createdAt || new Date().toISOString()
         };
       }
@@ -7133,33 +7193,62 @@
         writeBackendStoreValue(STORAGE_REMOTE_KEYS.asinMaster, asinMaster);
       }
 
-      function upsertAsinMasterAsin(asinCode) {
+      function upsertAsinMasterAsin(asinCode, productTitle) {
         var normalized = normalizeAsinCode(asinCode);
-        if (!isValidAsinCode(normalized)) return { ok: false, added: false, asin: normalized };
+        if (!isValidAsinCode(normalized)) return { ok: false, added: false, updated: false, asin: normalized };
+        var normalizedTitle = normalizeAsinProductTitle(productTitle || getAsinDefaultProductTitle(normalized));
 
-        var existing = asinMaster.find(function (item) {
-          return normalizeAsinCode(item && item.asin) === normalized;
-        });
+        var existing = getAsinMasterRecord(normalized);
         if (existing) {
+          var existingTitle = normalizeAsinProductTitle(existing.product_title || "");
+          if (!existingTitle && existing.label && normalizeAsinCode(existing.label) !== normalized) {
+            existingTitle = normalizeAsinProductTitle(existing.label);
+          }
+          var nextTitle = existingTitle || normalizedTitle;
+          if (nextTitle !== existingTitle) {
+            existing.product_title = nextTitle;
+            existing.label = nextTitle || normalized;
+          } else {
+            existing.product_title = existingTitle || "";
+            existing.label = (existing.product_title || normalized);
+          }
           syncAsinWarehouseOrderFromMaster();
           if (!Array.isArray(asinWarehouseData[normalized])) asinWarehouseData[normalized] = [];
-          return { ok: true, added: false, asin: normalized };
+          return { ok: true, added: false, updated: nextTitle !== existingTitle, asin: normalized };
         }
 
-        asinMaster.push(createAsinMasterRecord(normalized));
+        asinMaster.push(createAsinMasterRecord(normalized, new Date().toISOString(), normalizedTitle));
         var dedupedMap = Object.create(null);
         asinMaster.forEach(function (item) {
           var code = normalizeAsinCode(item && item.asin);
           if (!isValidAsinCode(code)) return;
-          if (dedupedMap[code]) return;
-          dedupedMap[code] = createAsinMasterRecord(code, item && item.created_at ? item.created_at : new Date().toISOString());
+          var itemTitle = normalizeAsinProductTitle(
+            item && (item.product_title != null
+              ? item.product_title
+              : ((item.label && normalizeAsinCode(item.label) !== code) ? item.label : ""))
+          );
+          if (!itemTitle) itemTitle = getAsinDefaultProductTitle(code);
+          if (!dedupedMap[code]) {
+            dedupedMap[code] = {
+              asin: code,
+              created_at: item && item.created_at ? item.created_at : new Date().toISOString(),
+              product_title: itemTitle
+            };
+            return;
+          }
+          if (!dedupedMap[code].product_title && itemTitle) dedupedMap[code].product_title = itemTitle;
         });
         asinMaster = sortAsinCodes(Object.keys(dedupedMap)).map(function (code) {
-          return dedupedMap[code];
+          var item = dedupedMap[code];
+          return createAsinMasterRecord(
+            code,
+            item && item.created_at ? item.created_at : new Date().toISOString(),
+            item && item.product_title ? item.product_title : ""
+          );
         });
         syncAsinWarehouseOrderFromMaster();
         if (!Array.isArray(asinWarehouseData[normalized])) asinWarehouseData[normalized] = [];
-        return { ok: true, added: true, asin: normalized };
+        return { ok: true, added: true, updated: false, asin: normalized };
       }
 
       function removeAsinMasterAsin(asinCode) {
@@ -7292,7 +7381,12 @@
               var code = normalizeAsinCode(entry && entry.asin);
               if (!isValidAsinCode(code)) return null;
               var createdAt = entry && entry.created_at ? String(entry.created_at) : "";
-              return createAsinMasterRecord(code, createdAt || new Date().toISOString());
+              var productTitle = normalizeAsinProductTitle(
+                entry && (entry.product_title != null
+                  ? entry.product_title
+                  : ((entry.label && normalizeAsinCode(entry.label) !== code) ? entry.label : ""))
+              );
+              return createAsinMasterRecord(code, createdAt || new Date().toISOString(), productTitle);
             }).filter(function (entry) {
               return !!entry;
             });
@@ -7322,11 +7416,20 @@
           var normalized = normalizeAsinCode(code);
           if (isValidAsinCode(normalized)) finalCodeMap[normalized] = true;
         });
+        Object.keys(ASIN_PRODUCT_TITLE_DEFAULTS).forEach(function (code) {
+          var normalized = normalizeAsinCode(code);
+          if (isValidAsinCode(normalized)) finalCodeMap[normalized] = true;
+        });
 
         var finalCodes = sortAsinCodes(Object.keys(finalCodeMap));
         asinMaster = finalCodes.map(function (code) {
           var existing = masterCodeMap[code];
-          return createAsinMasterRecord(code, existing && existing.created_at ? existing.created_at : new Date().toISOString());
+          var title = normalizeAsinProductTitle(existing && existing.product_title);
+          return createAsinMasterRecord(
+            code,
+            existing && existing.created_at ? existing.created_at : new Date().toISOString(),
+            title
+          );
         });
         syncAsinWarehouseOrderFromMaster();
 
@@ -7342,7 +7445,7 @@
 
       function buildAsinSelectOptionsHtml(includeAddOption) {
         var baseOptions = asinWarehouseOrder.map(function (asinCode) {
-          return "<option value='" + asinCode + "'>" + asinCode + "</option>";
+          return "<option value='" + asinCode + "'>" + escapeHtml(getAsinDisplayLabel(asinCode)) + "</option>";
         }).join("");
         if (!includeAddOption) return baseOptions;
         var divider = asinWarehouseOrder.length
@@ -7417,7 +7520,7 @@
 
         asinSelect.innerHTML = "<option value=''>All ASINs</option>"
           + asinWarehouseOrder.map(function (asinCode) {
-            return "<option value='" + asinCode + "'>" + asinCode + "</option>";
+            return "<option value='" + asinCode + "'>" + escapeHtml(getAsinDisplayLabel(asinCode)) + "</option>";
           }).join("");
         asinSelect.value = currentAsin && asinWarehouseOrder.indexOf(currentAsin) !== -1 ? currentAsin : "";
 
@@ -7522,13 +7625,15 @@
       function renderAsinWarehouseTable(selectedAsin) {
         var table = root.querySelector("[data-table='asin-warehouse-metrics']");
         var rows = buildWarehouseRowsForAsinCode(selectedAsin);
-        var headers = ["Fortnight", "Date Covered"].concat(asinWarehouseColumns.map(function (col) {
+        var productTitle = getAsinProductTitle(selectedAsin);
+        var headers = ["Fortnight", "Date Covered", "Product Title"].concat(asinWarehouseColumns.map(function (col) {
           return col.label;
         }));
         renderUniformWarehouseTable(table, headers, rows, function (row) {
           var fortnightNumber = parseFortnightIndex(row && row.fortnight) + 1;
           return "<tr><td>" + escapeHtml(row.fortnight) + "</td>"
             + "<td>" + escapeHtml(getFortnightDateCovered(fortnightNumber)) + "</td>"
+            + "<td>" + escapeHtml(productTitle || "") + "</td>"
             + asinWarehouseColumns.map(function (col) {
               return "<td>" + escapeHtml(formatWarehouseValue(col.type, row[col.key])) + "</td>";
             }).join("")
@@ -7549,7 +7654,7 @@
           inlineInput.classList.remove("cts-hidden");
           inlineInput.value = "";
           inlineInput.focus();
-          setAsinAddMessage("Type ASIN code then press Enter.", "");
+          setAsinAddMessage("Type ASIN code, then Product Title will be requested.", "");
         }
 
         function hideInlineInput(clearMessage) {
@@ -7581,7 +7686,13 @@
             return;
           }
 
-          var upsertResult = upsertAsinMasterAsin(asinCode);
+          var productTitle = normalizeAsinProductTitle(window.prompt("Enter Product Title for ASIN " + asinCode + ":", "") || "");
+          if (!productTitle) {
+            setAsinAddMessage("Product Title is required.", "warn");
+            return;
+          }
+
+          var upsertResult = upsertAsinMasterAsin(asinCode, productTitle);
           if (!upsertResult.ok || !upsertResult.added) {
             setAsinAddMessage("Unable to add ASIN.", "warn");
             return;
@@ -7592,7 +7703,7 @@
           renderAsinWarehouseOptions(filter, asinCode);
           renderAsinWarehouseTable(asinCode);
           refreshAsinProfitabilityViews();
-          setAsinAddMessage("ASIN added: " + asinCode, "ok");
+          setAsinAddMessage("ASIN added: " + asinCode + " (" + productTitle + ")", "ok");
           hideInlineInput(false);
         }
 
@@ -8659,6 +8770,7 @@
         var importAsinSelect = root.querySelector("[data-control='asin-import-filter']");
         var addRow = root.querySelector("[data-wrap='asin-import-add-row']");
         var addInput = root.querySelector("[data-input='asin-import-inline']");
+        var addTitleInput = root.querySelector("[data-input='asin-import-title-inline']");
         var addSave = root.querySelector("[data-action='asin-import-add-save']");
         var addCancel = root.querySelector("[data-action='asin-import-add-cancel']");
         if (!form) return;
@@ -8679,6 +8791,7 @@
         function hideAddAsinRow(clearMessage) {
           if (addRow) addRow.classList.add("cts-hidden");
           if (addInput) addInput.value = "";
+          if (addTitleInput) addTitleInput.value = "";
           if (clearMessage) setAsinImportAddMessage("", "");
         }
 
@@ -8688,7 +8801,8 @@
             addInput.value = "";
             addInput.focus();
           }
-          setAsinImportAddMessage("Enter a 10-character ASIN code.", "");
+          if (addTitleInput) addTitleInput.value = "";
+          setAsinImportAddMessage("Enter ASIN code and Product Title.", "");
         }
 
         function applySelectedImportAsin(selectedAsin) {
@@ -8721,6 +8835,7 @@
 
         function submitAddAsin() {
           var asinCode = normalizeAsinCode(addInput ? addInput.value : "");
+          var productTitle = normalizeAsinProductTitle(addTitleInput ? addTitleInput.value : "");
           if (!asinCode) {
             setAsinImportAddMessage("Enter an ASIN code.", "warn");
             return;
@@ -8729,12 +8844,16 @@
             setAsinImportAddMessage("ASIN must match format: 10 letters/numbers.", "warn");
             return;
           }
+          if (!productTitle) {
+            setAsinImportAddMessage("Enter a Product Title.", "warn");
+            return;
+          }
           if (asinWarehouseOrder.indexOf(asinCode) !== -1) {
             setAsinImportAddMessage("ASIN already exists.", "warn");
             return;
           }
 
-          var upsert = upsertAsinMasterAsin(asinCode);
+          var upsert = upsertAsinMasterAsin(asinCode, productTitle);
           if (!upsert.ok || !upsert.added) {
             setAsinImportAddMessage("Unable to add ASIN.", "warn");
             return;
@@ -8753,7 +8872,7 @@
           hideAddAsinRow(true);
           applySelectedImportAsin(asinCode);
 
-          setImportMessage("ASIN added: " + asinCode, "black");
+          setImportMessage("ASIN added: " + asinCode + " (" + productTitle + ")", "black");
           if (asinImportMessageTimer) window.clearTimeout(asinImportMessageTimer);
           asinImportMessageTimer = window.setTimeout(function () {
             setImportMessage("", "");
@@ -8831,24 +8950,53 @@
           renderAsinImportQueueTable(fileKey);
         }
 
-        function ensureAsinInMaster(asinCode) {
-          var upsert = upsertAsinMasterAsin(asinCode);
-          if (!upsert.ok || !upsert.added) return;
+        function ensureAsinInMaster(asinCode, titlePromptCache) {
+          var normalized = normalizeAsinCode(asinCode);
+          if (!isValidAsinCode(normalized)) {
+            return { ok: false, message: "Invalid ASIN: " + normalized };
+          }
 
-          saveAsinMasterState();
-          saveAsinWarehouseState();
-
-          var warehouseFilter = root.querySelector("[data-control='asin-warehouse-filter']");
-          var importCurrent = importAsinSelect ? String(importAsinSelect.value || "") : "";
-          if (warehouseFilter) {
-            var preferred = normalizeAsinCode(warehouseFilter.value || importCurrent);
-            renderAsinWarehouseOptions(warehouseFilter, preferred || "");
-          } else if (importAsinSelect) {
-            importAsinSelect.innerHTML = buildAsinSelectOptionsHtml(true);
-            if (importCurrent && importCurrent !== ASIN_ADD_OPTION_VALUE && importCurrent !== ASIN_ADD_DIVIDER_OPTION_VALUE) {
-              importAsinSelect.value = importCurrent;
+          var existing = getAsinMasterRecord(normalized);
+          var inputTitle = "";
+          if (!existing) {
+            inputTitle = getAsinDefaultProductTitle(normalized);
+            if (!inputTitle) {
+              if (titlePromptCache && Object.prototype.hasOwnProperty.call(titlePromptCache, normalized)) {
+                inputTitle = titlePromptCache[normalized];
+              } else {
+                inputTitle = window.prompt("Enter Product Title for ASIN " + normalized + ":", "") || "";
+                if (titlePromptCache) titlePromptCache[normalized] = inputTitle;
+              }
+            }
+            inputTitle = normalizeAsinProductTitle(inputTitle);
+            if (!inputTitle) {
+              return { ok: false, message: "Product Title is required for new ASIN " + normalized + "." };
             }
           }
+
+          var upsert = upsertAsinMasterAsin(normalized, inputTitle);
+          if (!upsert.ok) {
+            return { ok: false, message: "Unable to add ASIN " + normalized + "." };
+          }
+
+          if (upsert.added || upsert.updated) {
+            saveAsinMasterState();
+            saveAsinWarehouseState();
+
+            var warehouseFilter = root.querySelector("[data-control='asin-warehouse-filter']");
+            var importCurrent = importAsinSelect ? String(importAsinSelect.value || "") : "";
+            if (warehouseFilter) {
+              var preferred = normalizeAsinCode(warehouseFilter.value || importCurrent);
+              renderAsinWarehouseOptions(warehouseFilter, preferred || "");
+            } else if (importAsinSelect) {
+              importAsinSelect.innerHTML = buildAsinSelectOptionsHtml(true);
+              if (importCurrent && importCurrent !== ASIN_ADD_OPTION_VALUE && importCurrent !== ASIN_ADD_DIVIDER_OPTION_VALUE) {
+                importAsinSelect.value = importCurrent;
+              }
+            }
+          }
+
+          return { ok: true, asin: normalized };
         }
 
         async function importAmazonFile(file, context) {
@@ -8886,6 +9034,7 @@
           refreshAsinImportFileControl(fileKey);
 
           var tagOrder = { AMZ: 1, SB: 2, PPC: 3 };
+          var promptTitleByAsin = Object.create(null);
           var processingRows = validRows.slice().sort(function (left, right) {
             var asinDiff = String(left.asin || "").localeCompare(String(right.asin || ""), undefined, { sensitivity: "base" });
             if (asinDiff !== 0) return asinDiff;
@@ -8902,7 +9051,13 @@
             refreshAsinImportCardUi(fileKey);
 
             try {
-              ensureAsinInMaster(row.asin);
+              var ensured = ensureAsinInMaster(row.asin, promptTitleByAsin);
+              if (!ensured || !ensured.ok) {
+                row.status = "Failed";
+                row.message = (ensured && ensured.message) || "ASIN setup failed.";
+                refreshAsinImportCardUi(fileKey);
+                continue;
+              }
 
               var importer = null;
               if (row.tag === "AMZ") importer = importAmazonFile;
@@ -9001,6 +9156,17 @@
         }
         if (addInput) {
           addInput.addEventListener("keydown", function (event) {
+            if (event.key === "Enter") {
+              event.preventDefault();
+              submitAddAsin();
+            } else if (event.key === "Escape") {
+              event.preventDefault();
+              cancelAddAsin();
+            }
+          });
+        }
+        if (addTitleInput) {
+          addTitleInput.addEventListener("keydown", function (event) {
             if (event.key === "Enter") {
               event.preventDefault();
               submitAddAsin();
