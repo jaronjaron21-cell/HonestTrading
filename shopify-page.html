@@ -1980,12 +1980,18 @@
     #cts-shopify-reporting .cts-main {
       min-height: 0;
       height: 100%;
+      max-height: 100%;
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
       overflow: hidden;
     }
 
     #cts-shopify-reporting .cts-workspace {
       min-height: 0;
       height: 100%;
+      max-height: 100%;
+      display: grid;
+      grid-template-rows: minmax(0, 1fr);
       overflow: hidden;
     }
 
@@ -1996,6 +2002,7 @@
     #cts-shopify-reporting .cts-view.is-active {
       min-height: 0;
       height: 100%;
+      max-height: 100%;
       overflow-y: auto;
       overflow-x: hidden;
       overscroll-behavior: contain;
@@ -2162,12 +2169,19 @@
       max-width: 100%;
     }
 
+    #cts-shopify-reporting .cts-view.is-active {
+      display: grid;
+      grid-auto-flow: row;
+      grid-auto-rows: max-content;
+      align-content: start;
+    }
+
     #cts-shopify-reporting .cts-card,
     #cts-shopify-reporting .cts-kpi,
     #cts-shopify-reporting .cts-tile,
     #cts-shopify-reporting .cts-insight,
     #cts-shopify-reporting .cts-file-field {
-      overflow: hidden;
+      overflow: visible;
     }
 
     #cts-shopify-reporting .cts-analysis-wrap,
@@ -2256,7 +2270,7 @@
       display: grid;
       align-content: start;
       gap: var(--cts-space-sm);
-      padding: var(--cts-space-lg) var(--cts-space-lg) calc(var(--cts-space-lg) + 2px);
+      padding: var(--cts-space-lg) var(--cts-space-lg) calc(var(--cts-space-lg) + 8px);
     }
 
     #cts-shopify-reporting .cts-card h4 {
@@ -2290,7 +2304,7 @@
 
     #cts-shopify-reporting .cts-file-field {
       gap: 10px;
-      padding: var(--cts-space-md) var(--cts-space-md) calc(var(--cts-space-md) + 2px);
+      padding: var(--cts-space-md) var(--cts-space-md) calc(var(--cts-space-md) + 10px);
       align-content: start;
     }
 
@@ -2305,6 +2319,10 @@
     #cts-shopify-reporting .cts-import-queue-wrap table + .cts-note,
     #cts-shopify-reporting .cts-import-queue-wrap + .cts-note {
       margin-top: var(--cts-space-xs);
+    }
+
+    #cts-shopify-reporting .cts-import-queue-wrap {
+      padding-bottom: var(--cts-space-xs);
     }
 
     #cts-shopify-reporting .cts-dashboard-filter-grid {
@@ -2345,6 +2363,97 @@
     #cts-shopify-reporting .cts-view[data-view='asin-dashboard'] section.cts-card,
     #cts-shopify-reporting .cts-view[data-view='search-dashboard'] section.cts-card {
       margin: 0;
+    }
+
+    #cts-shopify-reporting .cts-view[data-view='asin-import'].is-active,
+    #cts-shopify-reporting .cts-view[data-view='search-import'].is-active,
+    #cts-shopify-reporting .cts-view[data-view='search-warehouse'].is-active,
+    #cts-shopify-reporting .cts-view[data-view='search-analysis'].is-active,
+    #cts-shopify-reporting .cts-view[data-view='asin-analysis'].is-active {
+      gap: var(--cts-space-xl);
+      padding-bottom: calc(var(--cts-space-xl) + 8px);
+    }
+
+    /* Sitewide cutoff/accessibility hardening (UI only) */
+    #cts-shopify-reporting .cts-card,
+    #cts-shopify-reporting .cts-file-field,
+    #cts-shopify-reporting .cts-form-meta,
+    #cts-shopify-reporting .cts-stack,
+    #cts-shopify-reporting .cts-file-grid,
+    #cts-shopify-reporting .cts-dashboard-main-grid,
+    #cts-shopify-reporting .cts-dashboard-filter-grid,
+    #cts-shopify-reporting .cts-home-grid,
+    #cts-shopify-reporting .cts-home-filter-grid,
+    #cts-shopify-reporting .cts-analysis-wrap,
+    #cts-shopify-reporting .cts-warehouse-table-wrap,
+    #cts-shopify-reporting .cts-import-queue-wrap {
+      min-height: 0;
+    }
+
+    #cts-shopify-reporting .cts-card,
+    #cts-shopify-reporting .cts-file-field {
+      height: auto;
+    }
+
+    #cts-shopify-reporting .cts-view[data-view='home-dashboard'] .cts-card,
+    #cts-shopify-reporting .cts-view[data-view='asin-dashboard'] .cts-card,
+    #cts-shopify-reporting .cts-view[data-view='search-dashboard'] .cts-card,
+    #cts-shopify-reporting .cts-view[data-view='asin-import'] .cts-card,
+    #cts-shopify-reporting .cts-view[data-view='search-import'] .cts-card,
+    #cts-shopify-reporting .cts-view[data-view='search-warehouse'] .cts-card,
+    #cts-shopify-reporting .cts-view[data-view='search-analysis'] .cts-card,
+    #cts-shopify-reporting .cts-view[data-view='asin-analysis'] .cts-card {
+      overflow: visible;
+    }
+
+    #cts-shopify-reporting .cts-view[data-view='asin-import'] .cts-card,
+    #cts-shopify-reporting .cts-view[data-view='search-import'] .cts-card {
+      padding-bottom: calc(var(--cts-space-lg) + 14px);
+    }
+
+    #cts-shopify-reporting .cts-view[data-view='asin-import'] .cts-file-field,
+    #cts-shopify-reporting .cts-view[data-view='search-import'] .cts-file-field {
+      padding-bottom: calc(var(--cts-space-md) + 14px);
+      overflow: visible;
+    }
+
+    #cts-shopify-reporting .cts-view[data-view='asin-import'] .cts-import-queue-wrap,
+    #cts-shopify-reporting .cts-view[data-view='search-import'] .cts-import-queue-wrap {
+      overflow: auto;
+      max-height: none;
+      padding-bottom: var(--cts-space-sm);
+    }
+
+    #cts-shopify-reporting .cts-view[data-view='asin-import'] .cts-form-meta,
+    #cts-shopify-reporting .cts-view[data-view='search-import'] .cts-form-meta {
+      row-gap: var(--cts-space-sm);
+      align-items: center;
+    }
+
+    /* Final anti-cutoff pass for variable-height content */
+    #cts-shopify-reporting .cts-view.is-active > section.cts-card,
+    #cts-shopify-reporting .cts-view.is-active .cts-file-field,
+    #cts-shopify-reporting .cts-view.is-active .cts-stack,
+    #cts-shopify-reporting .cts-view.is-active .cts-form-meta,
+    #cts-shopify-reporting .cts-view.is-active .cts-filter-row {
+      min-height: 0;
+      height: auto;
+      overflow: visible;
+    }
+
+    #cts-shopify-reporting .cts-view.is-active .cts-card > *,
+    #cts-shopify-reporting .cts-view.is-active .cts-file-field > * {
+      min-height: 0;
+      max-width: 100%;
+    }
+
+    #cts-shopify-reporting .cts-view[data-view='asin-import'] .cts-stack,
+    #cts-shopify-reporting .cts-view[data-view='search-import'] .cts-stack {
+      display: grid;
+      grid-auto-flow: row;
+      grid-auto-rows: max-content;
+      align-content: start;
+      gap: var(--cts-space-md);
     }
 
     /* ASIN Warehouse: fixed top controls, internal table scroll only */
