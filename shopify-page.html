@@ -1788,7 +1788,10 @@
       min-width: calc(1590px + var(--cts-sqp-keyword-col-w));
     }
 
-    #cts-shopify-reporting [data-table='sqp-warehouse-table'].cts-warehouse-shared-table th,
+    #cts-shopify-reporting [data-table='sqp-warehouse-table'].cts-warehouse-shared-table th {
+      overflow: visible;
+    }
+
     #cts-shopify-reporting [data-table='sqp-warehouse-table'].cts-warehouse-shared-table td {
       overflow: hidden;
     }
@@ -1809,49 +1812,103 @@
       text-overflow: ellipsis;
     }
 
-    #cts-shopify-reporting [data-table='sqp-warehouse-table'].cts-warehouse-shared-table .cts-warehouse-th-filter {
+    #cts-shopify-reporting [data-table='sqp-warehouse-table'].cts-warehouse-shared-table .cts-warehouse-th-inline {
       display: flex;
-      flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 6px;
+      gap: 8px;
       width: 100%;
       min-width: 0;
     }
 
     #cts-shopify-reporting [data-table='sqp-warehouse-table'].cts-warehouse-shared-table .cts-warehouse-th-title {
       display: block;
-      width: 100%;
       text-align: center;
       line-height: 1.15;
     }
 
-    #cts-shopify-reporting [data-table='sqp-warehouse-table'].cts-warehouse-shared-table .cts-warehouse-th-select {
-      width: 100%;
-      min-height: 30px;
-      height: 30px;
+    #cts-shopify-reporting [data-table='sqp-warehouse-table'].cts-warehouse-shared-table .cts-warehouse-th-menu {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      margin: 0;
+    }
+
+    #cts-shopify-reporting [data-table='sqp-warehouse-table'].cts-warehouse-shared-table .cts-warehouse-th-menu > summary {
+      list-style: none;
+    }
+
+    #cts-shopify-reporting [data-table='sqp-warehouse-table'].cts-warehouse-shared-table .cts-warehouse-th-menu > summary::-webkit-details-marker {
+      display: none;
+    }
+
+    #cts-shopify-reporting [data-table='sqp-warehouse-table'].cts-warehouse-shared-table .cts-warehouse-th-icon {
+      width: 22px;
+      height: 22px;
+      min-width: 22px;
+      min-height: 22px;
+      border: 1px solid var(--primary-200);
+      border-radius: 999px;
+      background: var(--surface);
+      color: var(--primary-700);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      padding: 0;
+      line-height: 1;
+      font-size: 14px;
+    }
+
+    #cts-shopify-reporting [data-table='sqp-warehouse-table'].cts-warehouse-shared-table .cts-warehouse-th-icon svg {
+      width: 12px;
+      height: 12px;
+      display: block;
+    }
+
+    #cts-shopify-reporting [data-table='sqp-warehouse-table'].cts-warehouse-shared-table .cts-warehouse-th-icon:hover,
+    #cts-shopify-reporting [data-table='sqp-warehouse-table'].cts-warehouse-shared-table .cts-warehouse-th-icon:focus-visible {
+      outline: none;
+      border-color: var(--primary-400);
+      background: var(--primary-100);
+    }
+
+    #cts-shopify-reporting [data-table='sqp-warehouse-table'].cts-warehouse-shared-table .cts-warehouse-th-menu-panel {
+      position: absolute;
+      top: calc(100% + 6px);
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 120;
+      background: var(--surface);
+      border: 1px solid var(--cts-line);
+      border-radius: 10px;
+      box-shadow: 0 8px 16px rgba(15, 23, 42, 0.12);
+      padding: 6px;
+      min-width: 130px;
       max-width: 170px;
-      padding: 0 8px;
+    }
+
+    #cts-shopify-reporting [data-table='sqp-warehouse-table'].cts-warehouse-shared-table th:nth-child(n+4) .cts-warehouse-th-menu-panel {
+      min-width: 118px;
+      max-width: 130px;
+    }
+
+    #cts-shopify-reporting [data-table='sqp-warehouse-table'].cts-warehouse-shared-table .cts-warehouse-th-menu-panel .cts-select {
+      width: 100%;
+      min-height: 28px;
+      height: 28px;
       font-size: 11px;
       font-weight: 600;
       letter-spacing: normal;
       text-transform: none;
-      border-radius: 10px;
-      background: var(--surface);
+      border-radius: 8px;
+      padding: 0 8px;
     }
 
-    #cts-shopify-reporting [data-table='sqp-warehouse-table'].cts-warehouse-shared-table th:nth-child(n+4) .cts-warehouse-th-select {
-      max-width: 130px;
-    }
-
-    #cts-shopify-reporting [data-table='sqp-warehouse-table'].cts-warehouse-shared-table .cts-warehouse-th-toggle {
-      min-height: 30px;
-      height: 30px;
-      padding: 0 10px;
-      border-radius: 10px;
-      font-size: 11px;
-      letter-spacing: normal;
-      text-transform: none;
+    #cts-shopify-reporting [data-table='sqp-warehouse-table'].cts-warehouse-shared-table .cts-warehouse-th-collapse {
+      font-size: 16px;
+      font-weight: 700;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
     }
 
     #cts-shopify-reporting [data-table='sqp-warehouse-table'].cts-warehouse-shared-table.is-date-collapsed th:nth-child(2),
@@ -2803,7 +2860,6 @@
             <div>
               <h3>Home Dashboard</h3>
             </div>
-            <div class="cts-code">HOME</div>
           </div>
 
           <section class="cts-card">
@@ -2923,7 +2979,6 @@
             <div>
               <h3>Search Query Performance Dashboard</h3>
             </div>
-            <div class="cts-code">SEARCH / DASHBOARD</div>
           </div>
 
           <section class="cts-card">
@@ -3022,7 +3077,6 @@
             <div>
               <h3>Search Query Performance Import</h3>
             </div>
-            <div class="cts-code">SQP / IMPORT</div>
           </div>
 
           <section class="cts-card cts-stack">
@@ -3070,7 +3124,6 @@
             <div>
               <h3>Search Query Performance Warehouse</h3>
             </div>
-            <div class="cts-code">SEARCH / WAREHOUSE</div>
           </div>
 
           <section class="cts-card">
@@ -3089,7 +3142,6 @@
             <div class="cts-view-head-actions">
               <button class="cts-code" type="button" data-action="export-sqp-analysis-csv">Export CSV</button>
               <button class="cts-code" type="button" data-action="export-sqp-analysis-xlsx">Export Excel</button>
-              <div class="cts-code">SEARCH / ANALYSIS</div>
             </div>
           </div>
 
@@ -3141,7 +3193,6 @@
             <div>
               <h3>ASIN Profitability Dashboard</h3>
             </div>
-            <div class="cts-code">ASIN / DASHBOARD</div>
           </div>
 
           <section class="cts-card">
@@ -3223,7 +3274,6 @@
             <div>
               <h3>ASIN Profitability Import</h3>
             </div>
-            <div class="cts-code">ASIN / IMPORT</div>
           </div>
 
           <section class="cts-card">
@@ -3285,7 +3335,6 @@
             <div>
               <h3>ASIN Profitability Warehouse</h3>
             </div>
-            <div class="cts-code">ASIN / WAREHOUSE</div>
           </div>
 
           <section class="cts-card cts-warehouse-controls">
@@ -3314,7 +3363,6 @@
             <div class="cts-view-head-actions">
               <button class="cts-code" type="button" data-action="export-asin-analysis-csv">Export CSV</button>
               <button class="cts-code" type="button" data-action="export-asin-analysis-xlsx">Export Excel</button>
-              <div class="cts-code">ASIN / ANALYSIS</div>
             </div>
           </div>
 
@@ -6806,31 +6854,60 @@
             + "<option value='asc' " + (selectedValue === "asc" ? "selected" : "") + ">Lowest</option>";
         }
 
+        function filterIconHtml() {
+          return "<svg viewBox='0 0 24 24' fill='none' aria-hidden='true'>"
+            + "<path d='M4 6h16l-6.5 7v5l-3 1v-6L4 6z' stroke='currentColor' stroke-width='1.8' stroke-linejoin='round'/>"
+            + "</svg>";
+        }
+
         function metricHeader(label, key) {
-          return "<th><div class='cts-warehouse-th-filter'>"
+          return "<th><div class='cts-warehouse-th-inline'>"
             + "<span class='cts-warehouse-th-title'>" + escapeHtml(label) + "</span>"
-            + "<select class='cts-select cts-select-compact cts-warehouse-th-select' data-action='sqp-warehouse-sort' data-key='" + escapeAttr(key) + "'>"
+            + "<details class='cts-warehouse-th-menu'>"
+            + "<summary class='cts-warehouse-th-icon' title='Sort'>"
+            + filterIconHtml()
+            + "</summary>"
+            + "<div class='cts-warehouse-th-menu-panel'>"
+            + "<select class='cts-select cts-select-compact' data-action='sqp-warehouse-sort' data-key='" + escapeAttr(key) + "'>"
             + sortOptionsFor(key)
             + "</select>"
+            + "</div>"
+            + "</details>"
             + "</div></th>";
         }
 
         var headerHtml = ""
-          + "<th><div class='cts-warehouse-th-filter'>"
+          + "<th><div class='cts-warehouse-th-inline'>"
           + "<span class='cts-warehouse-th-title'>Week</span>"
-          + "<select class='cts-select cts-select-compact cts-warehouse-th-select' data-action='sqp-warehouse-week-filter'>"
+          + "<details class='cts-warehouse-th-menu'>"
+          + "<summary class='cts-warehouse-th-icon' title='Filter Week'>"
+          + filterIconHtml()
+          + "</summary>"
+          + "<div class='cts-warehouse-th-menu-panel'>"
+          + "<select class='cts-select cts-select-compact' data-action='sqp-warehouse-week-filter'>"
           + weekOptions
-          + "</select></div></th>"
-          + "<th><div class='cts-warehouse-th-filter'>"
+          + "</select>"
+          + "</div>"
+          + "</details>"
+          + "</div></th>"
+          + "<th><div class='cts-warehouse-th-inline'>"
           + "<span class='cts-warehouse-th-title'>Date Covered</span>"
-          + "<button type='button' class='cts-code cts-warehouse-th-toggle' data-action='sqp-warehouse-toggle-date'>"
-          + (dateCoveredCollapsed ? "Show" : "Collapse")
+          + "<button type='button' class='cts-warehouse-th-icon cts-warehouse-th-collapse' data-action='sqp-warehouse-toggle-date' title='Toggle Date Covered'>"
+          + (dateCoveredCollapsed ? "+" : "-")
           + "</button></div></th>"
-          + "<th><div class='cts-warehouse-th-filter'>"
+          + "<th><div class='cts-warehouse-th-inline'>"
           + "<span class='cts-warehouse-th-title'>Keyword</span>"
-          + "<select class='cts-select cts-select-compact cts-warehouse-th-select' data-action='sqp-warehouse-keyword-type-filter'>"
+          + "<details class='cts-warehouse-th-menu'>"
+          + "<summary class='cts-warehouse-th-icon' title='Filter Keyword Type'>"
+          + filterIconHtml()
+          + "</summary>"
+          + "<div class='cts-warehouse-th-menu-panel'>"
+          + "<select class='cts-select cts-select-compact' data-action='sqp-warehouse-keyword-type-filter'>"
           + keywordTypeOptions
-          + "</select></div></th>"
+          + "</select>"
+          + "</div>"
+          + "</details>"
+          + "</div></th>"
           + metricHeader("Search Query Volume", "search_query_volume")
           + metricHeader("Impressions Total", "impressions_total")
           + metricHeader("Impressions Brand Share %", "impressions_brand_share_pct")
