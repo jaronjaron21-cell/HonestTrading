@@ -2559,6 +2559,29 @@
       align-items: center;
     }
 
+    #cts-shopify-reporting .cts-view[data-view='search-import'] .cts-search-import-layout {
+      display: grid;
+      grid-template-columns: minmax(320px, 560px) minmax(0, 1fr);
+      align-items: start;
+      gap: var(--cts-space-lg);
+    }
+
+    #cts-shopify-reporting .cts-view[data-view='search-import'] .cts-search-import-left,
+    #cts-shopify-reporting .cts-view[data-view='search-import'] .cts-search-import-right {
+      min-width: 0;
+      display: grid;
+      align-content: start;
+      gap: var(--cts-space-md);
+    }
+
+    #cts-shopify-reporting .cts-view[data-view='search-import'] .cts-search-import-left .cts-file-grid {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    #cts-shopify-reporting .cts-view[data-view='search-import'] .cts-search-import-right .cts-import-queue-wrap {
+      margin-top: 0;
+    }
+
     /* Scroll ownership + dead-zone prevention */
     #cts-shopify-reporting .cts-view.is-active .cts-analysis-wrap,
     #cts-shopify-reporting .cts-view.is-active .cts-import-queue-wrap,
@@ -2728,6 +2751,10 @@
 
       #cts-shopify-reporting .cts-view[data-view='search-warehouse'] .cts-filter-row {
         flex-wrap: wrap !important;
+      }
+
+      #cts-shopify-reporting .cts-view[data-view='search-import'] .cts-search-import-layout {
+        grid-template-columns: 1fr;
       }
     }
 
@@ -3095,22 +3122,26 @@
           <section class="cts-card">
             <h4>Bulk Upload</h4>
 
-            <form class="cts-stack" data-form="search-import">
-              <div class="cts-file-grid">
-                <label class="cts-file-field" data-dropzone="sqp-import">
-                  <span>SQP Files *</span>
-                  <input type="file" data-file="sqp" required multiple accept=".csv,.xlsx,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv" />
-                  <small>Accepted: CSV, XLSX. Select or drag/drop multiple files.</small>
-                  <div class="cts-import-file-list" data-import-file-list="sqp"></div>
-                </label>
-              </div>
+            <form class="cts-stack cts-search-import-layout" data-form="search-import">
+              <div class="cts-search-import-left">
+                <div class="cts-file-grid">
+                  <label class="cts-file-field" data-dropzone="sqp-import">
+                    <span>SQP Files *</span>
+                    <input type="file" data-file="sqp" required multiple accept=".csv,.xlsx,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv" />
+                    <small>Accepted: CSV, XLSX. Select or drag/drop multiple files.</small>
+                    <div class="cts-import-file-list" data-import-file-list="sqp"></div>
+                  </label>
+                </div>
 
-              <div class="cts-form-meta">
-                <button class="cts-btn" type="button" data-action="search-import-upload" disabled>Process Import</button>
-                <span class="cts-import-msg" data-search-import-msg>Waiting for file selection.</span>
+                <div class="cts-form-meta">
+                  <button class="cts-btn" type="button" data-action="search-import-upload" disabled>Process Import</button>
+                  <span class="cts-import-msg" data-search-import-msg>Waiting for file selection.</span>
+                </div>
               </div>
-              <div class="cts-import-queue-wrap">
-                <table class="cts-table" data-table="sqp-import-queue"></table>
+              <div class="cts-search-import-right">
+                <div class="cts-import-queue-wrap">
+                  <table class="cts-table" data-table="sqp-import-queue"></table>
+                </div>
               </div>
             </form>
           </section>
@@ -3298,8 +3329,6 @@
 
           <section class="cts-card">
             <h4>Bulk Upload</h4>
-            <p class="cts-note">Accepted files: CSV and XLSX. Filename format: <code>{ASIN}_{AMZ|SB|PPC}_F{1..26}</code>.</p>
-
             <form class="cts-stack" data-form="asin-import">
               <div class="cts-file-grid">
                 <label class="cts-file-field" data-dropzone="asin-import">
@@ -3323,7 +3352,7 @@
           </section>
 
           <section class="cts-card">
-            <h4>Processing Checklist (ASIN + Fortnight)</h4>
+            <h4>Processing Checklist</h4>
             <table class="cts-table" data-table="asin-import-checklist"></table>
           </section>
         </article>
@@ -8597,16 +8626,19 @@
 
         var groups = buildAsinBulkGroupRows(asinImportQueues.bulk);
         if (!groups.length) {
-          table.innerHTML = "<thead><tr><th>ASIN</th><th>Fortnight</th><th>Amazon Data</th><th>Sellerboard Data</th><th>PPC Data</th><th>Readiness</th></tr></thead>"
+          table.innerHTML = "<thead><tr><th>ASIN</th><th>Fortnight</th><th>Amazon Data</th><th>Sellerboard Data</th><th>PPC Data</th><th>Status</th></tr></thead>"
             + "<tbody><tr><td colspan='6'>No mapped ASIN/Fortnight groups yet.</td></tr></tbody>";
           return;
         }
 
         var rowsHtml = groups.map(function (group) {
-          var readinessClass = group.ready ? "cts-status is-ok" : "cts-status is-warn";
-          var readinessText = group.ready
-            ? "Ready"
-            : ("Missing: " + group.missingRequired.join(", "));
+          var availableSources = [group.hasAmz, group.hasSb, group.hasPpc].filter(function (flag) {
+            return !!flag;
+          }).length;
+          var readinessClass = availableSources > 0 ? "cts-status is-ok" : "cts-status is-neutral";
+          var readinessText = availableSources > 0
+            ? ("Ready (" + availableSources + "/3)")
+            : "Pending";
           return "<tr>"
             + "<td>" + escapeHtml(group.asin) + "</td>"
             + "<td>" + escapeHtml(toFortnightLabel(group.fortnight) || "") + "</td>"
@@ -8617,7 +8649,7 @@
             + "</tr>";
         }).join("");
 
-        table.innerHTML = "<thead><tr><th>ASIN</th><th>Fortnight</th><th>Amazon Data</th><th>Sellerboard Data</th><th>PPC Data</th><th>Readiness</th></tr></thead><tbody>"
+        table.innerHTML = "<thead><tr><th>ASIN</th><th>Fortnight</th><th>Amazon Data</th><th>Sellerboard Data</th><th>PPC Data</th><th>Status</th></tr></thead><tbody>"
           + rowsHtml + "</tbody>";
       }
 
@@ -8853,23 +8885,8 @@
           setAsinImportFileStatus(fileKey, ASIN_IMPORT_IMPORTING_TEXT, "");
           refreshAsinImportFileControl(fileKey);
 
-          var groupRows = buildAsinBulkGroupRows(queue);
-          var eligibleGroups = {};
-          groupRows.forEach(function (group) {
-            if (group.ready) eligibleGroups[group.key] = true;
-          });
-
-          validRows.forEach(function (row) {
-            if (!eligibleGroups[row.groupKey]) {
-              row.status = "Skipped";
-              row.message = "Missing required files (Amazon + Sellerboard) for this ASIN/Fortnight.";
-            }
-          });
-
           var tagOrder = { AMZ: 1, SB: 2, PPC: 3 };
-          var processingRows = validRows.filter(function (row) {
-            return row.status !== "Skipped";
-          }).slice().sort(function (left, right) {
+          var processingRows = validRows.slice().sort(function (left, right) {
             var asinDiff = String(left.asin || "").localeCompare(String(right.asin || ""), undefined, { sensitivity: "base" });
             if (asinDiff !== 0) return asinDiff;
             var fortnightDiff = toNumber(left.fortnight) - toNumber(right.fortnight);
