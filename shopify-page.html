@@ -3419,6 +3419,7 @@
       };
       var sqpImportQueue = [];
       var searchImportBusy = false;
+      var sqpCleanupSummary = null;
       var SQP_ALL_KEYWORDS_VALUE = "__all_keywords__";
       var SQP_ALL_KEYWORDS_LABEL = "All Keywords";
       var SQP_ALL_KEYWORD_TYPES_VALUE = "__all_keyword_types__";
@@ -5097,6 +5098,7 @@
         await loadSqpKeywordsState();
         await loadSqpWarehouseState();
         await loadSqpImportAuditState();
+        cleanupSqpWarehouseAgainstKeywordList();
       }
 
       function setSqpKeywordMessage(text, type) {
@@ -5112,6 +5114,72 @@
         var node = root.querySelector("[data-search-import-summary]");
         if (!node) return;
         node.innerHTML = htmlText || "";
+      }
+
+      function getManagedSqpKeywordMap() {
+        var managed = {};
+        sqpKeywords.forEach(function (item) {
+          if (!item) return;
+          var keyword = collapseWhitespace(item.keyword);
+          var key = normalizeKeywordKey(keyword);
+          if (!key || Object.prototype.hasOwnProperty.call(managed, key)) return;
+          managed[key] = keyword;
+        });
+        return managed;
+      }
+
+      function formatSqpCleanupSummaryHtml() {
+        if (!sqpCleanupSummary) return "";
+        return "Cleanup: "
+          + "Checked stored keywords <strong>" + toNumber(sqpCleanupSummary.checkedKeywords).toLocaleString() + "</strong> | "
+          + "Valid kept <strong>" + toNumber(sqpCleanupSummary.validKeywordsKept).toLocaleString() + "</strong> | "
+          + "Invalid removed <strong>" + toNumber(sqpCleanupSummary.invalidKeywordsRemoved).toLocaleString() + "</strong> | "
+          + "Records removed <strong>" + toNumber(sqpCleanupSummary.affectedRecordsRemoved).toLocaleString() + "</strong>";
+      }
+
+      function cleanupSqpWarehouseAgainstKeywordList() {
+        var managedKeywordMap = getManagedSqpKeywordMap();
+        var rows = Array.isArray(sqpWarehouse) ? sqpWarehouse : [];
+        var seenKeywords = {};
+        var keptKeywords = {};
+        var removedKeywords = {};
+        var keptRows = [];
+        var removedRowsCount = 0;
+
+        rows.forEach(function (row) {
+          var keyword = collapseWhitespace(row && row.keyword);
+          var key = normalizeKeywordKey(keyword);
+          if (key && !Object.prototype.hasOwnProperty.call(seenKeywords, key)) {
+            seenKeywords[key] = keyword || key;
+          }
+
+          if (!key || !Object.prototype.hasOwnProperty.call(managedKeywordMap, key)) {
+            removedRowsCount += 1;
+            if (key && !Object.prototype.hasOwnProperty.call(removedKeywords, key)) {
+              removedKeywords[key] = keyword || key;
+            }
+            return;
+          }
+
+          if (!Object.prototype.hasOwnProperty.call(keptKeywords, key)) {
+            keptKeywords[key] = managedKeywordMap[key];
+          }
+          keptRows.push(row);
+        });
+
+        if (removedRowsCount > 0) {
+          sqpWarehouse = keptRows;
+          saveSqpWarehouseState();
+        }
+
+        sqpCleanupSummary = {
+          checkedKeywords: Object.keys(seenKeywords).length,
+          validKeywordsKept: Object.keys(keptKeywords).length,
+          invalidKeywordsRemoved: Object.keys(removedKeywords).length,
+          affectedRecordsRemoved: removedRowsCount
+        };
+
+        return sqpCleanupSummary;
       }
 
       function sortSqpKeywords() {
@@ -5544,8 +5612,14 @@
         });
         if (sqpKeywords.length === before) return;
         saveSqpKeywordsState();
+        var cleanupResult = cleanupSqpWarehouseAgainstKeywordList();
         renderSqpKeywordList();
-        setSqpKeywordMessage("Keyword deleted. Historical warehouse rows are unchanged.", "");
+        var removedRecords = cleanupResult ? toNumber(cleanupResult.affectedRecordsRemoved) : 0;
+        if (removedRecords > 0) {
+          setSqpKeywordMessage("Keyword deleted. Removed " + removedRecords.toLocaleString() + " SQP warehouse records not in your keyword list.", "ok");
+        } else {
+          setSqpKeywordMessage("Keyword deleted.", "ok");
+        }
         fillSearchTables();
       }
 
@@ -8606,6 +8680,13 @@
       }
 
       function renderSearchImportSummary() {
+        var cleanupSummary = formatSqpCleanupSummaryHtml();
+        function withCleanupSummary(contentHtml) {
+          if (!cleanupSummary) return contentHtml || "";
+          if (!contentHtml) return cleanupSummary;
+          return cleanupSummary + "<br>" + contentHtml;
+        }
+
         if (sqpImportQueue.length) {
           var total = sqpImportQueue.length;
           var valid = sqpImportQueue.filter(function (row) { return row.valid; }).length;
@@ -8614,7 +8695,7 @@
           var rejected = sqpImportQueue.filter(function (row) { return row.status === "Rejected"; }).length;
           var duplicate = sqpImportQueue.filter(function (row) { return row.status === "Duplicate"; }).length;
           var inProgress = sqpImportQueue.filter(function (row) { return row.status === "Importing"; }).length;
-          setSearchImportSummary(
+          setSearchImportSummary(withCleanupSummary(
             "Total selected: <strong>" + total + "</strong> | "
             + "Valid: <strong>" + valid + "</strong> | "
             + "Imported: <strong>" + imported + "</strong> | "
@@ -8622,14 +8703,14 @@
             + "Rejected: <strong>" + rejected + "</strong>"
             + " | Duplicate: <strong>" + duplicate + "</strong>"
             + (inProgress ? " | Processing: <strong>" + inProgress + "</strong>" : "")
-          );
+          ));
           return;
         }
 
         var key = getSearchImportStorageKey(searchImportSelection.selectedWeek);
         var audit = sqpImportAudit[key];
         if (!audit) {
-          setSearchImportSummary("");
+          setSearchImportSummary(withCleanupSummary(""));
           return;
         }
 
@@ -8637,7 +8718,7 @@
           ? audit.unmatched_keywords.map(function (item) { return escapeHtml(item); }).join(", ")
           : "None";
 
-        setSearchImportSummary(
+        setSearchImportSummary(withCleanupSummary(
           "Rows in file: <strong>" + toNumber(audit.total_rows).toLocaleString() + "</strong> | "
           + "Tracked keywords (all/active): <strong>" + toNumber(audit.total_keywords_tracked).toLocaleString()
           + " / " + toNumber(audit.total_keywords_active).toLocaleString() + "</strong> | "
@@ -8647,7 +8728,7 @@
           + "Rows imported: <strong>" + toNumber(audit.rows_imported_count).toLocaleString() + "</strong> | "
           + "File unique keywords: <strong>" + toNumber(audit.file_unique_keywords_count).toLocaleString() + "</strong><br>"
           + "Keywords not found: " + unmatched
-        );
+        ));
       }
 
       function renderSearchImportChecklist() {
