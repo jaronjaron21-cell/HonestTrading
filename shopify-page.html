@@ -2005,7 +2005,9 @@
       max-height: 100%;
       overflow-y: auto;
       overflow-x: hidden;
-      overscroll-behavior: contain;
+      overscroll-behavior: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-gutter: stable;
       padding-right: 4px;
     }
 
@@ -2191,8 +2193,9 @@
       max-width: 100%;
       min-width: 0;
       overflow-x: auto;
-      overflow-y: auto;
-      overscroll-behavior: contain;
+      overflow-y: visible;
+      overscroll-behavior: auto;
+      -webkit-overflow-scrolling: touch;
     }
 
     #cts-shopify-reporting .cts-table {
@@ -2430,6 +2433,32 @@
       align-items: center;
     }
 
+    /* Scroll ownership + dead-zone prevention */
+    #cts-shopify-reporting .cts-view.is-active .cts-analysis-wrap,
+    #cts-shopify-reporting .cts-view.is-active .cts-import-queue-wrap,
+    #cts-shopify-reporting .cts-view.is-active .cts-card > div[style*='overflow:auto'] {
+      overflow-x: auto;
+      overflow-y: visible;
+      max-height: none;
+      overscroll-behavior: auto;
+    }
+
+    #cts-shopify-reporting .cts-view[data-view='search-warehouse'] .cts-warehouse-table-wrap {
+      overflow-x: auto;
+      overflow-y: visible;
+      max-height: none;
+      overscroll-behavior: auto;
+    }
+
+    #cts-shopify-reporting .cts-view[data-view='asin-dashboard'] .cts-dashboard-main-grid > .cts-card > div[style*='overflow:auto'],
+    #cts-shopify-reporting .cts-view[data-view='search-dashboard'] .cts-dashboard-main-grid > .cts-card > div[style*='overflow:auto'],
+    #cts-shopify-reporting .cts-view[data-view='home-dashboard'] .cts-card > div[style*='overflow:auto'] {
+      overflow-x: auto !important;
+      overflow-y: visible !important;
+      max-height: none !important;
+      overscroll-behavior: auto !important;
+    }
+
     /* Final anti-cutoff pass for variable-height content */
     #cts-shopify-reporting .cts-view.is-active > section.cts-card,
     #cts-shopify-reporting .cts-view.is-active .cts-file-field,
@@ -2461,6 +2490,7 @@
       height: 100%;
       min-height: 0;
       overflow: hidden;
+      overscroll-behavior: auto;
       display: grid;
       grid-template-rows: auto auto minmax(0, 1fr);
       gap: 12px;
@@ -2496,7 +2526,8 @@
       height: 100%;
       max-height: 100%;
       overflow: auto;
-      overscroll-behavior: contain;
+      overscroll-behavior: auto;
+      -webkit-overflow-scrolling: touch;
       border-radius: 14px;
     }
 
@@ -4698,6 +4729,46 @@
           if (!commandPaletteState.open) return;
           positionCommandPalettePopover();
         }, true);
+      }
+
+      function initScrollDeadZoneFixes() {
+        var asinWarehouseView = root.querySelector(".cts-view[data-view='asin-warehouse']");
+        if (!asinWarehouseView) return;
+        if (asinWarehouseView.dataset.scrollRelayBound === "1") return;
+        asinWarehouseView.dataset.scrollRelayBound = "1";
+
+        var tableWrap = asinWarehouseView.querySelector(".cts-warehouse-table-wrap");
+        if (!tableWrap) return;
+
+        var relaySources = asinWarehouseView.querySelectorAll(".cts-warehouse-topbar, .cts-warehouse-controls");
+        if (!relaySources.length) return;
+
+        var relayWheel = function (event) {
+          if (!event) return;
+          var target = event.target;
+          if (target && target.closest("select,input,textarea,button,a,[contenteditable='true']")) return;
+
+          var deltaX = toNumber(event.deltaX);
+          var deltaY = toNumber(event.deltaY);
+          if (!deltaX && !deltaY) return;
+
+          if (Math.abs(deltaY) >= Math.abs(deltaX)) {
+            var maxTop = Math.max(0, tableWrap.scrollHeight - tableWrap.clientHeight);
+            if (maxTop <= 0) return;
+            tableWrap.scrollTop = Math.max(0, Math.min(maxTop, tableWrap.scrollTop + deltaY));
+            event.preventDefault();
+            return;
+          }
+
+          var maxLeft = Math.max(0, tableWrap.scrollWidth - tableWrap.clientWidth);
+          if (maxLeft <= 0) return;
+          tableWrap.scrollLeft = Math.max(0, Math.min(maxLeft, tableWrap.scrollLeft + deltaX));
+          event.preventDefault();
+        };
+
+        relaySources.forEach(function (node) {
+          node.addEventListener("wheel", relayWheel, { passive: false });
+        });
       }
 
       function formatFreshnessFromISO(isoText) {
@@ -10740,6 +10811,7 @@
       initHomeSnapshotControls();
       initSidebarToggle();
       initCommandPalette();
+      initScrollDeadZoneFixes();
       fillHomeView();
       fillSearchTables();
       refreshAsinProfitabilityViews();
