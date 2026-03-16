@@ -916,6 +916,12 @@
       background: #fff2e2;
     }
 
+    #cts-shopify-reporting .cts-status.is-neutral {
+      color: #5a6a82;
+      border-color: #cdd8ec;
+      background: #f1f5ff;
+    }
+
     #cts-shopify-reporting .cts-small-grid {
       display: grid;
       grid-template-columns: repeat(3, minmax(120px, 1fr));
@@ -966,6 +972,12 @@
       display: grid;
       gap: 6px;
       min-width: 0;
+    }
+
+    #cts-shopify-reporting .cts-file-field.is-dragover {
+      border-color: var(--primary-500);
+      background: var(--primary-50);
+      box-shadow: 0 0 0 3px rgba(30, 86, 230, 0.16);
     }
 
     #cts-shopify-reporting .cts-file-field span {
@@ -2965,13 +2977,6 @@
             <div class="cts-code">SQP / IMPORT</div>
           </div>
 
-          <section class="cts-card">
-            <div class="cts-filter-row">
-              <strong>Week</strong>
-              <select class="cts-select" style="flex:1;min-width:0;" data-control="search-import-week"></select>
-            </div>
-          </section>
-
           <section class="cts-card cts-stack">
             <h4>Manage Keywords</h4>
             <div class="cts-filter-row">
@@ -2985,15 +2990,15 @@
           </section>
 
           <section class="cts-card">
-            <h4>Required Files</h4>
-            <p class="cts-note">Accepted files: CSV and XLSX.</p>
+            <h4>Bulk Upload</h4>
+            <p class="cts-note">Accepted files: CSV and XLSX. Filename format: <code>SQP_W{1..52}</code>.</p>
 
             <form class="cts-stack" data-form="search-import">
               <div class="cts-file-grid">
-                <label class="cts-file-field">
-                  <span>SQP Data *</span>
+                <label class="cts-file-field" data-dropzone="sqp-import">
+                  <span>SQP Files *</span>
                   <input type="file" data-file="sqp" required multiple accept=".csv,.xlsx,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv" />
-                  <small>Accepted: CSV, XLSX</small>
+                  <small>Accepted: CSV, XLSX. Select or drag/drop multiple files.</small>
                   <div class="cts-import-file-list" data-import-file-list="sqp"></div>
                 </label>
               </div>
@@ -3212,63 +3217,33 @@
           </section>
 
           <section class="cts-card">
-            <h4>Required Files</h4>
-            <p class="cts-note">Accepted files: CSV and XLSX. Each selected file is imported using filename mapping: <code>{ASIN}_{AMZ|SB|PPC}_F{1..26}</code>.</p>
+            <h4>Bulk Upload</h4>
+            <p class="cts-note">Accepted files: CSV and XLSX. Filename format: <code>{ASIN}_{AMZ|SB|PPC}_F{1..26}</code>.</p>
 
             <form class="cts-stack" data-form="asin-import">
               <div class="cts-file-grid">
-                <div class="cts-file-field">
-                  <span>Amazon Data *</span>
-                  <input type="file" data-file="amazon" required multiple accept=".csv,.xlsx,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv" />
-                  <small>Accepted: CSV, XLSX</small>
-                  <div class="cts-import-file-list" data-import-file-list="amazon"></div>
-                  <div class="cts-form-meta">
-                    <button class="cts-btn" type="button" data-action="asin-import-single" data-file="amazon" disabled>Import</button>
-                    <span class="cts-import-msg" data-import-file-status="amazon">Waiting for file selection.</span>
-                  </div>
-                  <div class="cts-import-queue-wrap">
-                    <table class="cts-table" data-table="asin-import-queue-amazon"></table>
-                    <p class="cts-note" data-import-queue-summary="amazon"></p>
-                  </div>
-                </div>
-
-                <div class="cts-file-field">
-                  <span>Sellerboard Data *</span>
-                  <input type="file" data-file="sellerboard" required multiple accept=".csv,.xlsx,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv" />
-                  <small>Accepted: CSV, XLSX</small>
-                  <div class="cts-import-file-list" data-import-file-list="sellerboard"></div>
-                  <div class="cts-form-meta">
-                    <button class="cts-btn" type="button" data-action="asin-import-single" data-file="sellerboard" disabled>Import</button>
-                    <span class="cts-import-msg" data-import-file-status="sellerboard">Waiting for file selection.</span>
-                  </div>
-                  <div class="cts-import-queue-wrap">
-                    <table class="cts-table" data-table="asin-import-queue-sellerboard"></table>
-                    <p class="cts-note" data-import-queue-summary="sellerboard"></p>
-                  </div>
-                </div>
-
-                <div class="cts-file-field">
-                  <span>PPC Data</span>
-                  <input type="file" data-file="ppc" multiple accept=".csv,.xlsx,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv" />
-                  <small>Accepted: CSV, XLSX</small>
-                  <div class="cts-import-file-list" data-import-file-list="ppc"></div>
-                  <div class="cts-form-meta">
-                    <button class="cts-btn" type="button" data-action="asin-import-single" data-file="ppc" disabled>Import</button>
-                    <span class="cts-import-msg" data-import-file-status="ppc">Waiting for file selection.</span>
-                  </div>
-                  <div class="cts-import-queue-wrap">
-                    <table class="cts-table" data-table="asin-import-queue-ppc"></table>
-                    <p class="cts-note" data-import-queue-summary="ppc"></p>
-                  </div>
-                </div>
+                <label class="cts-file-field" data-dropzone="asin-import">
+                  <span>ASIN Import Files *</span>
+                  <input type="file" data-file="asin-bulk" required multiple accept=".csv,.xlsx,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv" />
+                  <small>Accepted: CSV, XLSX. Select or drag/drop multiple files.</small>
+                  <div class="cts-import-file-list" data-import-file-list="asin-bulk"></div>
+                </label>
               </div>
 
+              <div class="cts-form-meta">
+                <button class="cts-btn" type="button" data-action="asin-import-bulk" disabled>Process Bulk Upload</button>
+                <span class="cts-import-msg" data-import-file-status="bulk">Waiting for file selection.</span>
+              </div>
+              <div class="cts-import-queue-wrap">
+                <table class="cts-table" data-table="asin-import-queue"></table>
+              </div>
+              <p class="cts-note" data-import-queue-summary="bulk"></p>
               <span class="cts-import-msg cts-hidden" data-import-toast></span>
             </form>
           </section>
 
           <section class="cts-card">
-            <h4>Import Checklist</h4>
+            <h4>Processing Checklist (ASIN + Fortnight)</h4>
             <table class="cts-table" data-table="asin-import-checklist"></table>
           </section>
         </article>
@@ -3396,27 +3371,26 @@
         { key: "ppc", label: "PPC Data", required: false }
       ];
       var asinImportFiles = {
-        amazon: [],
-        sellerboard: [],
-        ppc: []
+        bulk: []
       };
       var ASIN_IMPORT_WAITING_TEXT = "Waiting for file selection.";
       var ASIN_IMPORT_IMPORTING_TEXT = "Importing...";
       var ASIN_IMPORT_IMPORTED_TEXT = "Imported.";
       var asinImportFileState = {
-        amazon: { status: ASIN_IMPORT_WAITING_TEXT, importedAt: null, error: "" },
-        sellerboard: { status: ASIN_IMPORT_WAITING_TEXT, importedAt: null, error: "" },
-        ppc: { status: ASIN_IMPORT_WAITING_TEXT, importedAt: null, error: "" }
+        bulk: { status: ASIN_IMPORT_WAITING_TEXT, importedAt: null, error: "" }
       };
       var ASIN_IMPORT_TAG_TO_FILE_KEY = {
         AMZ: "amazon",
         SB: "sellerboard",
         PPC: "ppc"
       };
+      var ASIN_IMPORT_TAG_TO_LABEL = {
+        AMZ: "Amazon Data",
+        SB: "Sellerboard Data",
+        PPC: "PPC Data"
+      };
       var asinImportQueues = {
-        amazon: [],
-        sellerboard: [],
-        ppc: []
+        bulk: []
       };
       var searchImportSelection = {
         selectedWeek: "Week 1",
@@ -7857,6 +7831,13 @@
         if (!type || type === "black") msg.classList.add("is-black");
       }
 
+      function getQueueStatusClass(status) {
+        if (status === "Imported" || status === "Ready") return "cts-status is-ok";
+        if (status === "Failed" || status === "Rejected" || status === "Invalid") return "cts-status is-warn";
+        if (status === "Duplicate" || status === "Skipped") return "cts-status is-neutral";
+        return "cts-status";
+      }
+
       function setAsinImportFileStatus(fileKey, text, type) {
         var state = asinImportFileState[fileKey];
         if (!state) return;
@@ -7882,7 +7863,7 @@
 
         var isImporting = state.status === ASIN_IMPORT_IMPORTING_TEXT;
         var isReady = files.length > 0;
-        var button = root.querySelector("[data-action='asin-import-single'][data-file='" + fileKey + "']");
+        var button = root.querySelector("[data-action='asin-import-bulk']");
         if (button) button.disabled = !isReady || isImporting;
       }
 
@@ -7918,37 +7899,145 @@
         refreshAsinImportFileControl(fileKey);
       }
 
+      function toFortnightLabel(numberValue) {
+        var parsed = Number(numberValue);
+        if (!(parsed >= 1 && parsed <= 26)) return "";
+        return "Fortnight " + parsed;
+      }
+
+      function getAsinImportGroupKey(asinCode, fortnightNumber) {
+        return normalizeAsinCode(asinCode) + "__F" + String(fortnightNumber || 0);
+      }
+
+      function buildAsinBulkQueueFromFiles() {
+        var files = Array.isArray(asinImportFiles.bulk) ? asinImportFiles.bulk : [];
+        var queueRows = files.map(function (file, index) {
+          var parsed = parseImportFilename(file && file.name);
+          var row = {
+            id: "asin-bulk__" + String(index) + "__" + String(file && file.name || ""),
+            index: index,
+            file: file || null,
+            filename: file && file.name ? file.name : "",
+            asin: "",
+            tag: "",
+            fortnight: 0,
+            groupKey: "",
+            status: "Rejected",
+            message: "",
+            valid: false,
+            isDuplicate: false
+          };
+
+          if (!file) {
+            row.message = "File missing from selection.";
+            return row;
+          }
+          if (!parsed.ok) {
+            row.message = parsed.error || "Filename parse failed.";
+            return row;
+          }
+
+          row.asin = parsed.asin;
+          row.tag = parsed.tag;
+          row.fortnight = parsed.fortnight;
+          row.groupKey = getAsinImportGroupKey(parsed.asin, parsed.fortnight);
+          row.status = "Pending";
+          row.valid = true;
+          return row;
+        });
+
+        var latestByComposite = Object.create(null);
+        queueRows.forEach(function (row, idx) {
+          if (!row.valid) return;
+          var composite = row.asin + "__" + row.tag + "__F" + row.fortnight;
+          latestByComposite[composite] = idx;
+        });
+        queueRows.forEach(function (row, idx) {
+          if (!row.valid) return;
+          var composite = row.asin + "__" + row.tag + "__F" + row.fortnight;
+          if (latestByComposite[composite] !== idx) {
+            row.valid = false;
+            row.isDuplicate = true;
+            row.status = "Duplicate";
+            row.message = "Duplicate detected. Using latest selected file for this ASIN/source/fortnight.";
+          }
+        });
+
+        asinImportQueues.bulk = queueRows;
+      }
+
+      function buildAsinBulkGroupRows(queueRows) {
+        var groupsByKey = Object.create(null);
+        (queueRows || []).forEach(function (row) {
+          if (!row || !row.asin || !row.fortnight || !row.tag) return;
+          if (row.status === "Rejected") return;
+          if (row.isDuplicate) return;
+
+          var key = row.groupKey || getAsinImportGroupKey(row.asin, row.fortnight);
+          if (!groupsByKey[key]) {
+            groupsByKey[key] = {
+              key: key,
+              asin: row.asin,
+              fortnight: row.fortnight,
+              tags: { AMZ: null, SB: null, PPC: null }
+            };
+          }
+          groupsByKey[key].tags[row.tag] = row;
+        });
+
+        return Object.keys(groupsByKey).map(function (key) {
+          var group = groupsByKey[key];
+          var hasAmz = !!group.tags.AMZ;
+          var hasSb = !!group.tags.SB;
+          var hasPpc = !!group.tags.PPC;
+          var missing = [];
+          if (!hasAmz) missing.push("Amazon Data");
+          if (!hasSb) missing.push("Sellerboard Data");
+          return {
+            key: group.key,
+            asin: group.asin,
+            fortnight: group.fortnight,
+            hasAmz: hasAmz,
+            hasSb: hasSb,
+            hasPpc: hasPpc,
+            missingRequired: missing,
+            ready: missing.length === 0
+          };
+        }).sort(function (left, right) {
+          var asinCompare = String(left.asin || "").localeCompare(String(right.asin || ""), undefined, { sensitivity: "base" });
+          if (asinCompare !== 0) return asinCompare;
+          return toNumber(left.fortnight) - toNumber(right.fortnight);
+        });
+      }
+
       function renderAsinImportChecklist() {
         var table = root.querySelector("[data-table='asin-import-checklist']");
         if (!table) return;
 
-        table.innerHTML = "<thead><tr><th>Required File</th><th>Filename</th><th>Status</th></tr></thead><tbody>"
-          + asinImportRequirements.map(function (item) {
-            var files = Array.isArray(asinImportFiles[item.key]) ? asinImportFiles[item.key] : [];
-            var fileState = asinImportFileState[item.key] || {};
-            var filename = "No file selected";
-            if (files.length === 1) filename = files[0].name;
-            else if (files.length > 1) filename = files.length + " files selected";
-            var statusText = item.required ? "Pending" : "Optional";
-            var statusClass = item.required ? "cts-status is-warn" : "cts-status is-ok";
+        var groups = buildAsinBulkGroupRows(asinImportQueues.bulk);
+        if (!groups.length) {
+          table.innerHTML = "<thead><tr><th>ASIN</th><th>Fortnight</th><th>Amazon Data</th><th>Sellerboard Data</th><th>PPC Data</th><th>Readiness</th></tr></thead>"
+            + "<tbody><tr><td colspan='6'>No mapped ASIN/Fortnight groups yet.</td></tr></tbody>";
+          return;
+        }
 
-            if (String(fileState.status || "") === ASIN_IMPORT_IMPORTED_TEXT) {
-              statusText = "Uploaded";
-              statusClass = "cts-status is-ok";
-            } else if (String(fileState.status || "").indexOf("Error:") === 0) {
-              statusText = "Error";
-              statusClass = "cts-status is-warn";
-            } else if (String(fileState.status || "") === ASIN_IMPORT_IMPORTING_TEXT) {
-              statusText = "Importing";
-              statusClass = "cts-status is-warn";
-            } else if (files.length && files.every(function (file) { return isAllowedImportFile(file); })) {
-              statusText = "Ready";
-              statusClass = "cts-status is-ok";
-            }
+        var rowsHtml = groups.map(function (group) {
+          var readinessClass = group.ready ? "cts-status is-ok" : "cts-status is-warn";
+          var readinessText = group.ready
+            ? "Ready"
+            : ("Missing: " + group.missingRequired.join(", "));
+          return "<tr>"
+            + "<td>" + escapeHtml(group.asin) + "</td>"
+            + "<td>" + escapeHtml(toFortnightLabel(group.fortnight) || "") + "</td>"
+            + "<td><span class='" + (group.hasAmz ? "cts-status is-ok" : "cts-status is-warn") + "'>" + (group.hasAmz ? "Present" : "Missing") + "</span></td>"
+            + "<td><span class='" + (group.hasSb ? "cts-status is-ok" : "cts-status is-warn") + "'>" + (group.hasSb ? "Present" : "Missing") + "</span></td>"
+            + "<td><span class='" + (group.hasPpc ? "cts-status is-ok" : "cts-status is-neutral") + "'>" + (group.hasPpc ? "Present" : "Optional") + "</span></td>"
+            + "<td><span class='" + readinessClass + "'>" + escapeHtml(readinessText) + "</span></td>"
+            + "</tr>";
+        }).join("");
 
-            return "<tr><td>" + item.label + "</td><td>" + filename + "</td><td><span class='" + statusClass + "'>" + statusText + "</span></td></tr>";
-          }).join("")
-          + "</tbody>";
+        table.innerHTML = "<thead><tr><th>ASIN</th><th>Fortnight</th><th>Amazon Data</th><th>Sellerboard Data</th><th>PPC Data</th><th>Readiness</th></tr></thead><tbody>"
+          + rowsHtml + "</tbody>";
       }
 
       function initAsinImportForm() {
@@ -8058,18 +8147,6 @@
           }, 2000);
         }
 
-        function toFortnightLabel(numberValue) {
-          var parsed = Number(numberValue);
-          if (!(parsed >= 1 && parsed <= 26)) return "";
-          return "Fortnight " + parsed;
-        }
-
-        function getQueueStatusClass(status) {
-          if (status === "Imported") return "cts-status is-ok";
-          if (status === "Failed" || status === "Rejected") return "cts-status is-warn";
-          return "cts-status";
-        }
-
         function renderAsinImportSelectedFiles(fileKey) {
           var wrap = root.querySelector("[data-import-file-list='" + fileKey + "']");
           if (!wrap) return;
@@ -8090,70 +8167,39 @@
           wrap.innerHTML = "<details><summary>" + files.length + " files selected</summary><ul>" + items + "</ul></details>";
         }
 
-        function buildQueueRowsFromFiles(fileKey) {
-          var files = Array.isArray(asinImportFiles[fileKey]) ? asinImportFiles[fileKey] : [];
-          asinImportQueues[fileKey] = files.map(function (file, index) {
-            var parsed = parseImportFilename(file && file.name);
-            var row = {
-              id: fileKey + "__" + String(index) + "__" + String(file && file.name || ""),
-              file: file || null,
-              filename: file && file.name ? file.name : "",
-              asin: "",
-              tag: "",
-              fortnight: 0,
-              status: "Rejected",
-              message: "",
-              valid: false
-            };
-
-            if (!file) {
-              row.message = "File missing from selection.";
-              return row;
-            }
-            if (!parsed.ok) {
-              row.message = parsed.error || "Filename parse failed.";
-              return row;
-            }
-
-            row.asin = parsed.asin;
-            row.tag = parsed.tag;
-            row.fortnight = parsed.fortnight;
-            row.status = "Pending";
-            row.valid = true;
-            return row;
-          });
-        }
-
         function renderAsinImportQueueTable(fileKey) {
-          var table = root.querySelector("[data-table='asin-import-queue-" + fileKey + "']");
+          var table = root.querySelector("[data-table='asin-import-queue']");
           var summary = root.querySelector("[data-import-queue-summary='" + fileKey + "']");
           if (!table) return;
 
           var rows = Array.isArray(asinImportQueues[fileKey]) ? asinImportQueues[fileKey] : [];
           if (!rows.length) {
-            table.innerHTML = "<thead><tr><th>Filename</th><th>Parsed ASIN</th><th>Fortnight</th><th>Type</th><th>Status</th><th>Message</th></tr></thead>"
+            table.innerHTML = "<thead><tr><th>Filename</th><th>ASIN</th><th>Source</th><th>Fortnight</th><th>Status</th><th>Message</th></tr></thead>"
               + "<tbody><tr><td colspan='6'>No files queued.</td></tr></tbody>";
             if (summary) summary.textContent = "";
             return;
           }
 
           var body = rows.map(function (row) {
+            var tagLabel = ASIN_IMPORT_TAG_TO_LABEL[row.tag] || row.tag || "—";
             return "<tr>"
               + "<td>" + escapeHtml(row.filename || "") + "</td>"
               + "<td>" + escapeHtml(row.asin || "—") + "</td>"
+              + "<td>" + escapeHtml(tagLabel) + "</td>"
               + "<td>" + escapeHtml(toFortnightLabel(row.fortnight) || "—") + "</td>"
-              + "<td>" + escapeHtml(row.tag || "—") + "</td>"
               + "<td><span class='" + getQueueStatusClass(row.status) + "'>" + escapeHtml(row.status || "") + "</span></td>"
               + "<td>" + escapeHtml(row.message || "") + "</td>"
               + "</tr>";
           }).join("");
-          table.innerHTML = "<thead><tr><th>Filename</th><th>Parsed ASIN</th><th>Fortnight</th><th>Type</th><th>Status</th><th>Message</th></tr></thead><tbody>"
+          table.innerHTML = "<thead><tr><th>Filename</th><th>ASIN</th><th>Source</th><th>Fortnight</th><th>Status</th><th>Message</th></tr></thead><tbody>"
             + body + "</tbody>";
 
           if (summary) {
             var imported = rows.filter(function (row) { return row.status === "Imported"; }).length;
             var failed = rows.filter(function (row) { return row.status === "Failed"; }).length;
             var rejected = rows.filter(function (row) { return row.status === "Rejected"; }).length;
+            var duplicate = rows.filter(function (row) { return row.status === "Duplicate"; }).length;
+            var skipped = rows.filter(function (row) { return row.status === "Skipped"; }).length;
             var pending = rows.filter(function (row) {
               return row.status === "Pending" || row.status === "Importing";
             }).length;
@@ -8161,6 +8207,8 @@
               + " | Imported: " + imported
               + " | Failed: " + failed
               + " | Rejected: " + rejected
+              + " | Duplicate: " + duplicate
+              + " | Skipped: " + skipped
               + " | Pending: " + pending;
           }
         }
@@ -8224,9 +8272,32 @@
           setAsinImportFileStatus(fileKey, ASIN_IMPORT_IMPORTING_TEXT, "");
           refreshAsinImportFileControl(fileKey);
 
-          for (var i = 0; i < queue.length; i++) {
-            var row = queue[i];
-            if (!row.valid) continue;
+          var groupRows = buildAsinBulkGroupRows(queue);
+          var eligibleGroups = {};
+          groupRows.forEach(function (group) {
+            if (group.ready) eligibleGroups[group.key] = true;
+          });
+
+          validRows.forEach(function (row) {
+            if (!eligibleGroups[row.groupKey]) {
+              row.status = "Skipped";
+              row.message = "Missing required files (Amazon + Sellerboard) for this ASIN/Fortnight.";
+            }
+          });
+
+          var tagOrder = { AMZ: 1, SB: 2, PPC: 3 };
+          var processingRows = validRows.filter(function (row) {
+            return row.status !== "Skipped";
+          }).slice().sort(function (left, right) {
+            var asinDiff = String(left.asin || "").localeCompare(String(right.asin || ""), undefined, { sensitivity: "base" });
+            if (asinDiff !== 0) return asinDiff;
+            var fortnightDiff = toNumber(left.fortnight) - toNumber(right.fortnight);
+            if (fortnightDiff !== 0) return fortnightDiff;
+            return toNumber(tagOrder[left.tag]) - toNumber(tagOrder[right.tag]);
+          });
+
+          for (var i = 0; i < processingRows.length; i++) {
+            var row = processingRows[i];
 
             row.status = "Importing";
             row.message = "";
@@ -8268,10 +8339,12 @@
           var importedCount = queue.filter(function (row) { return row.status === "Imported"; }).length;
           var failedCount = queue.filter(function (row) { return row.status === "Failed"; }).length;
           var rejectedCount = queue.filter(function (row) { return row.status === "Rejected"; }).length;
+          var duplicateCount = queue.filter(function (row) { return row.status === "Duplicate"; }).length;
+          var skippedCount = queue.filter(function (row) { return row.status === "Skipped"; }).length;
 
           if (importedCount > 0) asinImportFileState[fileKey].importedAt = new Date().toISOString();
 
-          if (importedCount > 0 && failedCount === 0 && rejectedCount === 0) {
+          if (importedCount > 0 && failedCount === 0 && rejectedCount === 0 && skippedCount === 0) {
             setAsinImportFileStatus(fileKey, ASIN_IMPORT_IMPORTED_TEXT, "ok");
           } else if (importedCount > 0) {
             setAsinImportFileStatus(fileKey, "Error: Completed with some failures.", "warn");
@@ -8284,15 +8357,38 @@
           refreshAsinImportCardUi(fileKey);
 
           setImportMessage(
-            getAsinImportActionLabel(fileKey) + " batch completed. Imported: " + importedCount
-              + ", Failed: " + failedCount + ", Rejected: " + rejectedCount + ".",
+            "Bulk import completed. Imported: " + importedCount
+              + ", Failed: " + failedCount
+              + ", Rejected: " + rejectedCount
+              + ", Duplicate: " + duplicateCount
+              + ", Skipped: " + skippedCount + ".",
             failedCount || rejectedCount ? "warn" : "black"
           );
         }
 
-        function getAsinImportActionLabel(fileKey) {
-          var item = asinImportRequirements.find(function (entry) { return entry.key === fileKey; });
-          return item ? item.label : "File";
+        function bindDropzone(dropzoneNode, onFilesSelected) {
+          if (!dropzoneNode || dropzoneNode.dataset.dropzoneBound === "1") return;
+          dropzoneNode.dataset.dropzoneBound = "1";
+
+          ["dragenter", "dragover"].forEach(function (eventName) {
+            dropzoneNode.addEventListener(eventName, function (event) {
+              event.preventDefault();
+              dropzoneNode.classList.add("is-dragover");
+            });
+          });
+          ["dragleave", "dragend", "drop"].forEach(function (eventName) {
+            dropzoneNode.addEventListener(eventName, function (event) {
+              event.preventDefault();
+              dropzoneNode.classList.remove("is-dragover");
+            });
+          });
+          dropzoneNode.addEventListener("drop", function (event) {
+            event.preventDefault();
+            var droppedFiles = event.dataTransfer && event.dataTransfer.files
+              ? Array.from(event.dataTransfer.files)
+              : [];
+            onFilesSelected(droppedFiles);
+          });
         }
 
         if (addSave) {
@@ -8355,37 +8451,44 @@
           });
         }
 
-        asinImportRequirements.forEach(function (item) {
-          var input = form.querySelector("[data-file='" + item.key + "']");
-          var importBtn = form.querySelector("[data-action='asin-import-single'][data-file='" + item.key + "']");
+        var bulkFileKey = "bulk";
+        var bulkInput = form.querySelector("[data-file='asin-bulk']");
+        var bulkBtn = form.querySelector("[data-action='asin-import-bulk']");
+        var bulkDropzone = form.querySelector("[data-dropzone='asin-import']");
 
-          if (input) {
-            input.addEventListener("change", function () {
-              var selectedFiles = input.files ? Array.from(input.files) : [];
-              updateAsinImportFileSelectionState(item.key, selectedFiles);
-              buildQueueRowsFromFiles(item.key);
-              refreshAsinImportCardUi(item.key);
-              renderAsinImportChecklist();
-              setImportMessage("", "");
-            });
-          }
+        function onBulkFilesSelected(selectedFiles) {
+          updateAsinImportFileSelectionState(bulkFileKey, selectedFiles);
+          buildAsinBulkQueueFromFiles();
+          refreshAsinImportCardUi(bulkFileKey);
+          renderAsinImportChecklist();
+          setImportMessage("", "");
+        }
 
-          if (importBtn) {
-            importBtn.addEventListener("click", function () {
-              runSingleAsinFileImport(item.key);
-            });
-          }
+        if (bulkInput) {
+          bulkInput.addEventListener("change", function () {
+            var selectedFiles = bulkInput.files ? Array.from(bulkInput.files) : [];
+            onBulkFilesSelected(selectedFiles);
+          });
+          var initialFiles = bulkInput.files ? Array.from(bulkInput.files) : [];
+          onBulkFilesSelected(initialFiles);
+        }
 
-          var initialFiles = input && input.files ? Array.from(input.files) : [];
-          updateAsinImportFileSelectionState(item.key, initialFiles);
-          buildQueueRowsFromFiles(item.key);
-          refreshAsinImportCardUi(item.key);
-        });
+        if (bulkDropzone) {
+          bindDropzone(bulkDropzone, onBulkFilesSelected);
+        }
+
+        if (bulkBtn) {
+          bulkBtn.addEventListener("click", function () {
+            runSingleAsinFileImport(bulkFileKey);
+          });
+        }
 
         form.addEventListener("submit", function (event) {
           event.preventDefault();
         });
 
+        refreshAsinImportFileControl(bulkFileKey);
+        refreshAsinImportCardUi(bulkFileKey);
         renderAsinImportChecklist();
       }
 
@@ -8443,7 +8546,8 @@
             week: 0,
             status: "Rejected",
             message: "",
-            valid: false
+            valid: false,
+            isDuplicate: false
           };
 
           if (!file) {
@@ -8460,6 +8564,21 @@
           row.status = "Pending";
           row.valid = true;
           return row;
+        });
+
+        var latestByWeek = Object.create(null);
+        sqpImportQueue.forEach(function (row, idx) {
+          if (!row.valid) return;
+          latestByWeek[row.week] = idx;
+        });
+        sqpImportQueue.forEach(function (row, idx) {
+          if (!row.valid) return;
+          if (latestByWeek[row.week] !== idx) {
+            row.valid = false;
+            row.isDuplicate = true;
+            row.status = "Duplicate";
+            row.message = "Duplicate week in batch. Using latest selected file.";
+          }
         });
       }
 
@@ -8493,6 +8612,7 @@
           var imported = sqpImportQueue.filter(function (row) { return row.status === "Imported"; }).length;
           var failed = sqpImportQueue.filter(function (row) { return row.status === "Failed"; }).length;
           var rejected = sqpImportQueue.filter(function (row) { return row.status === "Rejected"; }).length;
+          var duplicate = sqpImportQueue.filter(function (row) { return row.status === "Duplicate"; }).length;
           var inProgress = sqpImportQueue.filter(function (row) { return row.status === "Importing"; }).length;
           setSearchImportSummary(
             "Total selected: <strong>" + total + "</strong> | "
@@ -8500,6 +8620,7 @@
             + "Imported: <strong>" + imported + "</strong> | "
             + "Failed: <strong>" + failed + "</strong> | "
             + "Rejected: <strong>" + rejected + "</strong>"
+            + " | Duplicate: <strong>" + duplicate + "</strong>"
             + (inProgress ? " | Processing: <strong>" + inProgress + "</strong>" : "")
           );
           return;
@@ -9063,18 +9184,47 @@
         var form = root.querySelector("[data-form='search-import']");
         var weekSelect = root.querySelector("[data-control='search-import-week']");
         var sqpInput = form ? form.querySelector("[data-file='sqp']") : null;
-        if (!form || !weekSelect || !sqpInput) return;
+        if (!form || !sqpInput) return;
 
         await loadSqpStores();
         initSqpKeywordManager();
         syncSqpWeekControls();
 
-        weekSelect.addEventListener("change", function () {
-          searchImportSelection.selectedWeek = toSqpWeekLabel(weekSelect.value) || "Week 1";
-          syncSqpWeekControls();
-          renderSearchImportChecklist();
-          fillSearchTables();
-        });
+        if (weekSelect) {
+          weekSelect.addEventListener("change", function () {
+            searchImportSelection.selectedWeek = toSqpWeekLabel(weekSelect.value) || "Week 1";
+            syncSqpWeekControls();
+            renderSearchImportChecklist();
+            fillSearchTables();
+          });
+        }
+
+        var sqpDropzone = form.querySelector("[data-dropzone='sqp-import']");
+        if (sqpDropzone && sqpDropzone.dataset.dropzoneBound !== "1") {
+          sqpDropzone.dataset.dropzoneBound = "1";
+          ["dragenter", "dragover"].forEach(function (eventName) {
+            sqpDropzone.addEventListener(eventName, function (event) {
+              event.preventDefault();
+              sqpDropzone.classList.add("is-dragover");
+            });
+          });
+          ["dragleave", "dragend", "drop"].forEach(function (eventName) {
+            sqpDropzone.addEventListener(eventName, function (event) {
+              event.preventDefault();
+              sqpDropzone.classList.remove("is-dragover");
+            });
+          });
+          sqpDropzone.addEventListener("drop", function (event) {
+            event.preventDefault();
+            searchImportFiles.sqp = event.dataTransfer && event.dataTransfer.files
+              ? Array.from(event.dataTransfer.files)
+              : [];
+            buildSqpImportQueueFromFiles();
+            updateSearchImportUploadButton();
+            renderSearchImportChecklist();
+            setSearchImportMessage(searchImportFiles.sqp.length ? "Ready to import." : "Waiting for file selection.", "");
+          });
+        }
 
         sqpInput.addEventListener("change", function () {
           searchImportFiles.sqp = sqpInput.files ? Array.from(sqpInput.files) : [];
@@ -9139,6 +9289,7 @@
               } else {
                 row.status = "Imported";
                 row.message = "Imported " + (toSqpWeekLabel(row.week) || "");
+                searchImportSelection.selectedWeek = toSqpWeekLabel(row.week) || searchImportSelection.selectedWeek;
               }
             } catch (error) {
               row.status = "Failed";
@@ -9157,9 +9308,15 @@
           var importedCount = sqpImportQueue.filter(function (row) { return row.status === "Imported"; }).length;
           var failedCount = sqpImportQueue.filter(function (row) { return row.status === "Failed"; }).length;
           var rejectedCount = sqpImportQueue.filter(function (row) { return row.status === "Rejected"; }).length;
+          var duplicateCount = sqpImportQueue.filter(function (row) { return row.status === "Duplicate"; }).length;
 
           if (importedCount > 0 && failedCount === 0 && rejectedCount === 0) {
-            setSearchImportMessage("Uploaded successfully.", "ok");
+            setSearchImportMessage(
+              duplicateCount
+                ? ("Uploaded successfully. Duplicate skipped: " + duplicateCount + ".")
+                : "Uploaded successfully.",
+              "ok"
+            );
           } else if (importedCount > 0) {
             setSearchImportMessage("Upload completed with some failures.", "warn");
           } else {
