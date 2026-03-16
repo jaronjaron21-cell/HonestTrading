@@ -8642,7 +8642,10 @@
           + "Tracked keywords (all/active): <strong>" + toNumber(audit.total_keywords_tracked).toLocaleString()
           + " / " + toNumber(audit.total_keywords_active).toLocaleString() + "</strong> | "
           + "Matched keywords: <strong>" + toNumber(audit.matched_keywords_count).toLocaleString() + "</strong> | "
-          + "Rows imported: <strong>" + toNumber(audit.rows_imported_count).toLocaleString() + "</strong><br>"
+          + "Rows kept: <strong>" + toNumber(audit.matched_rows_kept).toLocaleString() + "</strong> | "
+          + "Rows ignored: <strong>" + toNumber(audit.unmatched_rows_ignored).toLocaleString() + "</strong> | "
+          + "Rows imported: <strong>" + toNumber(audit.rows_imported_count).toLocaleString() + "</strong> | "
+          + "File unique keywords: <strong>" + toNumber(audit.file_unique_keywords_count).toLocaleString() + "</strong><br>"
           + "Keywords not found: " + unmatched
         );
       }
@@ -8818,6 +8821,10 @@
       function aggregateSqpRowsByTrackedKeywords(rows, queryKey, metricColumns, activeKeywordMap) {
         var aggregates = {};
         var trackedMatched = {};
+        var fileKeywords = {};
+        var ignoredKeywords = {};
+        var matchedRows = 0;
+        var ignoredRows = 0;
 
         var excludedKeys = {};
         [
@@ -8836,10 +8843,20 @@
         rows.forEach(function (row) {
           var query = collapseWhitespace(row[queryKey]);
           var normalizedQuery = normalizeKeywordKey(query);
-          if (!normalizedQuery || !Object.prototype.hasOwnProperty.call(activeKeywordMap, normalizedQuery)) return;
+          if (normalizedQuery && !Object.prototype.hasOwnProperty.call(fileKeywords, normalizedQuery)) {
+            fileKeywords[normalizedQuery] = query || normalizedQuery;
+          }
+          if (!normalizedQuery || !Object.prototype.hasOwnProperty.call(activeKeywordMap, normalizedQuery)) {
+            ignoredRows += 1;
+            if (normalizedQuery && !Object.prototype.hasOwnProperty.call(ignoredKeywords, normalizedQuery)) {
+              ignoredKeywords[normalizedQuery] = query || normalizedQuery;
+            }
+            return;
+          }
 
           var canonicalKeyword = activeKeywordMap[normalizedQuery];
           trackedMatched[normalizeKeywordKey(canonicalKeyword)] = true;
+          matchedRows += 1;
 
           if (!aggregates[canonicalKeyword]) {
             aggregates[canonicalKeyword] = {
@@ -8909,7 +8926,18 @@
 
         return {
           rows: aggregateRows,
-          matchedKeys: Object.keys(trackedMatched)
+          matchedKeys: Object.keys(trackedMatched),
+          totalRows: (rows || []).length,
+          matchedRows: matchedRows,
+          ignoredRows: ignoredRows,
+          totalUniqueKeywords: Object.keys(fileKeywords).length,
+          matchedKeywordCount: Object.keys(trackedMatched).length,
+          ignoredKeywordCount: Object.keys(ignoredKeywords).length,
+          ignoredKeywords: Object.keys(ignoredKeywords).map(function (key) {
+            return ignoredKeywords[key];
+          }).sort(function (left, right) {
+            return String(left || "").localeCompare(String(right || ""), undefined, { sensitivity: "base" });
+          })
         };
       }
 
@@ -9140,18 +9168,39 @@
           };
         }
 
-        var keywordUpsert = upsertSqpKeywordsFromRows(rows, queryKey);
-        if (!keywordUpsert.total) {
-          return { ok: false, message: "No searchable keywords found in query column." };
+        var activeKeywordMap = getActiveSqpKeywordsMap();
+        var trackedKeywords = Object.keys(activeKeywordMap);
+        if (!trackedKeywords.length) {
+          return {
+            ok: false,
+            message: "No active user-listed keywords found. Add keywords in Manage Keywords before importing.",
+            rowsInFile: rows.length,
+            matchedRows: 0,
+            ignoredRows: rows.length,
+            totalUniqueKeywords: 0,
+            matchedKeywordCount: 0,
+            ignoredKeywordCount: 0
+          };
         }
 
-        var aggregated = aggregateSqpRowsByTrackedKeywords(rows, queryKey, metricColumns, keywordUpsert.keywordMap);
+        var aggregated = aggregateSqpRowsByTrackedKeywords(rows, queryKey, metricColumns, activeKeywordMap);
+        if (!aggregated.matchedRows || !aggregated.rows.length) {
+          return {
+            ok: false,
+            message: "No matching user-listed keywords were found in this SQP file.",
+            rowsInFile: aggregated.totalRows,
+            matchedRows: aggregated.matchedRows,
+            ignoredRows: aggregated.ignoredRows,
+            totalUniqueKeywords: aggregated.totalUniqueKeywords,
+            matchedKeywordCount: aggregated.matchedKeywordCount,
+            ignoredKeywordCount: aggregated.ignoredKeywordCount
+          };
+        }
+
         var selectedWeek = toSqpWeekLabel(queueRow.week) || "Week 1";
         var uploadedAt = new Date().toISOString();
         applySqpWarehouseRows(selectedWeek, aggregated.rows, queueRow.filename, uploadedAt);
 
-        var activeKeywordMap = getActiveSqpKeywordsMap();
-        var trackedKeywords = Object.keys(activeKeywordMap);
         var unmatchedKeywords = trackedKeywords.map(function (key) {
           return activeKeywordMap[key];
         }).filter(function (keyword) {
@@ -9163,20 +9212,28 @@
           status: "uploaded",
           filename: queueRow.filename,
           uploaded_at: uploadedAt,
-          total_rows: rows.length,
+          total_rows: aggregated.totalRows,
           total_keywords_tracked: sqpKeywords.length,
           total_keywords_active: trackedKeywords.length,
-          matched_keywords_count: aggregated.rows.length,
+          matched_keywords_count: aggregated.matchedKeywordCount,
           unmatched_keywords: unmatchedKeywords,
-          rows_imported_count: aggregated.rows.length
+          rows_imported_count: aggregated.rows.length,
+          matched_rows_kept: aggregated.matchedRows,
+          unmatched_rows_ignored: aggregated.ignoredRows,
+          file_unique_keywords_count: aggregated.totalUniqueKeywords,
+          file_ignored_keywords_count: aggregated.ignoredKeywordCount
         };
         saveSqpImportAuditState();
 
         return {
           ok: true,
-          rowsInFile: rows.length,
+          rowsInFile: aggregated.totalRows,
           importedRows: aggregated.rows.length,
-          totalKeywords: keywordUpsert.total
+          matchedRows: aggregated.matchedRows,
+          ignoredRows: aggregated.ignoredRows,
+          totalUniqueKeywords: aggregated.totalUniqueKeywords,
+          matchedKeywordCount: aggregated.matchedKeywordCount,
+          ignoredKeywordCount: aggregated.ignoredKeywordCount
         };
       }
 
@@ -9286,21 +9343,55 @@
               var result = await processSingleSqpImportQueueRow(row);
               if (!result || !result.ok) {
                 row.status = "Failed";
-                row.message = (result && result.message) || "Import failed.";
+                var failedBaseMessage = (result && result.message) || "Import failed.";
+                var failedTotal = result && isFinite(Number(result.rowsInFile)) ? Number(result.rowsInFile) : null;
+                var failedMatched = result && isFinite(Number(result.matchedRows)) ? Number(result.matchedRows) : null;
+                var failedIgnored = result && isFinite(Number(result.ignoredRows)) ? Number(result.ignoredRows) : null;
+                if (failedTotal != null || failedMatched != null || failedIgnored != null) {
+                  var failedParts = [];
+                  if (failedTotal != null) failedParts.push("Total rows: " + failedTotal.toLocaleString());
+                  if (failedMatched != null) failedParts.push("Kept: " + failedMatched.toLocaleString());
+                  if (failedIgnored != null) failedParts.push("Ignored: " + failedIgnored.toLocaleString());
+                  row.message = failedBaseMessage + (failedParts.length ? (" (" + failedParts.join(" | ") + ")") : "");
+                } else {
+                  row.message = failedBaseMessage;
+                }
                 logSqpImportDebug("processing_file_failed", {
                   filename: row.filename,
                   week: row.week,
-                  reason: row.message
+                  reason: row.message,
+                  rowsInFile: result && result.rowsInFile,
+                  matchedRows: result && result.matchedRows,
+                  ignoredRows: result && result.ignoredRows
                 });
               } else {
                 row.status = "Imported";
-                row.message = "Imported " + (toSqpWeekLabel(row.week) || "");
+                var successWeekLabel = toSqpWeekLabel(row.week) || "";
+                var successParts = [
+                  "Imported " + successWeekLabel
+                ];
+                if (isFinite(Number(result.rowsInFile))) {
+                  successParts.push("Total rows: " + Number(result.rowsInFile).toLocaleString());
+                }
+                if (isFinite(Number(result.matchedRows))) {
+                  successParts.push("Kept: " + Number(result.matchedRows).toLocaleString());
+                }
+                if (isFinite(Number(result.ignoredRows))) {
+                  successParts.push("Ignored: " + Number(result.ignoredRows).toLocaleString());
+                }
+                if (isFinite(Number(result.totalUniqueKeywords))) {
+                  successParts.push("Unique keywords: " + Number(result.totalUniqueKeywords).toLocaleString());
+                }
+                row.message = successParts.join(" | ");
                 searchImportSelection.selectedWeek = toSqpWeekLabel(row.week) || searchImportSelection.selectedWeek;
                 logSqpImportDebug("processing_file_success", {
                   filename: row.filename,
                   week: row.week,
                   rowsInFile: result.rowsInFile,
-                  importedRows: result.importedRows
+                  importedRows: result.importedRows,
+                  matchedRows: result.matchedRows,
+                  ignoredRows: result.ignoredRows,
+                  totalUniqueKeywords: result.totalUniqueKeywords
                 });
               }
             } catch (error) {
