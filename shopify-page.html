@@ -3004,7 +3004,7 @@
               </div>
 
               <div class="cts-form-meta">
-                <button class="cts-btn" type="submit" data-action="search-import-upload" disabled>Process Import</button>
+                <button class="cts-btn" type="button" data-action="search-import-upload" disabled>Process Import</button>
                 <span class="cts-import-msg" data-search-import-msg>Waiting for file selection.</span>
               </div>
               <div class="cts-import-queue-wrap">
@@ -9184,11 +9184,168 @@
         var form = root.querySelector("[data-form='search-import']");
         var weekSelect = root.querySelector("[data-control='search-import-week']");
         var sqpInput = form ? form.querySelector("[data-file='sqp']") : null;
+        var uploadBtn = form ? form.querySelector("[data-action='search-import-upload']") : null;
         if (!form || !sqpInput) return;
 
         await loadSqpStores();
         initSqpKeywordManager();
         syncSqpWeekControls();
+
+        function logSqpImportDebug(label, payload) {
+          try {
+            if (payload !== undefined) {
+              console.info("[SQP Import] " + label, payload);
+            } else {
+              console.info("[SQP Import] " + label);
+            }
+          } catch (error) {}
+        }
+
+        function showNoValidSqpMessage() {
+          setSearchImportMessage("No valid SQP files found. Expected format: SQP_W#.csv or SQP_W#.xlsx", "warn");
+        }
+
+        function applySqpSelectedFiles(selectedFiles, sourceLabel) {
+          searchImportFiles.sqp = Array.isArray(selectedFiles)
+            ? selectedFiles.filter(function (file) { return !!file; })
+            : [];
+          buildSqpImportQueueFromFiles();
+          updateSearchImportUploadButton();
+          renderSearchImportChecklist();
+
+          var total = searchImportFiles.sqp.length;
+          var valid = sqpImportQueue.filter(function (row) { return row.valid; }).length;
+          var invalid = sqpImportQueue.filter(function (row) { return !row.valid; }).length;
+          logSqpImportDebug("files_selected", {
+            source: sourceLabel || "unknown",
+            total: total,
+            valid: valid,
+            invalid: invalid
+          });
+
+          if (!total) {
+            setSearchImportMessage("Waiting for file selection.", "");
+            return;
+          }
+          if (!valid) {
+            showNoValidSqpMessage();
+            return;
+          }
+          setSearchImportMessage("Ready to import.", "");
+        }
+
+        async function runSqpBulkImport(triggerLabel) {
+          var files = Array.isArray(searchImportFiles.sqp) ? searchImportFiles.sqp : [];
+          if (!files.length) {
+            setSearchImportMessage("Waiting for file selection.", "warn");
+            updateSearchImportUploadButton();
+            logSqpImportDebug("processing_blocked_no_files", { trigger: triggerLabel || "unknown" });
+            return;
+          }
+
+          buildSqpImportQueueFromFiles();
+          renderSearchImportChecklist();
+
+          var validRows = sqpImportQueue.filter(function (row) { return row.valid; });
+          if (!validRows.length) {
+            showNoValidSqpMessage();
+            updateSearchImportUploadButton();
+            logSqpImportDebug("processing_blocked_no_valid_files", {
+              trigger: triggerLabel || "unknown",
+              total: files.length
+            });
+            return;
+          }
+
+          searchImportBusy = true;
+          updateSearchImportUploadButton();
+          setSearchImportMessage("Uploading...", "");
+
+          var processingRows = validRows.slice().sort(function (a, b) {
+            if (a.week !== b.week) return a.week - b.week;
+            return a.index - b.index;
+          });
+          logSqpImportDebug("processing_started", {
+            trigger: triggerLabel || "unknown",
+            selected: files.length,
+            valid: processingRows.length,
+            invalid: files.length - processingRows.length
+          });
+
+          for (var i = 0; i < processingRows.length; i++) {
+            var row = processingRows[i];
+            row.status = "Importing";
+            row.message = "";
+            renderSearchImportChecklist();
+            logSqpImportDebug("processing_file_start", {
+              filename: row.filename,
+              week: row.week
+            });
+
+            try {
+              var result = await processSingleSqpImportQueueRow(row);
+              if (!result || !result.ok) {
+                row.status = "Failed";
+                row.message = (result && result.message) || "Import failed.";
+                logSqpImportDebug("processing_file_failed", {
+                  filename: row.filename,
+                  week: row.week,
+                  reason: row.message
+                });
+              } else {
+                row.status = "Imported";
+                row.message = "Imported " + (toSqpWeekLabel(row.week) || "");
+                searchImportSelection.selectedWeek = toSqpWeekLabel(row.week) || searchImportSelection.selectedWeek;
+                logSqpImportDebug("processing_file_success", {
+                  filename: row.filename,
+                  week: row.week,
+                  rowsInFile: result.rowsInFile,
+                  importedRows: result.importedRows
+                });
+              }
+            } catch (error) {
+              row.status = "Failed";
+              row.message = error && error.message ? error.message : "Unknown error.";
+              logSqpImportDebug("processing_file_exception", {
+                filename: row.filename,
+                week: row.week,
+                reason: row.message
+              });
+            }
+
+            renderSearchImportChecklist();
+          }
+
+          searchImportBusy = false;
+          updateSearchImportUploadButton();
+          renderSqpKeywordList();
+          renderSearchImportChecklist();
+          fillSearchTables();
+
+          var importedCount = sqpImportQueue.filter(function (row) { return row.status === "Imported"; }).length;
+          var failedCount = sqpImportQueue.filter(function (row) { return row.status === "Failed"; }).length;
+          var rejectedCount = sqpImportQueue.filter(function (row) { return row.status === "Rejected"; }).length;
+          var duplicateCount = sqpImportQueue.filter(function (row) { return row.status === "Duplicate"; }).length;
+          logSqpImportDebug("processing_completed", {
+            imported: importedCount,
+            failed: failedCount,
+            rejected: rejectedCount,
+            duplicate: duplicateCount
+          });
+
+          if (importedCount > 0 && failedCount === 0 && rejectedCount === 0) {
+            setSearchImportMessage(
+              duplicateCount
+                ? ("Uploaded successfully. Duplicate skipped: " + duplicateCount + ".")
+                : "Uploaded successfully.",
+              "ok"
+            );
+          } else if (importedCount > 0) {
+            setSearchImportMessage("Upload completed with some failures.", "warn");
+          } else {
+            setSearchImportMessage("Upload failed.", "warn");
+          }
+        }
 
         if (weekSelect) {
           weekSelect.addEventListener("change", function () {
@@ -9216,120 +9373,35 @@
           });
           sqpDropzone.addEventListener("drop", function (event) {
             event.preventDefault();
-            searchImportFiles.sqp = event.dataTransfer && event.dataTransfer.files
+            var droppedFiles = event.dataTransfer && event.dataTransfer.files
               ? Array.from(event.dataTransfer.files)
               : [];
-            buildSqpImportQueueFromFiles();
-            updateSearchImportUploadButton();
-            renderSearchImportChecklist();
-            setSearchImportMessage(searchImportFiles.sqp.length ? "Ready to import." : "Waiting for file selection.", "");
+            applySqpSelectedFiles(droppedFiles, "dropzone");
           });
         }
 
         sqpInput.addEventListener("change", function () {
-          searchImportFiles.sqp = sqpInput.files ? Array.from(sqpInput.files) : [];
-          buildSqpImportQueueFromFiles();
-          updateSearchImportUploadButton();
-          renderSearchImportChecklist();
-
-          if (!searchImportFiles.sqp.length) {
-            setSearchImportMessage("Waiting for file selection.", "");
-            return;
-          }
-
-          var validCount = sqpImportQueue.filter(function (row) { return row.valid; }).length;
-          if (!validCount) {
-            setSearchImportMessage("No valid files. Use SQP_W{1..52}.csv or .xlsx.", "warn");
-            return;
-          }
-
-          setSearchImportMessage("Ready to import.", "");
+          var selectedFiles = sqpInput.files ? Array.from(sqpInput.files) : [];
+          applySqpSelectedFiles(selectedFiles, "picker");
         });
 
-        form.addEventListener("submit", async function (event) {
-          event.preventDefault();
-
-          var files = Array.isArray(searchImportFiles.sqp) ? searchImportFiles.sqp : [];
-          if (!files.length) {
-            setSearchImportMessage("Waiting for file selection.", "warn");
-            updateSearchImportUploadButton();
-            return;
-          }
-
-          buildSqpImportQueueFromFiles();
-          renderSearchImportChecklist();
-
-          var validRows = sqpImportQueue.filter(function (row) { return row.valid; });
-          if (!validRows.length) {
-            setSearchImportMessage("No valid files to import. Use SQP_W{1..52}.csv or .xlsx.", "warn");
-            updateSearchImportUploadButton();
-            return;
-          }
-
-          searchImportBusy = true;
-          updateSearchImportUploadButton();
-          setSearchImportMessage("Uploading...", "");
-
-          var processingRows = validRows.slice().sort(function (a, b) {
-            if (a.week !== b.week) return a.week - b.week;
-            return a.index - b.index;
+        if (uploadBtn && uploadBtn.dataset.bound !== "1") {
+          uploadBtn.dataset.bound = "1";
+          uploadBtn.addEventListener("click", function (event) {
+            if (event) event.preventDefault();
+            runSqpBulkImport("button");
           });
+        }
 
-          for (var i = 0; i < processingRows.length; i++) {
-            var row = processingRows[i];
-            row.status = "Importing";
-            row.message = "";
-            renderSearchImportChecklist();
-
-            try {
-              var result = await processSingleSqpImportQueueRow(row);
-              if (!result || !result.ok) {
-                row.status = "Failed";
-                row.message = (result && result.message) || "Import failed.";
-              } else {
-                row.status = "Imported";
-                row.message = "Imported " + (toSqpWeekLabel(row.week) || "");
-                searchImportSelection.selectedWeek = toSqpWeekLabel(row.week) || searchImportSelection.selectedWeek;
-              }
-            } catch (error) {
-              row.status = "Failed";
-              row.message = error && error.message ? error.message : "Unknown error.";
-            }
-
-            renderSearchImportChecklist();
-          }
-
-          searchImportBusy = false;
-          updateSearchImportUploadButton();
-          renderSqpKeywordList();
-          renderSearchImportChecklist();
-          fillSearchTables();
-
-          var importedCount = sqpImportQueue.filter(function (row) { return row.status === "Imported"; }).length;
-          var failedCount = sqpImportQueue.filter(function (row) { return row.status === "Failed"; }).length;
-          var rejectedCount = sqpImportQueue.filter(function (row) { return row.status === "Rejected"; }).length;
-          var duplicateCount = sqpImportQueue.filter(function (row) { return row.status === "Duplicate"; }).length;
-
-          if (importedCount > 0 && failedCount === 0 && rejectedCount === 0) {
-            setSearchImportMessage(
-              duplicateCount
-                ? ("Uploaded successfully. Duplicate skipped: " + duplicateCount + ".")
-                : "Uploaded successfully.",
-              "ok"
-            );
-          } else if (importedCount > 0) {
-            setSearchImportMessage("Upload completed with some failures.", "warn");
-          } else {
-            setSearchImportMessage("Upload failed.", "warn");
-          }
+        form.setAttribute("novalidate", "novalidate");
+        form.addEventListener("submit", function (event) {
+          if (event) event.preventDefault();
+          runSqpBulkImport("form-submit");
         });
 
-        searchImportFiles.sqp = sqpInput.files ? Array.from(sqpInput.files) : [];
-        buildSqpImportQueueFromFiles();
-        updateSearchImportUploadButton();
+        var initialFiles = sqpInput.files ? Array.from(sqpInput.files) : [];
+        applySqpSelectedFiles(initialFiles, "init");
         renderSqpKeywordList();
-        renderSearchImportChecklist();
-        setSearchImportMessage(searchImportFiles.sqp.length ? "Ready to import." : "Waiting for file selection.", "");
         fillSearchTables();
       }
 
