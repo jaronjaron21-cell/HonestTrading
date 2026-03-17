@@ -1829,7 +1829,8 @@
       text-overflow: ellipsis;
     }
 
-    #cts-shopify-reporting [data-table='sqp-warehouse-table'].cts-warehouse-shared-table .cts-warehouse-th-inline {
+    #cts-shopify-reporting [data-table='sqp-warehouse-table'].cts-warehouse-shared-table .cts-warehouse-th-inline,
+    #cts-shopify-reporting [data-table='asin-warehouse-metrics'].cts-warehouse-shared-table .cts-warehouse-th-inline {
       display: flex;
       align-items: center;
       justify-content: center;
@@ -1838,28 +1839,33 @@
       min-width: 0;
     }
 
-    #cts-shopify-reporting [data-table='sqp-warehouse-table'].cts-warehouse-shared-table .cts-warehouse-th-title {
+    #cts-shopify-reporting [data-table='sqp-warehouse-table'].cts-warehouse-shared-table .cts-warehouse-th-title,
+    #cts-shopify-reporting [data-table='asin-warehouse-metrics'].cts-warehouse-shared-table .cts-warehouse-th-title {
       display: block;
       text-align: center;
       line-height: 1.15;
     }
 
-    #cts-shopify-reporting [data-table='sqp-warehouse-table'].cts-warehouse-shared-table .cts-warehouse-th-menu {
+    #cts-shopify-reporting [data-table='sqp-warehouse-table'].cts-warehouse-shared-table .cts-warehouse-th-menu,
+    #cts-shopify-reporting [data-table='asin-warehouse-metrics'].cts-warehouse-shared-table .cts-warehouse-th-menu {
       position: relative;
       display: inline-flex;
       align-items: center;
       margin: 0;
     }
 
-    #cts-shopify-reporting [data-table='sqp-warehouse-table'].cts-warehouse-shared-table .cts-warehouse-th-menu > summary {
+    #cts-shopify-reporting [data-table='sqp-warehouse-table'].cts-warehouse-shared-table .cts-warehouse-th-menu > summary,
+    #cts-shopify-reporting [data-table='asin-warehouse-metrics'].cts-warehouse-shared-table .cts-warehouse-th-menu > summary {
       list-style: none;
     }
 
-    #cts-shopify-reporting [data-table='sqp-warehouse-table'].cts-warehouse-shared-table .cts-warehouse-th-menu > summary::-webkit-details-marker {
+    #cts-shopify-reporting [data-table='sqp-warehouse-table'].cts-warehouse-shared-table .cts-warehouse-th-menu > summary::-webkit-details-marker,
+    #cts-shopify-reporting [data-table='asin-warehouse-metrics'].cts-warehouse-shared-table .cts-warehouse-th-menu > summary::-webkit-details-marker {
       display: none;
     }
 
-    #cts-shopify-reporting [data-table='sqp-warehouse-table'].cts-warehouse-shared-table .cts-warehouse-th-icon {
+    #cts-shopify-reporting [data-table='sqp-warehouse-table'].cts-warehouse-shared-table .cts-warehouse-th-icon,
+    #cts-shopify-reporting [data-table='asin-warehouse-metrics'].cts-warehouse-shared-table .cts-warehouse-th-icon {
       width: 22px;
       height: 22px;
       min-width: 22px;
@@ -1877,20 +1883,24 @@
       font-size: 14px;
     }
 
-    #cts-shopify-reporting [data-table='sqp-warehouse-table'].cts-warehouse-shared-table .cts-warehouse-th-icon svg {
+    #cts-shopify-reporting [data-table='sqp-warehouse-table'].cts-warehouse-shared-table .cts-warehouse-th-icon svg,
+    #cts-shopify-reporting [data-table='asin-warehouse-metrics'].cts-warehouse-shared-table .cts-warehouse-th-icon svg {
       width: 12px;
       height: 12px;
       display: block;
     }
 
     #cts-shopify-reporting [data-table='sqp-warehouse-table'].cts-warehouse-shared-table .cts-warehouse-th-icon:hover,
-    #cts-shopify-reporting [data-table='sqp-warehouse-table'].cts-warehouse-shared-table .cts-warehouse-th-icon:focus-visible {
+    #cts-shopify-reporting [data-table='sqp-warehouse-table'].cts-warehouse-shared-table .cts-warehouse-th-icon:focus-visible,
+    #cts-shopify-reporting [data-table='asin-warehouse-metrics'].cts-warehouse-shared-table .cts-warehouse-th-icon:hover,
+    #cts-shopify-reporting [data-table='asin-warehouse-metrics'].cts-warehouse-shared-table .cts-warehouse-th-icon:focus-visible {
       outline: none;
       border-color: var(--primary-400);
       background: var(--primary-100);
     }
 
-    #cts-shopify-reporting [data-table='sqp-warehouse-table'].cts-warehouse-shared-table .cts-warehouse-th-menu-panel {
+    #cts-shopify-reporting [data-table='sqp-warehouse-table'].cts-warehouse-shared-table .cts-warehouse-th-menu-panel,
+    #cts-shopify-reporting [data-table='asin-warehouse-metrics'].cts-warehouse-shared-table .cts-warehouse-th-menu-panel {
       position: absolute;
       top: calc(100% + 6px);
       left: 50%;
@@ -1905,12 +1915,14 @@
       max-width: 170px;
     }
 
-    #cts-shopify-reporting [data-table='sqp-warehouse-table'].cts-warehouse-shared-table th:nth-child(n+4) .cts-warehouse-th-menu-panel {
+    #cts-shopify-reporting [data-table='sqp-warehouse-table'].cts-warehouse-shared-table th:nth-child(n+4) .cts-warehouse-th-menu-panel,
+    #cts-shopify-reporting [data-table='asin-warehouse-metrics'].cts-warehouse-shared-table th:nth-child(n+4) .cts-warehouse-th-menu-panel {
       min-width: 118px;
       max-width: 130px;
     }
 
-    #cts-shopify-reporting [data-table='sqp-warehouse-table'].cts-warehouse-shared-table .cts-warehouse-th-menu-panel .cts-select {
+    #cts-shopify-reporting [data-table='sqp-warehouse-table'].cts-warehouse-shared-table .cts-warehouse-th-menu-panel .cts-select,
+    #cts-shopify-reporting [data-table='asin-warehouse-metrics'].cts-warehouse-shared-table .cts-warehouse-th-menu-panel .cts-select {
       width: 100%;
       min-height: 28px;
       height: 28px;
@@ -1922,7 +1934,8 @@
       padding: 0 8px;
     }
 
-    #cts-shopify-reporting [data-table='sqp-warehouse-table'].cts-warehouse-shared-table .cts-warehouse-th-collapse {
+    #cts-shopify-reporting [data-table='sqp-warehouse-table'].cts-warehouse-shared-table .cts-warehouse-th-collapse,
+    #cts-shopify-reporting [data-table='asin-warehouse-metrics'].cts-warehouse-shared-table .cts-warehouse-th-collapse {
       font-size: 16px;
       font-weight: 700;
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
@@ -1937,6 +1950,18 @@
 
     #cts-shopify-reporting [data-table='sqp-warehouse-table'].cts-warehouse-shared-table.is-date-collapsed td:nth-child(2) .cts-date-covered-value,
     #cts-shopify-reporting [data-table='sqp-warehouse-table'].cts-warehouse-shared-table.is-date-collapsed th:nth-child(2) .cts-warehouse-th-title {
+      display: none;
+    }
+
+    #cts-shopify-reporting [data-table='asin-warehouse-metrics'].cts-warehouse-shared-table.is-date-collapsed th:nth-child(2),
+    #cts-shopify-reporting [data-table='asin-warehouse-metrics'].cts-warehouse-shared-table.is-date-collapsed td:nth-child(2) {
+      width: 64px;
+      min-width: 64px;
+      max-width: 64px;
+    }
+
+    #cts-shopify-reporting [data-table='asin-warehouse-metrics'].cts-warehouse-shared-table.is-date-collapsed td:nth-child(2) .cts-date-covered-value,
+    #cts-shopify-reporting [data-table='asin-warehouse-metrics'].cts-warehouse-shared-table.is-date-collapsed th:nth-child(2) .cts-warehouse-th-title {
       display: none;
     }
 
@@ -4004,6 +4029,11 @@
       var asinMaster = [];
       var asinWarehouseOrder = Object.keys(asinWarehouseData);
       var asinDashboardSort = { key: "cm3", dir: "desc" };
+      var asinWarehouseTableState = {
+        sortKey: "",
+        sortDir: "",
+        dateCoveredCollapsed: false
+      };
       var BENCHMARKS = {
         "CM1%": { value: 0.70, direction: "higher" },
         "CM2%": { value: 0.35, direction: "higher" },
@@ -7975,21 +8005,131 @@
 
       function renderAsinWarehouseTable(selectedAsin) {
         var table = root.querySelector("[data-table='asin-warehouse-metrics']");
+        if (!table) return;
         var rows = buildWarehouseRowsForAsinCode(selectedAsin);
         var productTitle = getAsinProductTitle(selectedAsin);
-        var headers = ["Fortnight", "Date Covered", "Product Title"].concat(asinWarehouseColumns.map(function (col) {
-          return col.label;
-        }));
-        renderUniformWarehouseTable(table, headers, rows, function (row) {
+        var sortableMetricMap = asinWarehouseColumns.reduce(function (acc, col) {
+          if (col && col.type !== "text") acc[col.key] = true;
+          return acc;
+        }, {});
+        var sortKey = String(asinWarehouseTableState.sortKey || "");
+        var sortDir = String(asinWarehouseTableState.sortDir || "").toLowerCase();
+        if (!sortableMetricMap[sortKey]) {
+          sortKey = "";
+          sortDir = "";
+        }
+        if (sortDir !== "asc" && sortDir !== "desc") {
+          sortDir = "";
+          if (sortKey) sortKey = "";
+        }
+
+        function baseSortComparator(left, right) {
+          return parseFortnightIndex(left && left.fortnight) - parseFortnightIndex(right && right.fortnight);
+        }
+
+        var sortedRows = (rows || []).slice().sort(function (left, right) {
+          if (!sortKey) return baseSortComparator(left, right);
+          var leftValue = toNumber(left && left[sortKey]);
+          var rightValue = toNumber(right && right[sortKey]);
+          if (leftValue === rightValue) return baseSortComparator(left, right);
+          return sortDir === "asc" ? (leftValue - rightValue) : (rightValue - leftValue);
+        });
+
+        table.classList.toggle("is-date-collapsed", !!asinWarehouseTableState.dateCoveredCollapsed);
+
+        function sortOptionsFor(metricKey) {
+          var selectedValue = sortKey === metricKey ? sortDir : "";
+          return ""
+            + "<option value='' " + (selectedValue === "" ? "selected" : "") + ">Default</option>"
+            + "<option value='desc' " + (selectedValue === "desc" ? "selected" : "") + ">Highest</option>"
+            + "<option value='asc' " + (selectedValue === "asc" ? "selected" : "") + ">Lowest</option>";
+        }
+
+        function filterIconHtml() {
+          return "<svg viewBox='0 0 24 24' fill='none' aria-hidden='true'>"
+            + "<path d='M4 6h16l-6.5 7v5l-3 1v-6L4 6z' stroke='currentColor' stroke-width='1.8' stroke-linejoin='round'/>"
+            + "</svg>";
+        }
+
+        function metricHeader(label, key, sortable) {
+          if (!sortable) {
+            return "<th><div class='cts-warehouse-th-inline'><span class='cts-warehouse-th-title'>"
+              + escapeHtml(label)
+              + "</span></div></th>";
+          }
+          return "<th><div class='cts-warehouse-th-inline'>"
+            + "<span class='cts-warehouse-th-title'>" + escapeHtml(label) + "</span>"
+            + "<details class='cts-warehouse-th-menu'>"
+            + "<summary class='cts-warehouse-th-icon' title='Sort'>"
+            + filterIconHtml()
+            + "</summary>"
+            + "<div class='cts-warehouse-th-menu-panel'>"
+            + "<select class='cts-select cts-select-compact' data-action='asin-warehouse-sort' data-key='" + escapeAttr(key) + "'>"
+            + sortOptionsFor(key)
+            + "</select>"
+            + "</div>"
+            + "</details>"
+            + "</div></th>";
+        }
+
+        var headers = ""
+          + "<th><div class='cts-warehouse-th-inline'><span class='cts-warehouse-th-title'>Fortnight</span></div></th>"
+          + "<th><div class='cts-warehouse-th-inline'>"
+          + "<span class='cts-warehouse-th-title'>Date Covered</span>"
+          + "<button type='button' class='cts-warehouse-th-icon cts-warehouse-th-collapse' data-action='asin-warehouse-toggle-date' title='Toggle Date Covered'>"
+          + (asinWarehouseTableState.dateCoveredCollapsed ? "+" : "-")
+          + "</button>"
+          + "</div></th>"
+          + "<th><div class='cts-warehouse-th-inline'><span class='cts-warehouse-th-title'>Product Title</span></div></th>"
+          + asinWarehouseColumns.map(function (col) {
+            return metricHeader(col.label, col.key, !!sortableMetricMap[col.key]);
+          }).join("");
+
+        var bodyHtml = sortedRows.map(function (row) {
           var fortnightNumber = parseFortnightIndex(row && row.fortnight) + 1;
           return "<tr><td>" + escapeHtml(row.fortnight) + "</td>"
-            + "<td>" + escapeHtml(getFortnightDateCovered(fortnightNumber)) + "</td>"
+            + "<td><span class='cts-date-covered-value'>" + escapeHtml(getFortnightDateCovered(fortnightNumber)) + "</span></td>"
             + "<td>" + escapeHtml(productTitle || "") + "</td>"
             + asinWarehouseColumns.map(function (col) {
               return "<td>" + escapeHtml(formatWarehouseValue(col.type, row[col.key])) + "</td>";
             }).join("")
             + "</tr>";
-        }, "<tr><td colspan='" + headers.length + "'>No warehouse rows available.</td></tr>");
+        }).join("");
+
+        table.innerHTML = "<thead><tr>" + headers + "</tr></thead><tbody>" + bodyHtml + "</tbody>";
+
+        if (table.dataset.asinHeaderControlsBound !== "1") {
+          table.dataset.asinHeaderControlsBound = "1";
+          function getCurrentWarehouseAsin() {
+            var filter = root.querySelector("[data-control='asin-warehouse-filter']");
+            var current = normalizeAsinCode(filter && filter.value);
+            return isValidAsinCode(current) ? current : normalizeAsinCode(selectedAsin);
+          }
+          table.addEventListener("change", function (event) {
+            var target = event.target;
+            if (!target) return;
+            var action = target.getAttribute("data-action");
+            if (action !== "asin-warehouse-sort") return;
+            var metricKey = String(target.getAttribute("data-key") || "");
+            var direction = String(target.value || "").toLowerCase();
+            if (sortableMetricMap[metricKey] && (direction === "asc" || direction === "desc")) {
+              asinWarehouseTableState.sortKey = metricKey;
+              asinWarehouseTableState.sortDir = direction;
+            } else {
+              asinWarehouseTableState.sortKey = "";
+              asinWarehouseTableState.sortDir = "";
+            }
+            renderAsinWarehouseTable(getCurrentWarehouseAsin());
+          });
+          table.addEventListener("click", function (event) {
+            var trigger = event.target && event.target.closest
+              ? event.target.closest("[data-action='asin-warehouse-toggle-date']")
+              : null;
+            if (!trigger) return;
+            asinWarehouseTableState.dateCoveredCollapsed = !asinWarehouseTableState.dateCoveredCollapsed;
+            renderAsinWarehouseTable(getCurrentWarehouseAsin());
+          });
+        }
       }
 
       async function initAsinWarehouse() {
@@ -8814,9 +8954,9 @@
 
       async function applyPpcImportToWarehouse(selectedAsin, selectedFortnight, ppcFile) {
         var rows = await readTabularFile(ppcFile, [
-          "Sales",
           "Sales (USD)",
           "Sales(USD)",
+          "Sales",
           "Total Sales",
           "Attributed Sales",
           "7 Day Total Sales",
@@ -8828,46 +8968,22 @@
 
         var salesKey = resolveHeaderKey(
           rows[0],
-          ["Sales", "Sales (USD)", "Sales(USD)", "Total Sales", "Attributed Sales", "7 Day Total Sales", "14 Day Total Sales"],
+          ["Sales (USD)", "Sales(USD)", "Sales", "Total Sales", "Attributed Sales", "7 Day Total Sales", "14 Day Total Sales"],
           [["sales"], ["total", "sales"], ["attributed", "sales"], ["day", "sales"]],
-          ["acos", "roas", "click", "impression", "order"]
+          ["acos", "roas", "click", "impression", "order", "ntb"]
         );
         if (!salesKey) {
-          return { ok: false, message: "PPC Data missing column: Sales." };
+          return { ok: false, message: "PPC Data missing column: Sales (USD)." };
         }
-
         var normalizedSelectedAsin = normalizeAsinCode(selectedAsin);
-        var ppcAsinKey = resolveHeaderKey(
-          rows[0],
-          ["ASIN", "Advertised ASIN", "Product ASIN", "Child ASIN"],
-          [["asin"], ["advertised", "asin"], ["product", "asin"], ["child", "asin"]],
-          []
-        );
-        var ppcProductKey = resolveHeaderKey(
-          rows[0],
-          ["Product", "Products", "SKU"],
-          [["product"], ["products"], ["sku"]],
-          []
-        );
-        var rowsForAsin = rows;
-        if (ppcAsinKey) {
-          var exactAsinRows = rows.filter(function (row) {
-            return normalizeAsinCode(row[ppcAsinKey]) === normalizedSelectedAsin;
-          });
-          if (exactAsinRows.length) rowsForAsin = exactAsinRows;
-        } else if (ppcProductKey) {
-          var productMatchedRows = rows.filter(function (row) {
-            return valueContainsAsin(row[ppcProductKey], normalizedSelectedAsin);
-          });
-          if (productMatchedRows.length) rowsForAsin = productMatchedRows;
-        }
 
         var fortnightIdx = parseFortnightIndex(selectedFortnight);
         if (fortnightIdx < 0) {
           return { ok: false, message: "Select a valid Fortnight." };
         }
 
-        var sumSales = rowsForAsin.reduce(function (sum, row) {
+        // PPC import is filename-context driven: sum the whole file's sales column.
+        var sumSales = rows.reduce(function (sum, row) {
           return sum + toNumber(row[salesKey]);
         }, 0);
 
@@ -8886,7 +9002,7 @@
         }
         refreshAsinProfitabilityViews();
 
-        return { ok: true, rowCount: rowsForAsin.length, adSales: sumSales };
+        return { ok: true, rowCount: rows.length, adSales: sumSales };
       }
 
       function setImportMessage(text, type) {
