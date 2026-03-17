@@ -1176,8 +1176,8 @@
     #cts-shopify-reporting .cts-view[data-view='asin-warehouse'] .cts-asin-warehouse-dropdown {
       position: relative;
       width: auto;
-      max-width: min(980px, 90vw);
-      min-width: 620px;
+      max-width: min(860px, 88vw);
+      min-width: 320px;
     }
 
     #cts-shopify-reporting .cts-view[data-view='asin-warehouse'] .cts-asin-warehouse-dropdown-trigger {
@@ -8125,16 +8125,27 @@
           dropdown.style.minWidth = "0";
           dropdown.style.maxWidth = "100%";
         } else {
-          var deleteColWidth = 64;
-          var triggerChromeWidth = 74;
-          var menuPaddingWidth = 24;
-          var extraContentAllowance = 64;
-          var desiredWidth = Math.ceil(labelWidth + Math.max(triggerChromeWidth, deleteColWidth + menuPaddingWidth) + extraContentAllowance);
-          var maxAllowedWidth = Math.max(620, viewportWidth - 96);
-          var finalWidth = clamp(desiredWidth, 620, maxAllowedWidth);
+          var optionTextPaddingWidth = 20;
+          var optionDeleteColWidth = 62;
+          var optionGapWidth = 6;
+          var menuPaddingWidth = 12;
+          var triggerChromeWidth = 34;
+          var desiredWidth = Math.ceil(
+            labelWidth
+            + optionTextPaddingWidth
+            + optionDeleteColWidth
+            + optionGapWidth
+            + menuPaddingWidth
+          );
+          var minAllowedWidth = 320;
+          var maxAllowedWidth = Math.max(420, viewportWidth - 88);
+          var finalWidth = clamp(desiredWidth, minAllowedWidth, maxAllowedWidth);
           dropdown.style.width = finalWidth + "px";
-          dropdown.style.minWidth = "620px";
+          dropdown.style.minWidth = minAllowedWidth + "px";
           dropdown.style.maxWidth = finalWidth + "px";
+          if (finalWidth < labelWidth + triggerChromeWidth) {
+            dropdown.style.width = Math.ceil(labelWidth + triggerChromeWidth) + "px";
+          }
         }
 
         var disableDelete = asinWarehouseOrder.length <= 1;
