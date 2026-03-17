@@ -1156,12 +1156,6 @@
       color: #943c3c;
     }
 
-    #cts-shopify-reporting .cts-view[data-view='asin-warehouse'] .cts-asin-warehouse-filter-row {
-      justify-content: flex-end;
-      gap: 12px;
-      row-gap: 10px;
-    }
-
     #cts-shopify-reporting .cts-view[data-view='asin-warehouse'] .cts-asin-warehouse-selector-group {
       display: flex;
       align-items: center;
@@ -1169,6 +1163,12 @@
       min-width: 0;
       flex: 0 1 auto;
       margin-left: auto;
+    }
+
+    #cts-shopify-reporting .cts-view[data-view='asin-warehouse'] .cts-asin-warehouse-msg {
+      grid-column: 1 / -1;
+      justify-self: start;
+      margin-top: 2px;
     }
 
     #cts-shopify-reporting .cts-view[data-view='asin-warehouse'] .cts-asin-warehouse-dropdown {
@@ -2861,7 +2861,7 @@
       overflow: hidden;
       overscroll-behavior: auto;
       display: grid;
-      grid-template-rows: auto auto minmax(0, 1fr);
+      grid-template-rows: auto minmax(0, 1fr);
       gap: 12px;
     }
 
@@ -2872,14 +2872,11 @@
       background: var(--surface);
       border-bottom: 1px solid var(--cts-line);
       padding-bottom: 8px;
-    }
-
-    #cts-shopify-reporting .cts-view[data-view='asin-warehouse'] .cts-warehouse-controls {
-      position: sticky;
-      top: 78px;
-      z-index: 80;
-      background: var(--surface);
-      box-shadow: 0 2px 0 rgba(15, 23, 42, 0.03);
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+      column-gap: 14px;
+      row-gap: 8px;
     }
 
     #cts-shopify-reporting .cts-view[data-view='asin-warehouse'] .cts-warehouse-table-card {
@@ -3361,9 +3358,6 @@
         width: 100%;
       }
 
-      #cts-shopify-reporting .cts-view[data-view='asin-warehouse'] .cts-warehouse-controls {
-        top: 72px;
-      }
     }
 
     @media (max-width: 640px) {
@@ -3384,8 +3378,13 @@
         gap: 18px;
       }
 
+      #cts-shopify-reporting .cts-view[data-view='asin-warehouse'] .cts-warehouse-topbar {
+        grid-template-columns: 1fr;
+      }
+
       #cts-shopify-reporting .cts-view[data-view='asin-warehouse'] .cts-asin-warehouse-selector-group {
         width: 100%;
+        margin-left: 0;
       }
 
       #cts-shopify-reporting .cts-view[data-view='asin-warehouse'] .cts-asin-warehouse-dropdown {
@@ -3939,11 +3938,7 @@
             <div>
               <h3>ASIN Profitability Warehouse</h3>
             </div>
-          </div>
-
-          <section class="cts-card cts-warehouse-controls">
-            <div class="cts-filter-row cts-asin-warehouse-filter-row">
-              <div class="cts-asin-warehouse-selector-group">
+            <div class="cts-asin-warehouse-selector-group">
                 <strong>Product</strong>
                 <div class="cts-asin-warehouse-dropdown" data-control="asin-warehouse-custom">
                   <button class="cts-select cts-asin-warehouse-dropdown-trigger" type="button" data-action="asin-warehouse-dropdown-toggle" aria-expanded="false">
@@ -3955,11 +3950,9 @@
                   </div>
                 </div>
                 <select class="cts-select cts-hidden" data-control="asin-warehouse-filter"></select>
-              </div>
-              <input class="cts-text-input cts-hidden" type="text" data-input="asin-inline" placeholder="ASIN Code" maxlength="10" />
-              <span class="cts-import-msg" data-msg="asin-add"></span>
             </div>
-          </section>
+            <span class="cts-import-msg cts-asin-warehouse-msg" data-msg="asin-add"></span>
+          </div>
 
           <section class="cts-card cts-warehouse-table-card">
             <h4>Fortnight Warehouse Data</h4>
@@ -8413,12 +8406,11 @@
 
       async function initAsinWarehouse() {
         var filter = root.querySelector("[data-control='asin-warehouse-filter']");
-        var inlineInput = root.querySelector("[data-input='asin-inline']");
         var dropdown = root.querySelector("[data-control='asin-warehouse-custom']");
         var dropdownTrigger = dropdown ? dropdown.querySelector("[data-action='asin-warehouse-dropdown-toggle']") : null;
         var dropdownMenu = dropdown ? dropdown.querySelector("[data-wrap='asin-warehouse-dropdown-menu']") : null;
         var dropdownList = dropdown ? dropdown.querySelector("[data-list='asin-warehouse-options']") : null;
-        if (!filter || !inlineInput || !dropdown || !dropdownTrigger || !dropdownMenu || !dropdownList) return;
+        if (!filter || !dropdown || !dropdownTrigger || !dropdownMenu || !dropdownList) return;
 
         await loadAsinWarehouseState();
 
@@ -8459,8 +8451,6 @@
           renderAsinWarehouseOptions(filter, nextAsin);
           if (nextAsin) renderAsinWarehouseTable(nextAsin);
           refreshAsinProfitabilityViews();
-          inlineInput.classList.add("cts-hidden");
-          inlineInput.value = "";
           if (asinAddMessageTimer) window.clearTimeout(asinAddMessageTimer);
           setAsinAddMessage("", "");
           closeDropdown();
@@ -8474,8 +8464,6 @@
         }
 
         filter.addEventListener("change", function () {
-          inlineInput.classList.add("cts-hidden");
-          inlineInput.value = "";
           setAsinAddMessage("", "");
           renderAsinWarehouseCustomDropdown(filter.value);
           renderAsinWarehouseTable(filter.value);
