@@ -3849,6 +3849,13 @@
             </form>
           </section>
 
+          <section class="cts-card">
+            <h4>Uploaded Weeks Checklist</h4>
+            <div class="cts-import-queue-wrap">
+              <table class="cts-table" data-table="sqp-import-checklist"></table>
+            </div>
+          </section>
+
         </article>
 
         <article class="cts-view" data-view="search-warehouse">
@@ -4046,7 +4053,7 @@
           </section>
 
           <section class="cts-card">
-            <h4>Processing Checklist</h4>
+            <h4>Uploaded Data Checklist</h4>
             <table class="cts-table" data-table="asin-import-checklist"></table>
           </section>
         </article>
@@ -4194,6 +4201,11 @@
         AMZ: "Amazon Data",
         SB: "Sellerboard Data",
         PPC: "PPC Data"
+      };
+      var ASIN_IMPORT_SOURCE_FIELDS = {
+        AMZ: ["totalOrders", "totalUnitsSold"],
+        SB: ["sales", "promotion", "adCost", "cogs", "sessions", "refundCost", "amazonFees", "returnsUnits", "sellableReturns"],
+        PPC: ["adSales"]
       };
       var asinImportQueues = {
         bulk: []
@@ -6020,6 +6032,177 @@
         var node = root.querySelector("[data-search-import-summary]");
         if (!node) return;
         node.innerHTML = htmlText || "";
+      }
+
+      function formatUploadDateTime(value) {
+        if (!value) return "—";
+        var parsed = new Date(value);
+        if (isNaN(parsed.getTime())) return String(value);
+        try {
+          return parsed.toLocaleString();
+        } catch (error) {
+          return parsed.toISOString();
+        }
+      }
+
+      function hasMeaningfulWarehouseFieldValue(value) {
+        return !(value === null || value === undefined || value === "");
+      }
+
+      function getAsinWarehouseRowByFortnightNumber(asinCode, fortnightNumber) {
+        var normalized = normalizeAsinCode(asinCode);
+        if (!isValidAsinCode(normalized)) return null;
+        var rows = Array.isArray(asinWarehouseData[normalized]) ? asinWarehouseData[normalized] : [];
+        var targetIndex = Number(fortnightNumber) - 1;
+        if (!(targetIndex >= 0 && targetIndex < 26)) return null;
+        return rows.find(function (row) {
+          return parseFortnightIndex(row && row.fortnight) === targetIndex;
+        }) || null;
+      }
+
+      function hasAsinSourceDataForTarget(asinCode, fortnightNumber, tag) {
+        var row = getAsinWarehouseRowByFortnightNumber(asinCode, fortnightNumber);
+        if (!row) return false;
+        var fieldKeys = ASIN_IMPORT_SOURCE_FIELDS[tag] || [];
+        if (!fieldKeys.length) return false;
+        return fieldKeys.some(function (key) {
+          return hasMeaningfulWarehouseFieldValue(row[key]);
+        });
+      }
+
+      function buildAsinUploadedChecklistRows() {
+        var rows = [];
+        asinWarehouseOrder.forEach(function (asinCode) {
+          var asinRows = Array.isArray(asinWarehouseData[asinCode]) ? asinWarehouseData[asinCode] : [];
+          asinRows.forEach(function (row) {
+            var fortnightIndex = parseFortnightIndex(row && row.fortnight);
+            if (fortnightIndex < 0) return;
+            var fortnightNumber = fortnightIndex + 1;
+            var hasAmz = hasAsinSourceDataForTarget(asinCode, fortnightNumber, "AMZ");
+            var hasSb = hasAsinSourceDataForTarget(asinCode, fortnightNumber, "SB");
+            var hasPpc = hasAsinSourceDataForTarget(asinCode, fortnightNumber, "PPC");
+            if (!hasAmz && !hasSb && !hasPpc) return;
+
+            var completedCount = [hasAmz, hasSb, hasPpc].filter(function (flag) { return !!flag; }).length;
+            rows.push({
+              asin: asinCode,
+              fortnight: fortnightNumber,
+              hasAmz: hasAmz,
+              hasSb: hasSb,
+              hasPpc: hasPpc,
+              completedCount: completedCount
+            });
+          });
+        });
+
+        return rows.sort(function (left, right) {
+          var asinDiff = String(left.asin || "").localeCompare(String(right.asin || ""), undefined, { sensitivity: "base" });
+          if (asinDiff !== 0) return asinDiff;
+          return toNumber(left.fortnight) - toNumber(right.fortnight);
+        });
+      }
+
+      function hasSqpWeekExistingUploadData(weekValue) {
+        var weekLabel = toSqpWeekLabel(weekValue);
+        if (!weekLabel) return false;
+        var storageKey = getSearchImportStorageKey(weekLabel);
+        var cacheEntry = sqpWeekCache && sqpWeekCache[storageKey];
+        var hasCache = !!(cacheEntry && (
+          (cacheEntry.source_filename && String(cacheEntry.source_filename).trim())
+          || (cacheEntry.uploaded_at && String(cacheEntry.uploaded_at).trim())
+          || (Array.isArray(cacheEntry.rows) && cacheEntry.rows.length)
+        ));
+        if (hasCache) return true;
+
+        var auditEntry = sqpImportAudit && sqpImportAudit[storageKey];
+        var hasAudit = !!(auditEntry && (
+          (auditEntry.filename && String(auditEntry.filename).trim())
+          || (auditEntry.uploaded_at && String(auditEntry.uploaded_at).trim())
+          || toNumber(auditEntry.rows_imported_count) > 0
+        ));
+        if (hasAudit) return true;
+
+        return (sqpWarehouse || []).some(function (row) {
+          return toSqpWeekLabel(row && (row.week != null ? row.week : row.fortnight)) === weekLabel;
+        });
+      }
+
+      function buildSqpUploadedWeeksChecklistRows() {
+        var rowsByWeek = Object.create(null);
+
+        Object.keys(sqpWeekCache || {}).forEach(function (storageKey) {
+          var entry = sqpWeekCache[storageKey];
+          if (!entry || typeof entry !== "object") return;
+          var weekLabel = toSqpWeekLabel(entry.week || String(storageKey || "").replace(/^WEEK__/, ""));
+          if (!weekLabel) return;
+          rowsByWeek[weekLabel] = rowsByWeek[weekLabel] || { week: weekLabel, source: "", uploadedAt: "", keywords: 0 };
+          if (entry.source_filename) rowsByWeek[weekLabel].source = String(entry.source_filename);
+          if (entry.uploaded_at && (!rowsByWeek[weekLabel].uploadedAt || entry.uploaded_at > rowsByWeek[weekLabel].uploadedAt)) {
+            rowsByWeek[weekLabel].uploadedAt = String(entry.uploaded_at);
+          }
+        });
+
+        Object.keys(sqpImportAudit || {}).forEach(function (storageKey) {
+          var entry = sqpImportAudit[storageKey];
+          if (!entry || typeof entry !== "object") return;
+          var weekLabel = toSqpWeekLabel(String(storageKey || "").replace(/^WEEK__/, ""));
+          if (!weekLabel) return;
+          rowsByWeek[weekLabel] = rowsByWeek[weekLabel] || { week: weekLabel, source: "", uploadedAt: "", keywords: 0 };
+          if (!rowsByWeek[weekLabel].source && entry.filename) rowsByWeek[weekLabel].source = String(entry.filename);
+          if (entry.uploaded_at && (!rowsByWeek[weekLabel].uploadedAt || entry.uploaded_at > rowsByWeek[weekLabel].uploadedAt)) {
+            rowsByWeek[weekLabel].uploadedAt = String(entry.uploaded_at);
+          }
+        });
+
+        (sqpWarehouse || []).forEach(function (row) {
+          var weekLabel = toSqpWeekLabel(row && (row.week != null ? row.week : row.fortnight));
+          if (!weekLabel) return;
+          rowsByWeek[weekLabel] = rowsByWeek[weekLabel] || { week: weekLabel, source: "", uploadedAt: "", keywords: 0 };
+          rowsByWeek[weekLabel].keywords += 1;
+          if (!rowsByWeek[weekLabel].source && row && row.source_filename) rowsByWeek[weekLabel].source = String(row.source_filename);
+          if (row && row.uploaded_at && (!rowsByWeek[weekLabel].uploadedAt || row.uploaded_at > rowsByWeek[weekLabel].uploadedAt)) {
+            rowsByWeek[weekLabel].uploadedAt = String(row.uploaded_at);
+          }
+        });
+
+        return Object.keys(rowsByWeek).map(function (weekLabel) {
+          var item = rowsByWeek[weekLabel];
+          return {
+            week: weekLabel,
+            source: item.source || "",
+            uploadedAt: item.uploadedAt || "",
+            keywords: toNumber(item.keywords)
+          };
+        }).sort(function (left, right) {
+          return parseSqpWeekNumber(left.week) - parseSqpWeekNumber(right.week);
+        });
+      }
+
+      function renderSqpUploadedWeeksChecklist() {
+        var table = root.querySelector("[data-table='sqp-import-checklist']");
+        if (!table) return;
+
+        var rows = buildSqpUploadedWeeksChecklistRows();
+        if (!rows.length) {
+          table.innerHTML = "<thead><tr><th>Week</th><th>Source File</th><th>Uploaded At</th><th>Status</th></tr></thead>"
+            + "<tbody><tr><td colspan='4'>No uploaded weeks yet.</td></tr></tbody>";
+          return;
+        }
+
+        var body = rows.map(function (row) {
+          var source = row.source || "—";
+          var uploadedAt = formatUploadDateTime(row.uploadedAt);
+          var status = "Uploaded";
+          return "<tr>"
+            + "<td>" + escapeHtml(row.week) + "</td>"
+            + "<td>" + escapeHtml(source) + "</td>"
+            + "<td>" + escapeHtml(uploadedAt) + "</td>"
+            + "<td><span class='cts-status is-ok'>" + escapeHtml(status) + "</span></td>"
+            + "</tr>";
+        }).join("");
+
+        table.innerHTML = "<thead><tr><th>Week</th><th>Source File</th><th>Uploaded At</th><th>Status</th></tr></thead><tbody>"
+          + body + "</tbody>";
       }
 
       function getManagedSqpKeywordMap() {
@@ -9643,28 +9826,25 @@
         var table = root.querySelector("[data-table='asin-import-checklist']");
         if (!table) return;
 
-        var groups = buildAsinBulkGroupRows(asinImportQueues.bulk);
-        if (!groups.length) {
+        var rows = buildAsinUploadedChecklistRows();
+        if (!rows.length) {
           table.innerHTML = "<thead><tr><th>ASIN</th><th>Fortnight</th><th>Amazon Data</th><th>Sellerboard Data</th><th>PPC Data</th><th>Status</th></tr></thead>"
-            + "<tbody><tr><td colspan='6'>No mapped ASIN/Fortnight groups yet.</td></tr></tbody>";
+            + "<tbody><tr><td colspan='6'>No uploaded ASIN/Fortnight data yet.</td></tr></tbody>";
           return;
         }
 
-        var rowsHtml = groups.map(function (group) {
-          var availableSources = [group.hasAmz, group.hasSb, group.hasPpc].filter(function (flag) {
-            return !!flag;
-          }).length;
-          var readinessClass = availableSources > 0 ? "cts-status is-ok" : "cts-status is-neutral";
-          var readinessText = availableSources > 0
-            ? ("Ready (" + availableSources + "/3)")
-            : "Pending";
+        var rowsHtml = rows.map(function (row) {
+          var completenessClass = row.completedCount >= 2 ? "cts-status is-ok" : "cts-status is-neutral";
+          var completenessText = row.completedCount === 3
+            ? "Complete (3/3)"
+            : ("Uploaded (" + row.completedCount + "/3)");
           return "<tr>"
-            + "<td>" + escapeHtml(group.asin) + "</td>"
-            + "<td>" + escapeHtml(toFortnightLabel(group.fortnight) || "") + "</td>"
-            + "<td><span class='" + (group.hasAmz ? "cts-status is-ok" : "cts-status is-warn") + "'>" + (group.hasAmz ? "Present" : "Missing") + "</span></td>"
-            + "<td><span class='" + (group.hasSb ? "cts-status is-ok" : "cts-status is-warn") + "'>" + (group.hasSb ? "Present" : "Missing") + "</span></td>"
-            + "<td><span class='" + (group.hasPpc ? "cts-status is-ok" : "cts-status is-neutral") + "'>" + (group.hasPpc ? "Present" : "Optional") + "</span></td>"
-            + "<td><span class='" + readinessClass + "'>" + escapeHtml(readinessText) + "</span></td>"
+            + "<td>" + escapeHtml(row.asin) + "</td>"
+            + "<td>" + escapeHtml(toFortnightLabel(row.fortnight) || "") + "</td>"
+            + "<td><span class='" + (row.hasAmz ? "cts-status is-ok" : "cts-status is-neutral") + "'>" + (row.hasAmz ? "Uploaded" : "—") + "</span></td>"
+            + "<td><span class='" + (row.hasSb ? "cts-status is-ok" : "cts-status is-neutral") + "'>" + (row.hasSb ? "Uploaded" : "—") + "</span></td>"
+            + "<td><span class='" + (row.hasPpc ? "cts-status is-ok" : "cts-status is-neutral") + "'>" + (row.hasPpc ? "Uploaded" : "—") + "</span></td>"
+            + "<td><span class='" + completenessClass + "'>" + escapeHtml(completenessText) + "</span></td>"
             + "</tr>";
         }).join("");
 
@@ -9943,6 +10123,7 @@
 
           var tagOrder = { AMZ: 1, SB: 2, PPC: 3 };
           var promptTitleByAsin = Object.create(null);
+          var overwriteDecisions = Object.create(null);
           var processingRows = validRows.slice().sort(function (left, right) {
             var asinDiff = String(left.asin || "").localeCompare(String(right.asin || ""), undefined, { sensitivity: "base" });
             if (asinDiff !== 0) return asinDiff;
@@ -9965,6 +10146,27 @@
                 row.message = (ensured && ensured.message) || "ASIN setup failed.";
                 refreshAsinImportCardUi(fileKey);
                 continue;
+              }
+
+              var overwriteKey = row.asin + "__F" + String(row.fortnight) + "__" + String(row.tag || "");
+              if (hasAsinSourceDataForTarget(row.asin, row.fortnight, row.tag)) {
+                if (!Object.prototype.hasOwnProperty.call(overwriteDecisions, overwriteKey)) {
+                  var sourceLabel = ASIN_IMPORT_TAG_TO_LABEL[row.tag] || row.tag || "Source";
+                  var overwriteAllowed = true;
+                  if (typeof window !== "undefined" && typeof window.confirm === "function") {
+                    overwriteAllowed = window.confirm(
+                      sourceLabel + " already has data for "
+                      + row.asin + " / " + toFortnightLabel(row.fortnight) + ". Overwrite existing data?"
+                    );
+                  }
+                  overwriteDecisions[overwriteKey] = !!overwriteAllowed;
+                }
+                if (!overwriteDecisions[overwriteKey]) {
+                  row.status = "Skipped";
+                  row.message = "Skipped: overwrite cancelled.";
+                  refreshAsinImportCardUi(fileKey);
+                  continue;
+                }
               }
 
               var importer = null;
@@ -10292,6 +10494,7 @@
           var failed = sqpImportQueue.filter(function (row) { return row.status === "Failed"; }).length;
           var rejected = sqpImportQueue.filter(function (row) { return row.status === "Rejected"; }).length;
           var duplicate = sqpImportQueue.filter(function (row) { return row.status === "Duplicate"; }).length;
+          var skipped = sqpImportQueue.filter(function (row) { return row.status === "Skipped"; }).length;
           var inProgress = sqpImportQueue.filter(function (row) { return row.status === "Importing"; }).length;
           setSearchImportSummary(withCleanupSummary(
             "Total selected: <strong>" + total + "</strong> | "
@@ -10300,6 +10503,7 @@
             + "Failed: <strong>" + failed + "</strong> | "
             + "Rejected: <strong>" + rejected + "</strong>"
             + " | Duplicate: <strong>" + duplicate + "</strong>"
+            + " | Skipped: <strong>" + skipped + "</strong>"
             + (inProgress ? " | Processing: <strong>" + inProgress + "</strong>" : "")
           ));
           return;
@@ -10332,6 +10536,7 @@
       function renderSearchImportChecklist() {
         renderSqpImportSelectedFiles();
         renderSqpImportQueue();
+        renderSqpUploadedWeeksChecklist();
         renderSearchImportSummary();
       }
 
@@ -11047,6 +11252,7 @@
             if (a.week !== b.week) return a.week - b.week;
             return a.index - b.index;
           });
+          var overwriteDecisionsByWeek = Object.create(null);
           logSqpImportDebug("processing_started", {
             trigger: triggerLabel || "unknown",
             selected: files.length,
@@ -11056,6 +11262,28 @@
 
           for (var i = 0; i < processingRows.length; i++) {
             var row = processingRows[i];
+            var weekLabel = toSqpWeekLabel(row.week) || "";
+            if (weekLabel && hasSqpWeekExistingUploadData(weekLabel)) {
+              if (!Object.prototype.hasOwnProperty.call(overwriteDecisionsByWeek, weekLabel)) {
+                var overwriteAllowed = true;
+                if (typeof window !== "undefined" && typeof window.confirm === "function") {
+                  overwriteAllowed = window.confirm(
+                    weekLabel + " already has uploaded data. Overwrite existing data?"
+                  );
+                }
+                overwriteDecisionsByWeek[weekLabel] = !!overwriteAllowed;
+              }
+              if (!overwriteDecisionsByWeek[weekLabel]) {
+                row.status = "Skipped";
+                row.message = "Skipped: overwrite cancelled.";
+                renderSearchImportChecklist();
+                logSqpImportDebug("processing_file_skipped_overwrite", {
+                  filename: row.filename,
+                  week: row.week
+                });
+                continue;
+              }
+            }
             row.status = "Importing";
             row.message = "";
             renderSearchImportChecklist();
@@ -11142,21 +11370,23 @@
           var failedCount = sqpImportQueue.filter(function (row) { return row.status === "Failed"; }).length;
           var rejectedCount = sqpImportQueue.filter(function (row) { return row.status === "Rejected"; }).length;
           var duplicateCount = sqpImportQueue.filter(function (row) { return row.status === "Duplicate"; }).length;
+          var skippedCount = sqpImportQueue.filter(function (row) { return row.status === "Skipped"; }).length;
           logSqpImportDebug("processing_completed", {
             imported: importedCount,
             failed: failedCount,
             rejected: rejectedCount,
-            duplicate: duplicateCount
+            duplicate: duplicateCount,
+            skipped: skippedCount
           });
 
-          if (importedCount > 0 && failedCount === 0 && rejectedCount === 0) {
+          if (importedCount > 0 && failedCount === 0 && rejectedCount === 0 && skippedCount === 0) {
             setSearchImportMessage(
               duplicateCount
                 ? ("Uploaded successfully. Duplicate skipped: " + duplicateCount + ".")
                 : "Uploaded successfully.",
               "ok"
             );
-          } else if (importedCount > 0) {
+          } else if (importedCount > 0 || skippedCount > 0) {
             setSearchImportMessage("Upload completed with some failures.", "warn");
           } else {
             setSearchImportMessage("Upload failed.", "warn");
