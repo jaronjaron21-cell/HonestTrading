@@ -1156,6 +1156,30 @@
       color: #943c3c;
     }
 
+    #cts-shopify-reporting .cts-view[data-view='asin-warehouse'] .cts-asin-warehouse-filter-row {
+      justify-content: flex-start;
+      gap: 12px;
+      row-gap: 10px;
+    }
+
+    #cts-shopify-reporting .cts-view[data-view='asin-warehouse'] .cts-asin-warehouse-selector-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+      flex: 0 1 auto;
+    }
+
+    #cts-shopify-reporting .cts-view[data-view='asin-warehouse'] .cts-asin-warehouse-selector-group .cts-select {
+      min-width: min(640px, 72vw);
+      max-width: 100%;
+    }
+
+    #cts-shopify-reporting .cts-view[data-view='asin-warehouse'] .cts-asin-warehouse-selector-group .cts-delete-asin {
+      margin-left: 0;
+      flex: 0 0 auto;
+    }
+
     #cts-shopify-reporting .cts-text-input {
       border: 1px solid #cfd8c8;
       border-radius: 9px;
@@ -1770,6 +1794,24 @@
     #cts-shopify-reporting .cts-warehouse-shared-table .cts-cell-input:focus-visible {
       border-color: var(--primary-400);
       box-shadow: 0 0 0 2px rgba(58, 110, 240, 0.18);
+    }
+
+    #cts-shopify-reporting .cts-warehouse-shared-table .cts-cell-input.cts-cell-input-rating {
+      width: 96px;
+      margin: 0 auto;
+    }
+
+    #cts-shopify-reporting .cts-warehouse-shared-table .cts-rating-display {
+      display: block;
+      width: 100%;
+      text-align: center;
+      font-variant-numeric: tabular-nums;
+    }
+
+    #cts-shopify-reporting [data-table='asin-warehouse-metrics'].cts-warehouse-shared-table .cts-warehouse-th-edit.is-active {
+      border-color: var(--primary-400);
+      background: var(--primary-100);
+      color: var(--primary-700);
     }
 
     #cts-shopify-reporting .cts-warehouse-shared-table thead th:nth-child(1) {
@@ -3781,10 +3823,12 @@
           </div>
 
           <section class="cts-card cts-warehouse-controls">
-            <div class="cts-filter-row">
-              <strong>Product</strong>
-              <select class="cts-select" data-control="asin-warehouse-filter"></select>
-              <button class="cts-code cts-delete-asin" type="button" data-action="delete-asin-trigger">Delete ASIN</button>
+            <div class="cts-filter-row cts-asin-warehouse-filter-row">
+              <div class="cts-asin-warehouse-selector-group">
+                <strong>Product</strong>
+                <select class="cts-select" data-control="asin-warehouse-filter"></select>
+                <button class="cts-code cts-delete-asin" type="button" data-action="delete-asin-trigger">Delete ASIN</button>
+              </div>
               <input class="cts-text-input cts-hidden" type="text" data-input="asin-inline" placeholder="ASIN Code" maxlength="10" />
               <span class="cts-import-msg" data-msg="asin-add"></span>
             </div>
@@ -4054,7 +4098,8 @@
       var asinWarehouseTableState = {
         sortKey: "",
         sortDir: "",
-        dateCoveredCollapsed: false
+        dateCoveredCollapsed: false,
+        editSellerRating: false
       };
       var BENCHMARKS = {
         "CM1%": { value: 0.70, direction: "higher" },
@@ -8080,13 +8125,26 @@
         }
 
         function metricHeader(label, key, sortable) {
+          var sellerRatingEditHtml = "";
+          if (key === "reviewRating") {
+            sellerRatingEditHtml = "<button type='button' class='cts-warehouse-th-icon cts-warehouse-th-edit"
+              + (asinWarehouseTableState.editSellerRating ? " is-active" : "")
+              + "' data-action='asin-warehouse-toggle-seller-rating-edit' title='"
+              + (asinWarehouseTableState.editSellerRating ? "Done editing Seller Rating" : "Edit Seller Rating")
+              + "' aria-label='"
+              + (asinWarehouseTableState.editSellerRating ? "Done editing Seller Rating" : "Edit Seller Rating")
+              + "'>✎</button>";
+          }
           if (!sortable) {
             return "<th><div class='cts-warehouse-th-inline'><span class='cts-warehouse-th-title'>"
               + escapeHtml(label)
-              + "</span></div></th>";
+              + "</span>"
+              + sellerRatingEditHtml
+              + "</div></th>";
           }
           return "<th><div class='cts-warehouse-th-inline'>"
             + "<span class='cts-warehouse-th-title'>" + escapeHtml(label) + "</span>"
+            + sellerRatingEditHtml
             + "<details class='cts-warehouse-th-menu'>"
             + "<summary class='cts-warehouse-th-icon' title='Sort'>"
             + filterIconHtml()
@@ -8122,12 +8180,17 @@
             + asinWarehouseColumns.map(function (col) {
               if (col.key === "reviewRating") {
                 var rawRating = row && row[col.key];
-                var ratingValue = (rawRating === "" || rawRating === null || rawRating === undefined)
-                  ? ""
-                  : String(toNumber(rawRating));
-                return "<td><input class='cts-cell-input' type='number' step='0.1' min='0' data-action='asin-warehouse-edit-seller-rating' data-fortnight='"
-                  + escapeAttr(fortnightLabel)
-                  + "' value='" + escapeAttr(ratingValue) + "' placeholder='0.0' /></td>";
+                if (asinWarehouseTableState.editSellerRating) {
+                  var ratingValue = (rawRating === "" || rawRating === null || rawRating === undefined)
+                    ? ""
+                    : String(toNumber(rawRating));
+                  return "<td><input class='cts-cell-input cts-cell-input-rating' type='number' step='0.1' min='0' data-action='asin-warehouse-edit-seller-rating' data-fortnight='"
+                    + escapeAttr(fortnightLabel)
+                    + "' value='" + escapeAttr(ratingValue) + "' placeholder='0.0' /></td>";
+                }
+                return "<td><span class='cts-rating-display'>"
+                  + escapeHtml(formatWarehouseValue(col.type, rawRating))
+                  + "</span></td>";
               }
               return "<td>" + escapeHtml(formatWarehouseValue(col.type, row[col.key])) + "</td>";
             }).join("")
@@ -8152,6 +8215,7 @@
               fortnightRow.reviewRating = rawValue === "" ? null : toNumber(rawValue);
               saveAsinWarehouseState();
               refreshAsinProfitabilityViews();
+              asinWarehouseTableState.editSellerRating = false;
               renderAsinWarehouseTable(currentAsin);
               return;
             }
@@ -8168,6 +8232,14 @@
             renderAsinWarehouseTable(getCurrentWarehouseAsin());
           });
           table.addEventListener("click", function (event) {
+            var ratingEditTrigger = event.target && event.target.closest
+              ? event.target.closest("[data-action='asin-warehouse-toggle-seller-rating-edit']")
+              : null;
+            if (ratingEditTrigger) {
+              asinWarehouseTableState.editSellerRating = !asinWarehouseTableState.editSellerRating;
+              renderAsinWarehouseTable(getCurrentWarehouseAsin());
+              return;
+            }
             var trigger = event.target && event.target.closest
               ? event.target.closest("[data-action='asin-warehouse-toggle-date']")
               : null;
