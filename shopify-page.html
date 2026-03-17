@@ -2919,6 +2919,7 @@
       --cts-radius-panel: 16px;
       --cts-radius-pill: 12px;
       --cts-shadow-soft: 0 1px 2px rgba(15, 23, 42, 0.05), 0 10px 22px rgba(30, 86, 230, 0.08);
+      --cts-sidebar-width: 248px;
       background: linear-gradient(180deg, #f3f7ff 0%, #ecf2ff 100%);
     }
 
@@ -2929,6 +2930,9 @@
       box-shadow: 0 10px 24px rgba(30, 86, 230, 0.10);
       padding: 14px;
       gap: 14px;
+      width: min(100%, 1600px);
+      margin: 0 auto;
+      grid-template-columns: minmax(220px, var(--cts-sidebar-width)) minmax(0, 1fr);
       max-width: 1600px;
       overflow: hidden;
     }
@@ -3138,6 +3142,8 @@
       background: linear-gradient(180deg, #f6f9ff 0%, #f1f6ff 100%);
       box-shadow: var(--cts-shadow-soft);
       padding: 18px;
+      min-width: 0;
+      overflow-x: hidden;
     }
 
     #cts-shopify-reporting .cts-view.is-active {
@@ -3348,7 +3354,7 @@
       color: #334155;
     }
 
-    @media (max-width: 1280px) {
+    @media (max-width: 1360px) {
       #cts-shopify-reporting .cts-dashboard-filter-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
       }
@@ -3489,15 +3495,6 @@
             <p>Amazon Data Reporting</p>
           </div>
         </div>
-        <button
-          class="cts-sidebar-toggle"
-          type="button"
-          data-action="sidebar-toggle"
-          aria-label="Collapse sidebar"
-          title="Collapse sidebar"
-        >
-          <span class="cts-sidebar-toggle-icon" aria-hidden="true">&#171;</span>
-        </button>
       </div>
 
       <p class="cts-label">Navigation</p>
@@ -4097,6 +4094,7 @@
 
       var state = { module: "home", subtab: "dashboard" };
       var isSidebarCollapsed = false;
+      var SIDEBAR_COLLAPSE_ENABLED = false;
       var SIDEBAR_COLLAPSED_STORAGE_KEY = "sidebarCollapsed";
       var defaultSubtab = { home: "dashboard", search: "dashboard", asin: "dashboard" };
       var SIDEBAR_ICON_SVGS = {
@@ -4778,15 +4776,16 @@
       }
 
       function loadSidebarCollapsedState() {
+        isSidebarCollapsed = false;
         try {
-          var saved = window.localStorage.getItem(SIDEBAR_COLLAPSED_STORAGE_KEY);
-          isSidebarCollapsed = saved === "true";
+          window.localStorage.removeItem(SIDEBAR_COLLAPSED_STORAGE_KEY);
         } catch (error) {
           isSidebarCollapsed = false;
         }
       }
 
       function saveSidebarCollapsedState() {
+        if (!SIDEBAR_COLLAPSE_ENABLED) return;
         try {
           window.localStorage.setItem(SIDEBAR_COLLAPSED_STORAGE_KEY, isSidebarCollapsed ? "true" : "false");
         } catch (error) {
@@ -4807,7 +4806,8 @@
       }
 
       function applySidebarCollapsedState() {
-        root.classList.toggle("is-sidebar-collapsed", !!isSidebarCollapsed);
+        isSidebarCollapsed = false;
+        root.classList.remove("is-sidebar-collapsed");
         applySidebarIcons();
 
         var toggle = root.querySelector("[data-action='sidebar-toggle']");
@@ -4830,6 +4830,7 @@
       }
 
       function initSidebarToggle() {
+        if (!SIDEBAR_COLLAPSE_ENABLED) return;
         var toggle = root.querySelector("[data-action='sidebar-toggle']");
         if (!toggle || toggle.dataset.bound === "1") return;
         toggle.dataset.bound = "1";
