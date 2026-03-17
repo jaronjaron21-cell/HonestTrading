@@ -2915,34 +2915,48 @@
 
     /* Coinest-inspired visual polish (UI only, colors retained) */
     #cts-shopify-reporting {
-      --cts-radius-xl: 22px;
-      --cts-radius-panel: 18px;
+      --cts-radius-xl: 24px;
+      --cts-radius-panel: 16px;
       --cts-radius-pill: 12px;
-      --cts-shadow-soft: 0 1px 2px rgba(15, 23, 42, 0.06), 0 12px 24px rgba(15, 23, 42, 0.04);
-      background: linear-gradient(180deg, #f6f8fc 0%, #eef2f8 100%);
+      --cts-shadow-soft: 0 1px 2px rgba(15, 23, 42, 0.05), 0 10px 22px rgba(30, 86, 230, 0.08);
+      background: linear-gradient(180deg, #f3f7ff 0%, #ecf2ff 100%);
     }
 
     #cts-shopify-reporting .cts-shell {
-      background: transparent;
-      border: 0;
-      border-radius: 0;
-      box-shadow: none;
-      padding: 20px;
-      gap: 20px;
+      background: linear-gradient(180deg, #eef4ff 0%, #e8f0ff 100%);
+      border: 1px solid var(--primary-100);
+      border-radius: var(--cts-radius-xl);
+      box-shadow: 0 10px 24px rgba(30, 86, 230, 0.10);
+      padding: 14px;
+      gap: 14px;
       max-width: 1600px;
+      overflow: hidden;
     }
 
     #cts-shopify-reporting .cts-sidebar {
-      background: #ffffff;
-      border: 1px solid var(--cts-line);
-      border-radius: var(--cts-radius-xl);
-      box-shadow: var(--cts-shadow-soft);
-      padding: 16px 14px;
-      gap: 10px;
+      background: linear-gradient(180deg, var(--primary-700) 0%, var(--primary-600) 48%, var(--primary-500) 100%);
+      border: 0;
+      border-radius: 18px;
+      box-shadow: 0 16px 30px rgba(24, 70, 191, 0.34);
+      padding: 16px 12px;
+      gap: 8px;
     }
 
     #cts-shopify-reporting .cts-sidebar-head {
-      margin-bottom: 2px;
+      margin-bottom: 6px;
+    }
+
+    #cts-shopify-reporting .cts-sidebar-toggle {
+      border-color: rgba(255, 255, 255, 0.28);
+      background: rgba(255, 255, 255, 0.14);
+      color: #f5f9ff;
+    }
+
+    #cts-shopify-reporting .cts-sidebar-toggle:hover,
+    #cts-shopify-reporting .cts-sidebar-toggle:focus-visible {
+      background: rgba(255, 255, 255, 0.24);
+      border-color: rgba(255, 255, 255, 0.38);
+      color: #ffffff;
     }
 
     #cts-shopify-reporting .cts-brand {
@@ -2975,13 +2989,13 @@
       font-size: 16px;
       font-weight: 600;
       line-height: 1.15;
-      color: var(--cts-ink);
+      color: #f3f8ff;
     }
 
     #cts-shopify-reporting .cts-brand p,
     #cts-shopify-reporting .cts-label {
-      color: var(--cts-muted);
-      font-size: 12px;
+      color: rgba(232, 243, 255, 0.76);
+      font-size: 11px;
       letter-spacing: 0;
       text-transform: none;
     }
@@ -3006,7 +3020,7 @@
     #cts-shopify-reporting .cts-tab,
     #cts-shopify-reporting .cts-subtab {
       border-radius: 10px;
-      color: #445267;
+      color: rgba(243, 248, 255, 0.88);
       gap: 8px;
       border: 1px solid transparent;
       position: relative;
@@ -3023,7 +3037,7 @@
       font-size: 13px;
       font-weight: 500;
       padding: 8px 10px;
-      color: #5f6f86;
+      color: rgba(226, 238, 255, 0.78);
     }
 
     #cts-shopify-reporting .cts-nav-icon {
@@ -3033,7 +3047,7 @@
       border-radius: 0;
       background: transparent;
       border: 0;
-      color: #53617a;
+      color: rgba(244, 249, 255, 0.92);
       box-shadow: none;
       padding: 0;
       display: inline-flex;
@@ -3048,17 +3062,17 @@
 
     #cts-shopify-reporting .cts-tab:hover,
     #cts-shopify-reporting .cts-subtab:hover {
-      background: #f7faff;
-      color: #2f3a4f;
-      border-color: var(--primary-100);
+      background: rgba(255, 255, 255, 0.16);
+      color: #ffffff;
+      border-color: rgba(255, 255, 255, 0.2);
       transform: none;
     }
 
     #cts-shopify-reporting .cts-tab.is-active,
     #cts-shopify-reporting .cts-subtab.is-active {
-      background: var(--primary-100);
-      border-color: var(--primary-200);
-      color: var(--primary-700);
+      background: rgba(255, 255, 255, 0.24);
+      border-color: rgba(255, 255, 255, 0.3);
+      color: #ffffff;
       box-shadow: none;
       transform: none;
     }
@@ -3078,7 +3092,7 @@
       bottom: 8px;
       width: 3px;
       border-radius: 999px;
-      background: var(--primary);
+      background: rgba(255, 255, 255, 0.9);
     }
 
     #cts-shopify-reporting .cts-subtabs {
@@ -3091,7 +3105,7 @@
       left: 6px;
       top: 8px;
       bottom: 8px;
-      background: rgba(175, 198, 255, 0.55);
+      background: rgba(226, 238, 255, 0.45);
     }
 
     #cts-shopify-reporting.is-sidebar-collapsed .cts-group {
@@ -3115,14 +3129,15 @@
       background: transparent;
       border: 0;
       margin-left: 0;
+      color: rgba(245, 250, 255, 0.95);
     }
 
     #cts-shopify-reporting .cts-workspace {
       border: 1px solid var(--cts-line);
       border-radius: var(--cts-radius-xl);
-      background: #ffffff;
+      background: linear-gradient(180deg, #f6f9ff 0%, #f1f6ff 100%);
       box-shadow: var(--cts-shadow-soft);
-      padding: 20px;
+      padding: 18px;
     }
 
     #cts-shopify-reporting .cts-view.is-active {
@@ -3136,7 +3151,7 @@
     }
 
     #cts-shopify-reporting .cts-view-head h3 {
-      font-size: 27px;
+      font-size: 26px;
       font-weight: 600;
       line-height: 1.15;
       color: #1f2b3d;
@@ -3149,17 +3164,17 @@
       border: 1px solid var(--cts-line);
       border-radius: var(--cts-radius-panel);
       background: #ffffff;
-      box-shadow: var(--cts-shadow-soft);
+      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05), 0 8px 18px rgba(30, 86, 230, 0.06);
     }
 
     #cts-shopify-reporting .cts-card {
-      padding: 18px;
-      gap: 14px;
+      padding: 16px;
+      gap: 12px;
     }
 
     #cts-shopify-reporting .cts-card h4 {
       margin: 0;
-      font-size: 17px;
+      font-size: 16px;
       font-weight: 600;
       color: #1f2b3d;
     }
@@ -3287,7 +3302,7 @@
     }
 
     #cts-shopify-reporting .cts-table th {
-      background: #f8faff;
+      background: #f3f7ff;
       color: #5d6d83;
       font-size: 11px;
       font-weight: 700;
