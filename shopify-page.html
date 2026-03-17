@@ -2954,10 +2954,21 @@
       width: 42px;
       height: 42px;
       border-radius: 12px;
-      font-size: 11px;
-      letter-spacing: 0.04em;
-      background: var(--primary-grad);
-      box-shadow: 0 10px 18px rgba(30, 86, 230, 0.2);
+      background: #ffffff;
+      border: 1px solid var(--primary-200);
+      box-shadow: 0 4px 10px rgba(30, 86, 230, 0.16);
+      overflow: hidden;
+      padding: 4px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #cts-shopify-reporting .cts-brand-icon img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
     }
 
     #cts-shopify-reporting .cts-brand h2 {
@@ -3455,7 +3466,9 @@
     <aside class="cts-sidebar">
       <div class="cts-sidebar-head">
         <div class="cts-brand">
-          <div class="cts-brand-icon">CTS</div>
+          <div class="cts-brand-icon">
+            <img src="assets/coppertech-logo.jpeg" alt="Copper Tech Sports logo" />
+          </div>
           <div class="cts-brand-copy">
             <h2>Copper Tech Sports</h2>
             <p>Amazon Data Reporting</p>
