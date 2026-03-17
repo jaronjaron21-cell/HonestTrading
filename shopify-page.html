@@ -4180,6 +4180,22 @@
           </section>
 
           <section class="cts-card">
+            <div class="cts-analysis-trend-head">
+              <h4>Trend Chart</h4>
+              <label class="cts-field cts-analysis-trend-field">
+                <span>Metric</span>
+                <select class="cts-select cts-select-compact" data-control="sqp-analysis-trend-metric"></select>
+              </label>
+            </div>
+            <div class="cts-chart-wrap">
+              <svg data-chart="sqp-analysis-trend" viewBox="0 0 760 210" preserveAspectRatio="none"></svg>
+              <div class="cts-chart-axis" data-chart-axis="sqp-analysis-trend">
+                <span>Week 1</span><span>Week 14</span><span>Week 27</span><span>Week 40</span><span>Week 52</span>
+              </div>
+            </div>
+          </section>
+
+          <section class="cts-card">
             <h4>SQP Weekly Matrix</h4>
             <div class="cts-analysis-wrap">
               <table class="cts-table cts-analysis-table" data-table="sqp-analysis-matrix"></table>
@@ -4363,7 +4379,6 @@
               <strong>ASIN</strong>
               <select class="cts-select" data-control="asin-analysis-filter"></select>
             </div>
-            <p class="cts-note">Selected ASIN: <strong data-analysis-selected-asin>-</strong></p>
           </section>
 
           <section class="cts-card">
@@ -4503,7 +4518,8 @@
         selectedKeywordType: "__all_keyword_types__",
         rangeMode: "all",
         fromWeek: 1,
-        toWeek: 52
+        toWeek: 52,
+        trendMetric: "purchasesTotal"
       };
       var searchDashboardSelection = {
         selectedKeyword: "__all_keywords__",
@@ -4532,6 +4548,16 @@
       var SQP_WAREHOUSE_STORAGE_KEY = "cts_sqp_warehouse_v1";
       var SQP_IMPORT_AUDIT_STORAGE_KEY = "cts_sqp_import_audit_v1";
       var SQP_WEEK_CACHE_STORAGE_KEY = "cts_sqp_week_cache_v1";
+      var SQP_ANALYSIS_METRIC_DEFINITIONS = [
+        { key: "searchQueryVolume", label: "Search Query Volume", type: "count" },
+        { key: "impressionsTotal", label: "Impressions Total", type: "count" },
+        { key: "impressionsBrandSharePct", label: "Impressions Brand Share %", type: "percent" },
+        { key: "clicksTotal", label: "Clicks Total", type: "count" },
+        { key: "purchasesTotal", label: "Purchases Total", type: "count" },
+        { key: "ctrPct", label: "CTR %", type: "percent" },
+        { key: "cvrPct", label: "CVR %", type: "percent" },
+        { key: "purchaseRatePct", label: "Purchase Rate %", type: "percent" }
+      ];
       var STORAGE_API_BASE = "/api/storage";
       var STORAGE_REMOTE_KEYS = {
         asinMaster: "asin_master",
@@ -7934,6 +7960,128 @@
         return metricsByWeek;
       }
 
+      function renderSqpAnalysisTrendAxis(fromWeek, toWeek) {
+        var axis = root.querySelector("[data-chart-axis='sqp-analysis-trend']");
+        if (!axis) return;
+
+        var start = Number(fromWeek);
+        var end = Number(toWeek);
+        if (!(start >= 1 && start <= 52)) start = 1;
+        if (!(end >= 1 && end <= 52)) end = 52;
+        if (start > end) {
+          var swap = start;
+          start = end;
+          end = swap;
+        }
+
+        var labels = [0, 1, 2, 3, 4].map(function (step) {
+          if (start === end) return start;
+          return Math.round(start + ((end - start) * step) / 4);
+        });
+        labels[0] = start;
+        labels[4] = end;
+        axis.innerHTML = labels.map(function (week) {
+          return "<span>Week " + week + "</span>";
+        }).join("");
+      }
+
+      function syncSqpAnalysisTrendMetricOptions(metricRows) {
+        var select = root.querySelector("[data-control='sqp-analysis-trend-metric']");
+        if (!select) return null;
+
+        var rows = Array.isArray(metricRows) && metricRows.length
+          ? metricRows
+          : SQP_ANALYSIS_METRIC_DEFINITIONS;
+        var currentKey = String(searchAnalysisSelection.trendMetric || "purchasesTotal");
+        select.innerHTML = rows.map(function (metric) {
+          return "<option value='" + escapeAttr(metric.key) + "'>" + escapeHtml(metric.label) + "</option>";
+        }).join("");
+
+        var isCurrentValid = rows.some(function (metric) {
+          return metric.key === currentKey;
+        });
+        if (!isCurrentValid) {
+          var hasPurchases = rows.some(function (metric) {
+            return metric.key === "purchasesTotal";
+          });
+          currentKey = hasPurchases ? "purchasesTotal" : (rows[0] ? rows[0].key : "");
+        }
+
+        searchAnalysisSelection.trendMetric = currentKey;
+        if (currentKey) select.value = currentKey;
+
+        for (var i = 0; i < rows.length; i++) {
+          if (rows[i].key === currentKey) return rows[i];
+        }
+        return null;
+      }
+
+      function renderSqpAnalysisTrendChart(metricsByWeek, weekRange, metricRows, selectedKeyword, selectedKeywordType) {
+        var svg = root.querySelector("[data-chart='sqp-analysis-trend']");
+        if (!svg) return;
+
+        var fromWeek = weekRange && weekRange.from ? Number(weekRange.from) : 1;
+        var toWeek = weekRange && weekRange.to ? Number(weekRange.to) : 52;
+        if (fromWeek > toWeek) {
+          var swap = fromWeek;
+          fromWeek = toWeek;
+          toWeek = swap;
+        }
+
+        renderSqpAnalysisTrendAxis(fromWeek, toWeek);
+
+        var metric = syncSqpAnalysisTrendMetricOptions(metricRows);
+        if (!metric) {
+          renderNoDataChart(svg, "No data for selected range");
+          return;
+        }
+
+        var weeks = [];
+        for (var week = fromWeek; week <= toWeek; week++) weeks.push(week);
+        var hasAnyData = weeks.some(function (week) {
+          return metricsByWeek[week] && metricsByWeek[week].hasData;
+        });
+        if (!hasAnyData) {
+          renderNoDataChart(svg, "No data for selected range");
+          return;
+        }
+
+        var keywordLabel = selectedKeyword === SQP_ALL_KEYWORDS_VALUE
+          ? SQP_ALL_KEYWORDS_LABEL
+          : selectedKeyword;
+        var keywordTypeLabel = selectedKeywordType === SQP_KEYWORD_TYPE_BRANDED
+          ? "Branded"
+          : (selectedKeywordType === SQP_KEYWORD_TYPE_GENERIC ? "Generic" : "All Types");
+        var contextLabel = keywordLabel === SQP_ALL_KEYWORDS_LABEL
+          ? (keywordLabel + " (" + keywordTypeLabel + ")")
+          : keywordLabel;
+
+        var series = weeks.map(function (week) {
+          var currentWeek = metricsByWeek[week];
+          if (!currentWeek || !currentWeek.hasData) return 0;
+          return toNumber(currentWeek[metric.key]);
+        });
+        var pointTitles = weeks.map(function (week) {
+          var currentWeek = metricsByWeek[week];
+          if (!currentWeek || !currentWeek.hasData) {
+            return "Week " + week
+              + "\n" + metric.label + ": No data"
+              + "\n" + contextLabel;
+          }
+
+          var valueText = formatSqpAnalysisMainValue(toNumber(currentWeek[metric.key]), metric.type);
+          return "Week " + week
+            + "\n" + metric.label + ": " + (valueText || "0")
+            + "\n" + contextLabel;
+        });
+
+        sparkline(svg, series, "var(--primary)", "var(--primary)", {
+          showGrid: true,
+          pointTitles: pointTitles,
+          noDataLabel: "No data for selected range"
+        });
+      }
+
       function fillSearchAnalysisView() {
         var table = root.querySelector("[data-table='sqp-analysis-matrix']");
         if (!table) return;
@@ -7949,16 +8097,8 @@
         for (var week = weekRange.from; week <= weekRange.to; week++) weeks.push(week);
 
         var metricsByWeek = buildSqpAnalysisWeekMetrics(selectedKeyword, selectedKeywordType);
-        var metricRows = [
-          { label: "Search Query Volume", key: "searchQueryVolume", type: "count" },
-          { label: "Impressions Total", key: "impressionsTotal", type: "count" },
-          { label: "Impressions Brand Share %", key: "impressionsBrandSharePct", type: "percent" },
-          { label: "Clicks Total", key: "clicksTotal", type: "count" },
-          { label: "Purchases Total", key: "purchasesTotal", type: "count" },
-          { label: "CTR %", key: "ctrPct", type: "percent" },
-          { label: "CVR %", key: "cvrPct", type: "percent" },
-          { label: "Purchase Rate %", key: "purchaseRatePct", type: "percent" }
-        ];
+        var metricRows = SQP_ANALYSIS_METRIC_DEFINITIONS;
+        renderSqpAnalysisTrendChart(metricsByWeek, weekRange, metricRows, selectedKeyword, selectedKeywordType);
 
         var hasData = weeks.some(function (slot) {
           return metricsByWeek[slot] && metricsByWeek[slot].hasData;
@@ -11260,10 +11400,12 @@
         var rangeModeSelect = root.querySelector("[data-control='sqp-analysis-range-mode']");
         var fromSelect = root.querySelector("[data-control='sqp-analysis-week-from']");
         var toSelect = root.querySelector("[data-control='sqp-analysis-week-to']");
+        var trendMetricSelect = root.querySelector("[data-control='sqp-analysis-trend-metric']");
         if (!keywordSelect || !typeSelect || !rangeModeSelect || !fromSelect || !toSelect) return;
 
         syncSqpAnalysisKeywordOptions();
         syncSqpAnalysisWeekControls();
+        syncSqpAnalysisTrendMetricOptions();
 
         keywordSelect.addEventListener("change", function () {
           searchAnalysisSelection.selectedKeyword = keywordSelect.value || SQP_ALL_KEYWORDS_VALUE;
@@ -11294,6 +11436,13 @@
           syncSqpAnalysisWeekControls();
           fillSearchAnalysisView();
         });
+
+        if (trendMetricSelect) {
+          trendMetricSelect.addEventListener("change", function () {
+            searchAnalysisSelection.trendMetric = String(trendMetricSelect.value || "purchasesTotal");
+            fillSearchAnalysisView();
+          });
+        }
       }
 
       function initSqpDashboardControls() {
@@ -12793,16 +12942,7 @@
         for (var week = weekRange.from; week <= weekRange.to; week++) weeks.push(week);
 
         var metricsByWeek = buildSqpAnalysisWeekMetrics(selectedKeyword, selectedKeywordType);
-        var metricRows = [
-          { label: "Search Query Volume", key: "searchQueryVolume", type: "count" },
-          { label: "Impressions Total", key: "impressionsTotal", type: "count" },
-          { label: "Impressions Brand Share %", key: "impressionsBrandSharePct", type: "percent" },
-          { label: "Clicks Total", key: "clicksTotal", type: "count" },
-          { label: "Purchases Total", key: "purchasesTotal", type: "count" },
-          { label: "CTR %", key: "ctrPct", type: "percent" },
-          { label: "CVR %", key: "cvrPct", type: "percent" },
-          { label: "Purchase Rate %", key: "purchaseRatePct", type: "percent" }
-        ];
+        var metricRows = SQP_ANALYSIS_METRIC_DEFINITIONS;
 
         var rows = metricRows.map(function (metric) {
           var cells = weeks.map(function (slot) {
