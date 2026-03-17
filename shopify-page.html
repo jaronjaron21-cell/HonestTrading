@@ -12281,6 +12281,24 @@
         return numericValue.toFixed(2);
       }
 
+      function formatAsinAnalysisAbsChange(abs, type) {
+        if (!isFinite(abs)) return "—";
+        var numericAbs = Number(abs);
+        var sign = numericAbs > 0 ? "+" : (numericAbs < 0 ? "-" : "");
+        var absoluteValue = Math.abs(numericAbs);
+
+        if (type === "money") {
+          return sign + money.format(absoluteValue);
+        }
+        if (type === "money2") {
+          return sign + money2.format(absoluteValue);
+        }
+        if (type === "percent") {
+          return sign + (absoluteValue * 100).toFixed(2) + " pp";
+        }
+        return sign + absoluteValue.toFixed(2);
+      }
+
       function fillAsinAnalysisMatrix() {
         var table = root.querySelector("[data-table='asin-analysis-matrix']");
         if (!table) return;
@@ -12315,9 +12333,33 @@
             + metric.values.map(function (value, idx) {
               var hasDataFlags = Array.isArray(metric.hasData) ? metric.hasData : null;
               var currHasData = hasDataFlags ? !!hasDataFlags[idx] : !(value === null || value === undefined || value === "");
+              if (!currHasData) return "<td></td>";
+
               var cellClass = getCellClass(metric.label, value, currHasData);
               var classAttr = cellClass ? " class='" + cellClass + "'" : "";
-              return "<td" + classAttr + ">" + formatAsinAnalysisValue(metric.type, value) + "</td>";
+              var mainText = formatAsinAnalysisValue(metric.type, value);
+              var changeText = "—";
+
+              if (idx > 0) {
+                var prevValue = metric.values[idx - 1];
+                var prevHasData = hasDataFlags
+                  ? !!hasDataFlags[idx - 1]
+                  : !(prevValue === null || prevValue === undefined || prevValue === "");
+                if (prevHasData) {
+                  var wow = computeWoW(toNumber(value), toNumber(prevValue), metric.type);
+                  if (wow.abs != null) {
+                    var absText = formatAsinAnalysisAbsChange(wow.abs, metric.type);
+                    var pctText = formatSqpAnalysisPctChange(wow.pct);
+                    changeText = absText + (pctText ? " (" + pctText + ")" : "");
+                  }
+                }
+              }
+
+              return "<td" + classAttr + "><span class='cts-sqp-main'>"
+                + escapeHtml(mainText)
+                + "</span><span class='cts-sqp-wow'>"
+                + escapeHtml(changeText)
+                + "</span></td>";
             }).join("")
             + "</tr>";
         }).join("");
