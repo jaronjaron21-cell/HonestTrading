@@ -1173,8 +1173,8 @@
 
     #cts-shopify-reporting .cts-view[data-view='asin-warehouse'] .cts-asin-warehouse-dropdown {
       position: relative;
-      width: max-content;
-      max-width: min(660px, 72vw);
+      width: auto;
+      max-width: min(760px, 82vw);
       min-width: 320px;
     }
 
@@ -1192,8 +1192,6 @@
       display: block;
       min-width: 0;
       max-width: 100%;
-      overflow: hidden;
-      text-overflow: ellipsis;
       white-space: nowrap;
     }
 
@@ -1230,7 +1228,7 @@
       align-items: center;
       gap: 6px;
       border-radius: 9px;
-      overflow: hidden;
+      overflow: visible;
     }
 
     #cts-shopify-reporting .cts-view[data-view='asin-warehouse'] .cts-asin-warehouse-option-btn {
@@ -1246,8 +1244,8 @@
       cursor: pointer;
       min-width: 0;
       white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+      overflow: visible;
+      text-overflow: clip;
     }
 
     #cts-shopify-reporting .cts-view[data-view='asin-warehouse'] .cts-asin-warehouse-option-row.is-active .cts-asin-warehouse-option-btn {
@@ -8097,6 +8095,45 @@
           + "</span><span class='cts-asin-warehouse-dropdown-caret' aria-hidden='true'>▾</span>";
         trigger.setAttribute("aria-expanded", menu.classList.contains("cts-hidden") ? "false" : "true");
 
+        var labels = asinWarehouseOrder.map(function (asinCode) {
+          return getAsinDisplayLabel(asinCode);
+        });
+        var longestLabel = labels.reduce(function (maxText, text) {
+          return String(text || "").length > String(maxText || "").length ? text : maxText;
+        }, selectedLabel || "");
+        var computed = window.getComputedStyle(trigger);
+        var font = computed.font || [
+          computed.fontStyle,
+          computed.fontVariant,
+          computed.fontWeight,
+          computed.fontSize + "/" + computed.lineHeight,
+          computed.fontFamily
+        ].join(" ");
+        var canvas = renderAsinWarehouseCustomDropdown._measureCanvas;
+        if (!canvas) {
+          canvas = document.createElement("canvas");
+          renderAsinWarehouseCustomDropdown._measureCanvas = canvas;
+        }
+        var ctx = canvas.getContext("2d");
+        if (ctx && font) ctx.font = font;
+        var labelWidth = ctx ? ctx.measureText(String(longestLabel || "")).width : (String(longestLabel || "").length * 10);
+        var viewportWidth = window.innerWidth || document.documentElement.clientWidth || 1280;
+        if (viewportWidth <= 640) {
+          dropdown.style.width = "100%";
+          dropdown.style.minWidth = "0";
+          dropdown.style.maxWidth = "100%";
+        } else {
+          var deleteColWidth = 64;
+          var triggerChromeWidth = 74;
+          var menuPaddingWidth = 24;
+          var desiredWidth = Math.ceil(labelWidth + Math.max(triggerChromeWidth, deleteColWidth + menuPaddingWidth));
+          var maxAllowedWidth = Math.max(420, viewportWidth - 120);
+          var finalWidth = clamp(desiredWidth, 420, maxAllowedWidth);
+          dropdown.style.width = finalWidth + "px";
+          dropdown.style.minWidth = "320px";
+          dropdown.style.maxWidth = finalWidth + "px";
+        }
+
         var disableDelete = asinWarehouseOrder.length <= 1;
         list.innerHTML = asinWarehouseOrder.map(function (asinCode) {
           var isActive = asinCode === selectedAsin;
@@ -8519,6 +8556,13 @@
             if (event.key === "Escape") {
               closeDropdown();
             }
+          });
+        }
+
+        if (dropdown.dataset.resizeBound !== "1") {
+          dropdown.dataset.resizeBound = "1";
+          window.addEventListener("resize", function () {
+            renderAsinWarehouseCustomDropdown(filter.value);
           });
         }
 
