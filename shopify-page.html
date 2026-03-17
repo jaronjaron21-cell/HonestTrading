@@ -733,6 +733,65 @@
       user-select: none;
     }
 
+    #cts-shopify-reporting [data-table='asin-dashboard-top'],
+    #cts-shopify-reporting [data-table='sqp-dashboard-top'] {
+      width: 100%;
+      min-width: 1720px;
+      table-layout: fixed;
+    }
+
+    #cts-shopify-reporting [data-table='asin-dashboard-top'] th,
+    #cts-shopify-reporting [data-table='asin-dashboard-top'] td,
+    #cts-shopify-reporting [data-table='sqp-dashboard-top'] th,
+    #cts-shopify-reporting [data-table='sqp-dashboard-top'] td {
+      width: 1%;
+      min-width: 0;
+    }
+
+    #cts-shopify-reporting [data-table='asin-dashboard-top'] th,
+    #cts-shopify-reporting [data-table='sqp-dashboard-top'] th {
+      white-space: normal;
+      vertical-align: middle;
+    }
+
+    #cts-shopify-reporting [data-table='asin-dashboard-top'] td:first-child,
+    #cts-shopify-reporting [data-table='sqp-dashboard-top'] td:first-child {
+      overflow-wrap: anywhere;
+      word-break: break-word;
+    }
+
+    #cts-shopify-reporting [data-table='asin-dashboard-top'] .cts-sort-head,
+    #cts-shopify-reporting [data-table='sqp-dashboard-top'] .cts-sort-head {
+      display: inline-flex;
+      width: 100%;
+      min-width: 0;
+      justify-content: center;
+      align-items: center;
+      gap: 6px;
+      text-align: center;
+      white-space: normal;
+      line-height: 1.18;
+    }
+
+    #cts-shopify-reporting [data-table='asin-dashboard-top'] .cts-sort-label,
+    #cts-shopify-reporting [data-table='sqp-dashboard-top'] .cts-sort-label {
+      min-width: 0;
+      max-width: 100%;
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 2;
+      overflow: hidden;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+      white-space: normal;
+      line-height: 1.16;
+    }
+
+    #cts-shopify-reporting [data-table='asin-dashboard-top'] .cts-sort-ind,
+    #cts-shopify-reporting [data-table='sqp-dashboard-top'] .cts-sort-ind {
+      flex: 0 0 auto;
+    }
+
     #cts-shopify-reporting .cts-sort-head.is-active {
       color: var(--cts-accent);
     }
@@ -1080,6 +1139,28 @@
       align-items: center;
       gap: 8px;
       flex-wrap: wrap;
+    }
+
+    #cts-shopify-reporting .cts-analysis-trend-head {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+
+    #cts-shopify-reporting .cts-analysis-trend-head h4 {
+      margin: 0;
+    }
+
+    #cts-shopify-reporting .cts-analysis-trend-field {
+      min-width: 220px;
+      width: min(320px, 100%);
+    }
+
+    #cts-shopify-reporting .cts-analysis-trend-field .cts-select {
+      width: 100%;
     }
 
     #cts-shopify-reporting .cts-asin-import-selector-grid {
@@ -4247,6 +4328,25 @@
               <select class="cts-select" data-control="asin-analysis-filter"></select>
             </div>
             <p class="cts-note">Selected ASIN: <strong data-analysis-selected-asin>-</strong></p>
+          </section>
+
+          <section class="cts-card">
+            <div class="cts-analysis-trend-head">
+              <h4>Trend Chart</h4>
+              <label class="cts-field cts-analysis-trend-field">
+                <span>Metric</span>
+                <select class="cts-select cts-select-compact" data-control="asin-analysis-trend-metric"></select>
+              </label>
+            </div>
+            <div class="cts-chart-wrap">
+              <svg data-chart="asin-analysis-trend" viewBox="0 0 760 210" preserveAspectRatio="none"></svg>
+              <div class="cts-chart-axis" data-chart-axis="asin-analysis-trend">
+                <span>Fortnight 1</span><span>Fortnight 7</span><span>Fortnight 13</span><span>Fortnight 19</span><span>Fortnight 26</span>
+              </div>
+            </div>
+          </section>
+
+          <section class="cts-card">
             <div class="cts-analysis-wrap">
               <table class="cts-table cts-analysis-table" data-table="asin-analysis-matrix"></table>
             </div>
@@ -4489,12 +4589,30 @@
       var asinMaster = [];
       var asinWarehouseOrder = Object.keys(asinWarehouseData);
       var asinDashboardSort = { key: "cm3", dir: "desc" };
+      var asinAnalysisSelection = {
+        trendMetric: "cm3"
+      };
       var asinWarehouseTableState = {
         sortKey: "",
         sortDir: "",
         dateCoveredCollapsed: false,
         editSellerRating: false
       };
+      var ASIN_ANALYSIS_METRIC_DEFINITIONS = [
+        { key: "netRevenue", label: "Net Revenue", type: "money" },
+        { key: "cm1", label: "CM1", type: "money" },
+        { key: "cm1Pct", label: "CM1%", type: "percent" },
+        { key: "cm2", label: "CM2", type: "money" },
+        { key: "cm2Pct", label: "CM2%", type: "percent" },
+        { key: "cm3", label: "CM3", type: "money" },
+        { key: "cm3Pct", label: "CM3%", type: "percent" },
+        { key: "tacos", label: "TACOS", type: "percent" },
+        { key: "organicRatio", label: "Organic Ratio", type: "percent" },
+        { key: "returnRiskRatio", label: "Return Risk Ratio", type: "percent" },
+        { key: "conversion", label: "Conversion (Unit/Session)", type: "percent" },
+        { key: "aov", label: "AOV", type: "money" },
+        { key: "gpPerSession", label: "GP:Session", type: "money2" }
+      ];
       var BENCHMARKS = {
         "CM1%": { value: 0.70, direction: "higher" },
         "CM2%": { value: 0.35, direction: "higher" },
@@ -7585,7 +7703,8 @@
         var headerHtml = columns.map(function (col) {
           var activeClass = sqpDashboardSort.key === col.key ? " is-active" : "";
           return "<th><span class='cts-sort-head" + activeClass + "' data-sqp-dashboard-sort='" + col.key + "'>"
-            + col.label + "<span class='cts-sort-ind'>" + getSqpDashboardSortIndicator(col.key) + "</span></span></th>";
+            + "<span class='cts-sort-label'>" + escapeHtml(col.label) + "</span>"
+            + "<span class='cts-sort-ind'>" + getSqpDashboardSortIndicator(col.key) + "</span></span></th>";
         }).join("");
 
         var bodyHtml = sortedRows.length ? sortedRows.map(function (row) {
@@ -8702,13 +8821,25 @@
 
       function initAsinAnalysisControls() {
         var analysisSelect = root.querySelector("[data-control='asin-analysis-filter']");
-        if (!analysisSelect || analysisSelect.dataset.bound === "1") return;
-        analysisSelect.dataset.bound = "1";
+        var trendMetricSelect = root.querySelector("[data-control='asin-analysis-trend-metric']");
+
+        if (analysisSelect && analysisSelect.dataset.bound !== "1") {
+          analysisSelect.dataset.bound = "1";
+          analysisSelect.addEventListener("change", function () {
+            fillAsinAnalysisMatrix();
+          });
+        }
+
+        if (trendMetricSelect && trendMetricSelect.dataset.bound !== "1") {
+          trendMetricSelect.dataset.bound = "1";
+          trendMetricSelect.addEventListener("change", function () {
+            asinAnalysisSelection.trendMetric = String(trendMetricSelect.value || "cm3");
+            fillAsinAnalysisMatrix();
+          });
+        }
 
         syncAsinAnalysisFilterOptions();
-        analysisSelect.addEventListener("change", function () {
-          fillAsinAnalysisMatrix();
-        });
+        syncAsinAnalysisTrendMetricOptions();
       }
 
       function formatWarehouseValue(type, value) {
@@ -12042,7 +12173,8 @@
         var headerHtml = headers.map(function (col) {
           var activeClass = asinDashboardSort.key === col.key ? " is-active" : "";
           return "<th><span class='cts-sort-head" + activeClass + "' data-sort-key='" + col.key + "'>"
-            + col.label + "<span class='cts-sort-ind'>" + dashboardSortIndicator(col.key) + "</span></span></th>";
+            + "<span class='cts-sort-label'>" + escapeHtml(col.label) + "</span>"
+            + "<span class='cts-sort-ind'>" + dashboardSortIndicator(col.key) + "</span></span></th>";
         }).join("");
 
         var body = sortedRows.length
@@ -12292,21 +12424,17 @@
           return !!(item && item.hasData);
         });
 
-        return [
-          { label: "Net Revenue", type: "money", hasData: hasDataByFortnight, values: byFortnight.map(function (item) { return item.netRevenue; }) },
-          { label: "CM1", type: "money", hasData: hasDataByFortnight, values: byFortnight.map(function (item) { return item.cm1; }) },
-          { label: "CM1%", type: "percent", hasData: hasDataByFortnight, values: byFortnight.map(function (item) { return item.cm1Pct; }) },
-          { label: "CM2", type: "money", hasData: hasDataByFortnight, values: byFortnight.map(function (item) { return item.cm2; }) },
-          { label: "CM2%", type: "percent", hasData: hasDataByFortnight, values: byFortnight.map(function (item) { return item.cm2Pct; }) },
-          { label: "CM3", type: "money", hasData: hasDataByFortnight, values: byFortnight.map(function (item) { return item.cm3; }) },
-          { label: "CM3%", type: "percent", hasData: hasDataByFortnight, values: byFortnight.map(function (item) { return item.cm3Pct; }) },
-          { label: "TACOS", type: "percent", hasData: hasDataByFortnight, values: byFortnight.map(function (item) { return item.tacos; }) },
-          { label: "Organic Ratio", type: "percent", hasData: hasDataByFortnight, values: byFortnight.map(function (item) { return item.organicRatio; }) },
-          { label: "Return Risk Ratio", type: "percent", hasData: hasDataByFortnight, values: byFortnight.map(function (item) { return item.returnRiskRatio; }) },
-          { label: "Conversion (Unit/Session)", type: "percent", hasData: hasDataByFortnight, values: byFortnight.map(function (item) { return item.conversion; }) },
-          { label: "AOV", type: "money", hasData: hasDataByFortnight, values: byFortnight.map(function (item) { return item.aov; }) },
-          { label: "GP:Session", type: "money2", hasData: hasDataByFortnight, values: byFortnight.map(function (item) { return item.gpPerSession; }) }
-        ];
+        return ASIN_ANALYSIS_METRIC_DEFINITIONS.map(function (metricDef) {
+          return {
+            key: metricDef.key,
+            label: metricDef.label,
+            type: metricDef.type,
+            hasData: hasDataByFortnight,
+            values: byFortnight.map(function (item) {
+              return item[metricDef.key];
+            })
+          };
+        });
       }
 
       function getCellClass(metricName, currentValue, currHasData) {
@@ -12365,6 +12493,99 @@
         return sign + absoluteValue.toFixed(2);
       }
 
+      function renderAsinAnalysisTrendAxis() {
+        var axis = root.querySelector("[data-chart-axis='asin-analysis-trend']");
+        if (!axis) return;
+        axis.innerHTML = "<span>Fortnight 1</span><span>Fortnight 7</span><span>Fortnight 13</span><span>Fortnight 19</span><span>Fortnight 26</span>";
+      }
+
+      function syncAsinAnalysisTrendMetricOptions(metricRows) {
+        var select = root.querySelector("[data-control='asin-analysis-trend-metric']");
+        if (!select) return null;
+
+        var rows = Array.isArray(metricRows) && metricRows.length
+          ? metricRows
+          : ASIN_ANALYSIS_METRIC_DEFINITIONS;
+        var currentKey = String(asinAnalysisSelection.trendMetric || "cm3");
+
+        select.innerHTML = rows.map(function (metric) {
+          return "<option value='" + escapeAttr(metric.key) + "'>" + escapeHtml(metric.label) + "</option>";
+        }).join("");
+
+        var isCurrentValid = rows.some(function (metric) {
+          return metric.key === currentKey;
+        });
+        if (!isCurrentValid) {
+          var hasCm3 = rows.some(function (metric) {
+            return metric.key === "cm3";
+          });
+          currentKey = hasCm3 ? "cm3" : (rows[0] ? rows[0].key : "");
+        }
+        asinAnalysisSelection.trendMetric = currentKey;
+        if (currentKey) select.value = currentKey;
+
+        for (var i = 0; i < rows.length; i++) {
+          if (rows[i].key === currentKey) return rows[i];
+        }
+        return null;
+      }
+
+      function renderAsinAnalysisTrendChart(selectedAsin, metricRows) {
+        var svg = root.querySelector("[data-chart='asin-analysis-trend']");
+        if (!svg) return;
+
+        renderAsinAnalysisTrendAxis();
+        var metric = syncAsinAnalysisTrendMetricOptions(metricRows);
+        if (!metric || !Array.isArray(metric.values) || !metric.values.length) {
+          renderNoDataChart(svg, "No data for selected range");
+          return;
+        }
+
+        var hasDataFlags = Array.isArray(metric.hasData) ? metric.hasData : [];
+        var hasAnyData = hasDataFlags.length
+          ? hasDataFlags.some(function (flag) { return !!flag; })
+          : metric.values.some(function (value) {
+            return !(value === null || value === undefined || value === "");
+          });
+        if (!hasAnyData) {
+          renderNoDataChart(svg, "No data for selected range");
+          return;
+        }
+
+        var selectedLabel = selectedAsin === ASIN_ALL_SELECTOR_VALUE
+          ? ASIN_ALL_SELECTOR_LABEL
+          : getAsinDisplayLabel(selectedAsin);
+        var series = metric.values.map(function (value, idx) {
+          var hasData = hasDataFlags.length
+            ? !!hasDataFlags[idx]
+            : !(value === null || value === undefined || value === "");
+          if (!hasData) return 0;
+          var numericValue = toNumber(value);
+          return isFinite(numericValue) ? numericValue : 0;
+        });
+        var pointTitles = metric.values.map(function (value, idx) {
+          var fortnightNumber = idx + 1;
+          var hasData = hasDataFlags.length
+            ? !!hasDataFlags[idx]
+            : !(value === null || value === undefined || value === "");
+          if (!hasData) {
+            return "Fortnight " + fortnightNumber
+              + "\n" + metric.label + ": No data"
+              + "\n" + selectedLabel;
+          }
+          var formattedValue = formatAsinAnalysisValue(metric.type, value);
+          return "Fortnight " + fortnightNumber
+            + "\n" + metric.label + ": " + (formattedValue || "0")
+            + "\n" + selectedLabel;
+        });
+
+        sparkline(svg, series, "var(--primary)", "var(--primary)", {
+          showGrid: true,
+          pointTitles: pointTitles,
+          noDataLabel: "No data for selected range"
+        });
+      }
+
       function fillAsinAnalysisMatrix() {
         var table = root.querySelector("[data-table='asin-analysis-matrix']");
         if (!table) return;
@@ -12379,17 +12600,20 @@
         }
 
         if (!asinWarehouseOrder.length) {
+          renderAsinAnalysisTrendChart(selectedAsin, []);
           table.innerHTML = "<thead><tr><th>Metric</th><th>Fortnight 1</th></tr></thead><tbody><tr><td colspan='2'>No ASIN selected.</td></tr></tbody>";
           return;
         }
 
         if (selectedAsin !== ASIN_ALL_SELECTOR_VALUE && (!selectedAsin || asinWarehouseOrder.indexOf(selectedAsin) === -1)) {
+          renderAsinAnalysisTrendChart(selectedAsin, []);
           table.innerHTML = "<thead><tr><th>Metric</th><th>Fortnight 1</th></tr></thead><tbody><tr><td colspan='2'>No ASIN selected.</td></tr></tbody>";
           return;
         }
 
         var fortnightBuckets = buildAsinAnalysisFortnightBuckets(selectedAsin);
         var metrics = buildAsinAnalysisMetricsByFortnight(fortnightBuckets);
+        renderAsinAnalysisTrendChart(selectedAsin, metrics);
         var fortnightHeaders = Array.from({ length: 26 }, function (_, idx) {
           return "<th>Fortnight " + (idx + 1) + "</th>";
         }).join("");
