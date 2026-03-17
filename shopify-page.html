@@ -29,18 +29,18 @@
       --cts-copper-2: var(--primary-700);
       --cts-good: #1f8755;
       --cts-warn: #b14f43;
-      --cts-cond-green-light-bg: #eefaf3;
-      --cts-cond-green-light-text: #2f7a56;
-      --cts-cond-green-regular-bg: #ddf3e7;
-      --cts-cond-green-regular-text: #1f6a45;
-      --cts-cond-green-deep-bg: #c8e9d8;
-      --cts-cond-green-deep-text: #145438;
-      --cts-cond-red-light-bg: #fff2f2;
-      --cts-cond-red-light-text: #b45555;
-      --cts-cond-red-regular-bg: #fde4e4;
-      --cts-cond-red-regular-text: #a74646;
-      --cts-cond-red-deep-bg: #f6cdcd;
-      --cts-cond-red-deep-text: #8e3737;
+      --cts-cond-green-light-bg: #eefaf2;
+      --cts-cond-green-light-text: #2d8a5a;
+      --cts-cond-green-regular-bg: #c9ebd9;
+      --cts-cond-green-regular-text: #18603f;
+      --cts-cond-green-deep-bg: #8fd2af;
+      --cts-cond-green-deep-text: #0d472d;
+      --cts-cond-red-light-bg: #fff0f0;
+      --cts-cond-red-light-text: #bd5050;
+      --cts-cond-red-regular-bg: #f8cfcf;
+      --cts-cond-red-regular-text: #9f3333;
+      --cts-cond-red-deep-bg: #eca8a8;
+      --cts-cond-red-deep-text: #7b2222;
       --cts-radius-lg: 18px;
       --cts-radius-md: 12px;
       --cts-shadow: 0 16px 34px rgba(30, 86, 230, 0.12);
@@ -794,6 +794,10 @@
 
     #cts-shopify-reporting td.cts-cond-red-deep {
       background: var(--cts-cond-red-deep-bg);
+    }
+
+    #cts-shopify-reporting td[class*='cts-cond-'] {
+      box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.09);
     }
 
     #cts-shopify-reporting .cts-card {
@@ -3434,6 +3438,42 @@
     #cts-shopify-reporting .cts-analysis-table tbody tr:hover td.cts-cond-red-deep {
       background: var(--cts-cond-red-deep-bg);
       color: var(--cts-cond-red-deep-text);
+    }
+
+    #cts-shopify-reporting [data-table='asin-analysis-matrix'].cts-analysis-table td.cts-cond-green-light,
+    #cts-shopify-reporting [data-table='asin-analysis-matrix'].cts-analysis-table tbody tr:hover td.cts-cond-green-light {
+      background: var(--cts-cond-green-light-bg) !important;
+      color: var(--cts-cond-green-light-text) !important;
+    }
+
+    #cts-shopify-reporting [data-table='asin-analysis-matrix'].cts-analysis-table td.cts-cond-green-regular,
+    #cts-shopify-reporting [data-table='asin-analysis-matrix'].cts-analysis-table tbody tr:hover td.cts-cond-green-regular {
+      background: var(--cts-cond-green-regular-bg) !important;
+      color: var(--cts-cond-green-regular-text) !important;
+    }
+
+    #cts-shopify-reporting [data-table='asin-analysis-matrix'].cts-analysis-table td.cts-cond-green-deep,
+    #cts-shopify-reporting [data-table='asin-analysis-matrix'].cts-analysis-table tbody tr:hover td.cts-cond-green-deep {
+      background: var(--cts-cond-green-deep-bg) !important;
+      color: var(--cts-cond-green-deep-text) !important;
+    }
+
+    #cts-shopify-reporting [data-table='asin-analysis-matrix'].cts-analysis-table td.cts-cond-red-light,
+    #cts-shopify-reporting [data-table='asin-analysis-matrix'].cts-analysis-table tbody tr:hover td.cts-cond-red-light {
+      background: var(--cts-cond-red-light-bg) !important;
+      color: var(--cts-cond-red-light-text) !important;
+    }
+
+    #cts-shopify-reporting [data-table='asin-analysis-matrix'].cts-analysis-table td.cts-cond-red-regular,
+    #cts-shopify-reporting [data-table='asin-analysis-matrix'].cts-analysis-table tbody tr:hover td.cts-cond-red-regular {
+      background: var(--cts-cond-red-regular-bg) !important;
+      color: var(--cts-cond-red-regular-text) !important;
+    }
+
+    #cts-shopify-reporting [data-table='asin-analysis-matrix'].cts-analysis-table td.cts-cond-red-deep,
+    #cts-shopify-reporting [data-table='asin-analysis-matrix'].cts-analysis-table tbody tr:hover td.cts-cond-red-deep {
+      background: var(--cts-cond-red-deep-bg) !important;
+      color: var(--cts-cond-red-deep-text) !important;
     }
 
     #cts-shopify-reporting .cts-sqp-keyword-delete-btn {
@@ -12425,14 +12465,14 @@
 
       function getExcelFillForColorClass(colorClass) {
         var fillMap = {
-          "cts-cond-green-light": "EEFAF3",
-          "cts-cond-green-regular": "DDF3E7",
-          "cts-cond-green-deep": "C8E9D8",
-          "cts-cond-red-light": "FFF2F2",
-          "cts-cond-red-regular": "FDE4E4",
-          "cts-cond-red-deep": "F6CDCD",
-          "bg-green": "DDF3E7",
-          "bg-red": "FDE4E4"
+          "cts-cond-green-light": "EEFAF2",
+          "cts-cond-green-regular": "C9EBD9",
+          "cts-cond-green-deep": "8FD2AF",
+          "cts-cond-red-light": "FFF0F0",
+          "cts-cond-red-regular": "F8CFCF",
+          "cts-cond-red-deep": "ECA8A8",
+          "bg-green": "C9EBD9",
+          "bg-red": "F8CFCF"
         };
         var fillHex = fillMap[String(colorClass || "")];
         if (fillHex) {
