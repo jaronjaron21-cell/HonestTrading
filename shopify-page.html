@@ -1750,6 +1750,28 @@
       white-space: nowrap;
     }
 
+    #cts-shopify-reporting .cts-warehouse-shared-table .cts-cell-input {
+      width: 100%;
+      max-width: 100%;
+      min-height: 28px;
+      height: 28px;
+      border: 1px solid var(--cts-line);
+      border-radius: 8px;
+      background: var(--surface);
+      color: var(--cts-text);
+      text-align: center;
+      padding: 0 8px;
+      font-size: 12px;
+      font-weight: 600;
+      line-height: 1.2;
+      outline: none;
+    }
+
+    #cts-shopify-reporting .cts-warehouse-shared-table .cts-cell-input:focus-visible {
+      border-color: var(--primary-400);
+      box-shadow: 0 0 0 2px rgba(58, 110, 240, 0.18);
+    }
+
     #cts-shopify-reporting .cts-warehouse-shared-table thead th:nth-child(1) {
       z-index: 50;
       background: var(--primary-50);
@@ -3990,7 +4012,7 @@
         { key: "totalUnitsSold", label: "Total Units Sold", type: "number" },
         { key: "returnsUnits", label: "Returns Units", type: "number" },
         { key: "sellableReturns", label: "Sellable Returns", type: "number" },
-        { key: "reviewRating", label: "Review Rating", type: "rating" },
+        { key: "reviewRating", label: "Seller Rating", type: "rating" },
         { key: "organicRank", label: "Organic Rank", type: "number" },
         { key: "organicRankingScreenshot", label: "Organic Ranking Screenshot", type: "text" }
       ];
@@ -8023,6 +8045,12 @@
           if (sortKey) sortKey = "";
         }
 
+        function getCurrentWarehouseAsin() {
+          var filter = root.querySelector("[data-control='asin-warehouse-filter']");
+          var current = normalizeAsinCode(filter && filter.value);
+          return isValidAsinCode(current) ? current : normalizeAsinCode(selectedAsin);
+        }
+
         function baseSortComparator(left, right) {
           return parseFortnightIndex(left && left.fortnight) - parseFortnightIndex(right && right.fortnight);
         }
@@ -8087,10 +8115,20 @@
 
         var bodyHtml = sortedRows.map(function (row) {
           var fortnightNumber = parseFortnightIndex(row && row.fortnight) + 1;
+          var fortnightLabel = String((row && row.fortnight) || ("Fortnight " + fortnightNumber));
           return "<tr><td>" + escapeHtml(row.fortnight) + "</td>"
             + "<td><span class='cts-date-covered-value'>" + escapeHtml(getFortnightDateCovered(fortnightNumber)) + "</span></td>"
             + "<td>" + escapeHtml(productTitle || "") + "</td>"
             + asinWarehouseColumns.map(function (col) {
+              if (col.key === "reviewRating") {
+                var rawRating = row && row[col.key];
+                var ratingValue = (rawRating === "" || rawRating === null || rawRating === undefined)
+                  ? ""
+                  : String(toNumber(rawRating));
+                return "<td><input class='cts-cell-input' type='number' step='0.1' min='0' data-action='asin-warehouse-edit-seller-rating' data-fortnight='"
+                  + escapeAttr(fortnightLabel)
+                  + "' value='" + escapeAttr(ratingValue) + "' placeholder='0.0' /></td>";
+              }
               return "<td>" + escapeHtml(formatWarehouseValue(col.type, row[col.key])) + "</td>";
             }).join("")
             + "</tr>";
@@ -8100,15 +8138,23 @@
 
         if (table.dataset.asinHeaderControlsBound !== "1") {
           table.dataset.asinHeaderControlsBound = "1";
-          function getCurrentWarehouseAsin() {
-            var filter = root.querySelector("[data-control='asin-warehouse-filter']");
-            var current = normalizeAsinCode(filter && filter.value);
-            return isValidAsinCode(current) ? current : normalizeAsinCode(selectedAsin);
-          }
           table.addEventListener("change", function (event) {
             var target = event.target;
             if (!target) return;
             var action = target.getAttribute("data-action");
+            if (action === "asin-warehouse-edit-seller-rating") {
+              var currentAsin = getCurrentWarehouseAsin();
+              var fortnightIdx = parseFortnightIndex(target.getAttribute("data-fortnight"));
+              if (!isValidAsinCode(currentAsin) || fortnightIdx < 0) return;
+              var fortnightRow = ensureAsinFortnightRow(currentAsin, fortnightIdx);
+              if (!fortnightRow) return;
+              var rawValue = String(target.value || "").trim();
+              fortnightRow.reviewRating = rawValue === "" ? null : toNumber(rawValue);
+              saveAsinWarehouseState();
+              refreshAsinProfitabilityViews();
+              renderAsinWarehouseTable(currentAsin);
+              return;
+            }
             if (action !== "asin-warehouse-sort") return;
             var metricKey = String(target.getAttribute("data-key") || "");
             var direction = String(target.value || "").toLowerCase();
