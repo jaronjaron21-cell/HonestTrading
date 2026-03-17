@@ -4426,8 +4426,41 @@
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script>
     (async function () {
+      function ensureSiteFavicon() {
+        var head = document.head || document.getElementsByTagName("head")[0];
+        if (!head) return;
+
+        var href = "/assets/honesty-favicon.svg";
+        var selectors = [
+          "link[rel='icon']",
+          "link[rel='shortcut icon']"
+        ];
+
+        selectors.forEach(function (selector) {
+          var existing = head.querySelector(selector);
+          if (existing) {
+            existing.setAttribute("href", href);
+            if (selector.indexOf("shortcut") === -1) {
+              existing.setAttribute("type", "image/svg+xml");
+            }
+            return;
+          }
+
+          var link = document.createElement("link");
+          if (selector.indexOf("shortcut") !== -1) {
+            link.setAttribute("rel", "shortcut icon");
+          } else {
+            link.setAttribute("rel", "icon");
+            link.setAttribute("type", "image/svg+xml");
+          }
+          link.setAttribute("href", href);
+          head.appendChild(link);
+        });
+      }
+
       var root = document.getElementById("cts-shopify-reporting");
       if (!root) return;
+      ensureSiteFavicon();
 
       var state = { module: "home", subtab: "dashboard" };
       var isSidebarCollapsed = false;

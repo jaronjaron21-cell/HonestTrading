@@ -334,6 +334,8 @@ function renderLoginPage(nextPath, hasError) {
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>HonestTrading Login</title>
+  <link rel="icon" type="image/svg+xml" href="/assets/honesty-favicon.svg" />
+  <link rel="shortcut icon" href="/assets/honesty-favicon.svg" />
   <style>
     :root {
       --bg: #26357a;
