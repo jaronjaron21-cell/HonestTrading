@@ -2233,6 +2233,10 @@
       grid-template-rows: auto minmax(0, 1fr);
     }
 
+    #cts-shopify-reporting .cts-dashboard-main-grid > .cts-dashboard-main-full {
+      grid-column: 1 / -1;
+    }
+
     #cts-shopify-reporting .cts-dashboard-main-grid > .cts-card > div[style*='overflow:auto'] {
       min-height: 0;
       max-width: 100%;
@@ -3075,42 +3079,32 @@
           </div>
 
           <section class="cts-card">
-            <h4>Top Keywords by Purchases</h4>
+            <div class="cts-filter-row">
+              <h4 style="margin:0;">Weekly Trend</h4>
+              <select class="cts-select cts-select-compact" data-control="sqp-dashboard-trend-metric" style="max-width:220px;">
+                <option value="purchasesTotal">Purchases Total</option>
+                <option value="searchQueryVolume">Search Query Volume</option>
+                <option value="impressionsTotal">Impressions Total</option>
+                <option value="clicksTotal">Clicks Total</option>
+                <option value="ctrPct">CTR %</option>
+                <option value="cvrPct">CVR %</option>
+                <option value="purchaseRatePct">Purchase Rate %</option>
+                <option value="impressionsBrandSharePct">Impressions Brand Share %</option>
+              </select>
+            </div>
             <div class="cts-chart-wrap">
-              <svg data-chart="sqp-dashboard-bars" viewBox="0 0 760 210" preserveAspectRatio="none"></svg>
-              <div class="cts-chart-axis" data-chart-axis="sqp-dashboard-bars">
-                <span>Keyword 1</span><span>Keyword 2</span><span>Keyword 3</span><span>Keyword 4</span><span>Keyword 5</span>
+              <svg data-chart="sqp-dashboard" viewBox="0 0 760 210" preserveAspectRatio="none"></svg>
+              <div class="cts-chart-axis" data-chart-axis="sqp-dashboard">
+                <span>Week 1</span><span>Week 14</span><span>Week 27</span><span>Week 40</span><span>Week 52</span>
               </div>
             </div>
           </section>
 
           <div class="cts-dashboard-main-grid">
-            <section class="cts-card">
+            <section class="cts-card cts-dashboard-main-full">
               <h4>Top Keywords Performance</h4>
               <div style="overflow:auto;">
                 <table class="cts-table" data-table="sqp-dashboard-top"></table>
-              </div>
-            </section>
-
-            <section class="cts-card">
-              <div class="cts-filter-row">
-                <h4 style="margin:0;">Weekly Trend</h4>
-                <select class="cts-select cts-select-compact" data-control="sqp-dashboard-trend-metric" style="max-width:220px;">
-                  <option value="purchasesTotal">Purchases Total</option>
-                  <option value="searchQueryVolume">Search Query Volume</option>
-                  <option value="impressionsTotal">Impressions Total</option>
-                  <option value="clicksTotal">Clicks Total</option>
-                  <option value="ctrPct">CTR %</option>
-                  <option value="cvrPct">CVR %</option>
-                  <option value="purchaseRatePct">Purchase Rate %</option>
-                  <option value="impressionsBrandSharePct">Impressions Brand Share %</option>
-                </select>
-              </div>
-              <div class="cts-chart-wrap">
-                <svg data-chart="sqp-dashboard" viewBox="0 0 760 210" preserveAspectRatio="none"></svg>
-                <div class="cts-chart-axis" data-chart-axis="sqp-dashboard">
-                  <span>Week 1</span><span>Week 14</span><span>Week 27</span><span>Week 40</span><span>Week 52</span>
-                </div>
               </div>
             </section>
           </div>
