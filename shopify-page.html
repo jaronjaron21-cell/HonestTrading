@@ -1163,6 +1163,8 @@
       min-width: 0;
       flex: 0 1 auto;
       margin-left: auto;
+      justify-self: end;
+      justify-content: flex-end;
     }
 
     #cts-shopify-reporting .cts-view[data-view='asin-warehouse'] .cts-asin-warehouse-msg {
@@ -1174,8 +1176,8 @@
     #cts-shopify-reporting .cts-view[data-view='asin-warehouse'] .cts-asin-warehouse-dropdown {
       position: relative;
       width: auto;
-      max-width: min(760px, 82vw);
-      min-width: 320px;
+      max-width: min(980px, 90vw);
+      min-width: 620px;
     }
 
     #cts-shopify-reporting .cts-view[data-view='asin-warehouse'] .cts-asin-warehouse-dropdown-trigger {
@@ -8126,11 +8128,12 @@
           var deleteColWidth = 64;
           var triggerChromeWidth = 74;
           var menuPaddingWidth = 24;
-          var desiredWidth = Math.ceil(labelWidth + Math.max(triggerChromeWidth, deleteColWidth + menuPaddingWidth));
-          var maxAllowedWidth = Math.max(420, viewportWidth - 120);
-          var finalWidth = clamp(desiredWidth, 420, maxAllowedWidth);
+          var extraContentAllowance = 64;
+          var desiredWidth = Math.ceil(labelWidth + Math.max(triggerChromeWidth, deleteColWidth + menuPaddingWidth) + extraContentAllowance);
+          var maxAllowedWidth = Math.max(620, viewportWidth - 96);
+          var finalWidth = clamp(desiredWidth, 620, maxAllowedWidth);
           dropdown.style.width = finalWidth + "px";
-          dropdown.style.minWidth = "320px";
+          dropdown.style.minWidth = "620px";
           dropdown.style.maxWidth = finalWidth + "px";
         }
 
