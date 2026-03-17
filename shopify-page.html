@@ -2327,7 +2327,7 @@
       height: 100%;
       max-height: 100%;
       display: grid;
-      grid-template-rows: auto minmax(0, 1fr);
+      grid-template-rows: minmax(0, 1fr);
       overflow: hidden;
     }
 
@@ -2935,6 +2935,7 @@
       grid-template-columns: minmax(220px, var(--cts-sidebar-width)) minmax(0, 1fr);
       max-width: 1600px;
       overflow: hidden;
+      align-items: stretch;
     }
 
     #cts-shopify-reporting .cts-sidebar {
@@ -2944,6 +2945,8 @@
       box-shadow: 0 16px 30px rgba(24, 70, 191, 0.34);
       padding: 16px 12px;
       gap: 8px;
+      height: 100%;
+      max-height: 100%;
     }
 
     #cts-shopify-reporting .cts-sidebar-head {
