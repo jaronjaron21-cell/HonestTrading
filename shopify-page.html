@@ -1173,13 +1173,14 @@
 
     #cts-shopify-reporting .cts-view[data-view='asin-warehouse'] .cts-asin-warehouse-dropdown {
       position: relative;
-      width: min(760px, 76vw);
-      max-width: 100%;
-      min-width: 300px;
+      width: max-content;
+      max-width: min(520px, 62vw);
+      min-width: 260px;
     }
 
     #cts-shopify-reporting .cts-view[data-view='asin-warehouse'] .cts-asin-warehouse-dropdown-trigger {
-      width: 100%;
+      width: auto;
+      max-width: 100%;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -1190,6 +1191,7 @@
     #cts-shopify-reporting .cts-view[data-view='asin-warehouse'] .cts-asin-warehouse-dropdown-trigger span[data-display='asin-warehouse-selected'] {
       display: block;
       min-width: 0;
+      max-width: 100%;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
