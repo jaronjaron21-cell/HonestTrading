@@ -3329,6 +3329,39 @@
       background: #f8fbff;
     }
 
+    #cts-shopify-reporting .cts-sqp-keyword-delete-btn {
+      appearance: none;
+      border: 0;
+      background: transparent;
+      padding: 0;
+      width: 18px;
+      height: 18px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: #ffffff;
+      cursor: pointer;
+      filter: drop-shadow(0 0 1px rgba(15, 23, 42, 0.82)) drop-shadow(0 1px 2px rgba(15, 23, 42, 0.38));
+      opacity: 0.95;
+    }
+
+    #cts-shopify-reporting .cts-sqp-keyword-delete-btn svg {
+      width: 16px;
+      height: 16px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      pointer-events: none;
+    }
+
+    #cts-shopify-reporting .cts-sqp-keyword-delete-btn:hover,
+    #cts-shopify-reporting .cts-sqp-keyword-delete-btn:focus-visible {
+      outline: none;
+      opacity: 0.75;
+    }
+
     #cts-shopify-reporting .cts-status.is-ok {
       color: #16653f;
       border-color: #bde8d2;
@@ -6516,6 +6549,7 @@
       function renderSqpKeywordList() {
         var table = root.querySelector("[data-table='sqp-keyword-list']");
         if (!table) return;
+        var sqpKeywordDeleteIcon = "<svg viewBox='0 0 24 24' aria-hidden='true'><path d='M3 6h18'/><path d='M8 6V4h8v2'/><path d='M7 6l1 14h8l1-14'/><path d='M10 11v6'/><path d='M14 11v6'/></svg>";
 
         if (!sqpKeywords.length) {
           sqpKeywordSelection = {};
@@ -6546,7 +6580,7 @@
               + "<td><input type='checkbox' data-action='sqp-keyword-select' data-key='" + key + "'" + selected + " /></td>"
               + "<td>" + escapeHtml(item.keyword) + "</td>"
               + "<td><input type='checkbox' data-action='sqp-keyword-toggle' data-key='" + key + "'" + checked + " /></td>"
-              + "<td><button class='cts-code' type='button' data-action='sqp-keyword-delete' data-key='" + key + "' title='Delete keyword'>&#128465;</button></td>"
+              + "<td><button class='cts-sqp-keyword-delete-btn' type='button' data-action='sqp-keyword-delete' data-key='" + key + "' title='Delete keyword' aria-label='Delete keyword'>" + sqpKeywordDeleteIcon + "</button></td>"
               + "</tr>";
           }).join("")
           + "</tbody>";
