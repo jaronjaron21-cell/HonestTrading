@@ -1170,14 +1170,123 @@
       flex: 0 1 auto;
     }
 
-    #cts-shopify-reporting .cts-view[data-view='asin-warehouse'] .cts-asin-warehouse-selector-group .cts-select {
-      min-width: min(640px, 72vw);
+    #cts-shopify-reporting .cts-view[data-view='asin-warehouse'] .cts-asin-warehouse-dropdown {
+      position: relative;
+      width: min(760px, 76vw);
       max-width: 100%;
+      min-width: 300px;
     }
 
-    #cts-shopify-reporting .cts-view[data-view='asin-warehouse'] .cts-asin-warehouse-selector-group .cts-delete-asin {
-      margin-left: 0;
+    #cts-shopify-reporting .cts-view[data-view='asin-warehouse'] .cts-asin-warehouse-dropdown-trigger {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      text-align: left;
+    }
+
+    #cts-shopify-reporting .cts-view[data-view='asin-warehouse'] .cts-asin-warehouse-dropdown-trigger span[data-display='asin-warehouse-selected'] {
+      display: block;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    #cts-shopify-reporting .cts-view[data-view='asin-warehouse'] .cts-asin-warehouse-dropdown-caret {
       flex: 0 0 auto;
+      font-size: 12px;
+      color: var(--cts-muted);
+    }
+
+    #cts-shopify-reporting .cts-view[data-view='asin-warehouse'] .cts-asin-warehouse-dropdown-menu {
+      position: absolute;
+      top: calc(100% + 6px);
+      left: 0;
+      right: 0;
+      z-index: 120;
+      background: var(--surface);
+      border: 1px solid var(--cts-line);
+      border-radius: 12px;
+      box-shadow: 0 10px 24px rgba(15, 23, 42, 0.14);
+      padding: 6px;
+      max-height: 320px;
+      overflow: auto;
+      overscroll-behavior: contain;
+    }
+
+    #cts-shopify-reporting .cts-view[data-view='asin-warehouse'] .cts-asin-warehouse-dropdown-list {
+      display: grid;
+      gap: 4px;
+    }
+
+    #cts-shopify-reporting .cts-view[data-view='asin-warehouse'] .cts-asin-warehouse-option-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 6px;
+      border-radius: 9px;
+      overflow: hidden;
+    }
+
+    #cts-shopify-reporting .cts-view[data-view='asin-warehouse'] .cts-asin-warehouse-option-btn {
+      appearance: none;
+      border: 0;
+      background: transparent;
+      color: var(--cts-ink);
+      font: inherit;
+      font-size: 13px;
+      text-align: left;
+      padding: 8px 10px;
+      border-radius: 9px;
+      cursor: pointer;
+      min-width: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    #cts-shopify-reporting .cts-view[data-view='asin-warehouse'] .cts-asin-warehouse-option-row.is-active .cts-asin-warehouse-option-btn {
+      background: var(--primary-100);
+      color: var(--primary-700);
+      font-weight: 700;
+    }
+
+    #cts-shopify-reporting .cts-view[data-view='asin-warehouse'] .cts-asin-warehouse-option-btn:hover,
+    #cts-shopify-reporting .cts-view[data-view='asin-warehouse'] .cts-asin-warehouse-option-btn:focus-visible {
+      outline: none;
+      background: var(--primary-100);
+    }
+
+    #cts-shopify-reporting .cts-view[data-view='asin-warehouse'] .cts-asin-warehouse-option-delete {
+      appearance: none;
+      border: 1px solid #f3c7ce;
+      background: #ffeef0;
+      color: #a74646;
+      width: 28px;
+      height: 28px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      line-height: 1;
+      cursor: pointer;
+      margin-right: 4px;
+    }
+
+    #cts-shopify-reporting .cts-view[data-view='asin-warehouse'] .cts-asin-warehouse-option-delete:hover,
+    #cts-shopify-reporting .cts-view[data-view='asin-warehouse'] .cts-asin-warehouse-option-delete:focus-visible {
+      outline: none;
+      background: #ffe3e8;
+      border-color: #ebaeb8;
+      color: #943c3c;
+    }
+
+    #cts-shopify-reporting .cts-view[data-view='asin-warehouse'] .cts-asin-warehouse-option-delete:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
     }
 
     #cts-shopify-reporting .cts-text-input {
@@ -3273,6 +3382,15 @@
       #cts-shopify-reporting .cts-view[data-view='search-dashboard'].is-active {
         gap: 18px;
       }
+
+      #cts-shopify-reporting .cts-view[data-view='asin-warehouse'] .cts-asin-warehouse-selector-group {
+        width: 100%;
+      }
+
+      #cts-shopify-reporting .cts-view[data-view='asin-warehouse'] .cts-asin-warehouse-dropdown {
+        width: 100%;
+        min-width: 0;
+      }
     }
   </style>
 
@@ -3826,8 +3944,16 @@
             <div class="cts-filter-row cts-asin-warehouse-filter-row">
               <div class="cts-asin-warehouse-selector-group">
                 <strong>Product</strong>
-                <select class="cts-select" data-control="asin-warehouse-filter"></select>
-                <button class="cts-code cts-delete-asin" type="button" data-action="delete-asin-trigger">Delete ASIN</button>
+                <div class="cts-asin-warehouse-dropdown" data-control="asin-warehouse-custom">
+                  <button class="cts-select cts-asin-warehouse-dropdown-trigger" type="button" data-action="asin-warehouse-dropdown-toggle" aria-expanded="false">
+                    <span data-display="asin-warehouse-selected">Select Product</span>
+                    <span class="cts-asin-warehouse-dropdown-caret" aria-hidden="true">▾</span>
+                  </button>
+                  <div class="cts-asin-warehouse-dropdown-menu cts-hidden" data-wrap="asin-warehouse-dropdown-menu">
+                    <div class="cts-asin-warehouse-dropdown-list" data-list="asin-warehouse-options"></div>
+                  </div>
+                </div>
+                <select class="cts-select cts-hidden" data-control="asin-warehouse-filter"></select>
               </div>
               <input class="cts-text-input cts-hidden" type="text" data-input="asin-inline" placeholder="ASIN Code" maxlength="10" />
               <span class="cts-import-msg" data-msg="asin-add"></span>
@@ -7936,6 +8062,7 @@
           ? preferredAsinCode
           : fallback;
         select.value = nextSelected;
+        renderAsinWarehouseCustomDropdown(nextSelected);
 
         if (importSelect) {
           importSelect.innerHTML = importOptionsHtml;
@@ -7951,6 +8078,39 @@
         syncHomeSnapshotControls();
         syncAsinAnalysisFilterOptions();
         fillAsinAnalysisMatrix();
+      }
+
+      function renderAsinWarehouseCustomDropdown(preferredAsinCode) {
+        var dropdown = root.querySelector("[data-control='asin-warehouse-custom']");
+        var filter = root.querySelector("[data-control='asin-warehouse-filter']");
+        if (!dropdown || !filter) return;
+
+        var trigger = dropdown.querySelector("[data-action='asin-warehouse-dropdown-toggle']");
+        var menu = dropdown.querySelector("[data-wrap='asin-warehouse-dropdown-menu']");
+        var list = dropdown.querySelector("[data-list='asin-warehouse-options']");
+        if (!trigger || !menu || !list) return;
+
+        var fallback = asinWarehouseOrder[0] || "";
+        var selectedAsin = normalizeAsinCode(preferredAsinCode || filter.value);
+        if (asinWarehouseOrder.indexOf(selectedAsin) === -1) selectedAsin = fallback;
+        filter.value = selectedAsin;
+
+        var selectedLabel = selectedAsin ? getAsinDisplayLabel(selectedAsin) : "Select Product";
+        trigger.innerHTML = "<span data-display='asin-warehouse-selected'>"
+          + escapeHtml(selectedLabel)
+          + "</span><span class='cts-asin-warehouse-dropdown-caret' aria-hidden='true'>▾</span>";
+        trigger.setAttribute("aria-expanded", menu.classList.contains("cts-hidden") ? "false" : "true");
+
+        var disableDelete = asinWarehouseOrder.length <= 1;
+        list.innerHTML = asinWarehouseOrder.map(function (asinCode) {
+          var isActive = asinCode === selectedAsin;
+          return "<div class='cts-asin-warehouse-option-row" + (isActive ? " is-active" : "") + "'>"
+            + "<button type='button' class='cts-asin-warehouse-option-btn' data-action='asin-warehouse-option-select' data-asin='" + escapeAttr(asinCode) + "' title='" + escapeAttr(getAsinDisplayLabel(asinCode)) + "'>"
+            + escapeHtml(getAsinDisplayLabel(asinCode))
+            + "</button>"
+            + "<button type='button' class='cts-asin-warehouse-option-delete' data-action='asin-warehouse-option-delete' data-asin='" + escapeAttr(asinCode) + "' title='Delete " + escapeAttr(asinCode) + "'" + (disableDelete ? " disabled" : "") + ">×</button>"
+            + "</div>";
+        }).join("");
       }
 
       function syncAsinDashboardFilterOptions() {
@@ -8252,93 +8412,26 @@
 
       async function initAsinWarehouse() {
         var filter = root.querySelector("[data-control='asin-warehouse-filter']");
-        var deleteTrigger = root.querySelector("[data-action='delete-asin-trigger']");
         var inlineInput = root.querySelector("[data-input='asin-inline']");
-        if (!filter || !deleteTrigger || !inlineInput) return;
+        var dropdown = root.querySelector("[data-control='asin-warehouse-custom']");
+        var dropdownTrigger = dropdown ? dropdown.querySelector("[data-action='asin-warehouse-dropdown-toggle']") : null;
+        var dropdownMenu = dropdown ? dropdown.querySelector("[data-wrap='asin-warehouse-dropdown-menu']") : null;
+        var dropdownList = dropdown ? dropdown.querySelector("[data-list='asin-warehouse-options']") : null;
+        if (!filter || !inlineInput || !dropdown || !dropdownTrigger || !dropdownMenu || !dropdownList) return;
 
         await loadAsinWarehouseState();
 
-        function showInlineInput() {
-          deleteTrigger.classList.add("cts-hidden");
-          inlineInput.classList.remove("cts-hidden");
-          inlineInput.value = "";
-          inlineInput.focus();
-          setAsinAddMessage("Type ASIN code, then Product Title will be requested.", "");
+        function closeDropdown() {
+          dropdownMenu.classList.add("cts-hidden");
+          dropdownTrigger.setAttribute("aria-expanded", "false");
         }
 
-        function hideInlineInput(clearMessage) {
-          inlineInput.classList.add("cts-hidden");
-          deleteTrigger.classList.remove("cts-hidden");
-          inlineInput.value = "";
-          if (clearMessage) setAsinAddMessage("", "");
-
-          if (filter.value === ASIN_ADD_OPTION_VALUE || filter.value === ASIN_ADD_DIVIDER_OPTION_VALUE) {
-            var fallbackAsin = asinWarehouseOrder[0] || "";
-            renderAsinWarehouseOptions(filter, fallbackAsin);
-            if (fallbackAsin) renderAsinWarehouseTable(fallbackAsin);
-          }
+        function openDropdown() {
+          dropdownMenu.classList.remove("cts-hidden");
+          dropdownTrigger.setAttribute("aria-expanded", "true");
         }
 
-        function submitInlineAsin() {
-          var asinCode = normalizeAsinCode(inlineInput.value);
-          if (!asinCode) {
-            setAsinAddMessage("Enter an ASIN code.", "warn");
-            return;
-          }
-          if (!isValidAsinCode(asinCode)) {
-            setAsinAddMessage("ASIN must be 10 letters/numbers.", "warn");
-            return;
-          }
-
-          if (asinWarehouseOrder.indexOf(asinCode) !== -1) {
-            setAsinAddMessage("Duplicate ASIN is not allowed.", "warn");
-            return;
-          }
-
-          var productTitle = normalizeAsinProductTitle(window.prompt("Enter Product Title for ASIN " + asinCode + ":", "") || "");
-          if (!productTitle) {
-            setAsinAddMessage("Product Title is required.", "warn");
-            return;
-          }
-
-          var upsertResult = upsertAsinMasterAsin(asinCode, productTitle);
-          if (!upsertResult.ok || !upsertResult.added) {
-            setAsinAddMessage("Unable to add ASIN.", "warn");
-            return;
-          }
-
-          saveAsinMasterState();
-          saveAsinWarehouseState();
-          renderAsinWarehouseOptions(filter, asinCode);
-          renderAsinWarehouseTable(asinCode);
-          refreshAsinProfitabilityViews();
-          setAsinAddMessage("ASIN added: " + asinCode + " (" + productTitle + ")", "ok");
-          hideInlineInput(false);
-        }
-
-        renderAsinWarehouseOptions(filter, asinWarehouseOrder[0] || "");
-        if (filter.value && filter.value !== ASIN_ADD_OPTION_VALUE && filter.value !== ASIN_ADD_DIVIDER_OPTION_VALUE) {
-          renderAsinWarehouseTable(filter.value);
-          var initialImportFilter = root.querySelector("[data-control='asin-import-filter']");
-          if (initialImportFilter) initialImportFilter.value = filter.value;
-        }
-
-        filter.addEventListener("change", function () {
-          if (filter.value === ASIN_ADD_OPTION_VALUE || filter.value === ASIN_ADD_DIVIDER_OPTION_VALUE) {
-            showInlineInput();
-            fillAsinAnalysisMatrix();
-            return;
-          }
-
-          hideInlineInput(true);
-          renderAsinWarehouseTable(filter.value);
-          var importFilter = root.querySelector("[data-control='asin-import-filter']");
-          if (importFilter) importFilter.value = filter.value;
-          fillAsinAnalysisMatrix();
-        });
-
-        deleteTrigger.addEventListener("click", function () {
-          var selected = filter.value;
+        function deleteAsinByCode(selected) {
           if (!selected || selected === ASIN_ADD_OPTION_VALUE || selected === ASIN_ADD_DIVIDER_OPTION_VALUE) {
             setAsinAddMessage("Select an ASIN to delete.", "warn");
             return;
@@ -8365,23 +8458,83 @@
           renderAsinWarehouseOptions(filter, nextAsin);
           if (nextAsin) renderAsinWarehouseTable(nextAsin);
           refreshAsinProfitabilityViews();
-          hideInlineInput(false);
+          inlineInput.classList.add("cts-hidden");
+          inlineInput.value = "";
           if (asinAddMessageTimer) window.clearTimeout(asinAddMessageTimer);
           setAsinAddMessage("", "");
+          closeDropdown();
+        }
+
+        renderAsinWarehouseOptions(filter, asinWarehouseOrder[0] || "");
+        if (filter.value && filter.value !== ASIN_ADD_OPTION_VALUE && filter.value !== ASIN_ADD_DIVIDER_OPTION_VALUE) {
+          renderAsinWarehouseTable(filter.value);
+          var initialImportFilter = root.querySelector("[data-control='asin-import-filter']");
+          if (initialImportFilter) initialImportFilter.value = filter.value;
+        }
+
+        filter.addEventListener("change", function () {
+          inlineInput.classList.add("cts-hidden");
+          inlineInput.value = "";
+          setAsinAddMessage("", "");
+          renderAsinWarehouseCustomDropdown(filter.value);
+          renderAsinWarehouseTable(filter.value);
+          var importFilter = root.querySelector("[data-control='asin-import-filter']");
+          if (importFilter) importFilter.value = filter.value;
+          fillAsinAnalysisMatrix();
+          closeDropdown();
         });
 
-        inlineInput.addEventListener("keydown", function (event) {
-          if (event.key === "Enter") {
-            event.preventDefault();
-            submitInlineAsin();
-          } else if (event.key === "Escape") {
-            event.preventDefault();
-            hideInlineInput(true);
+        dropdownTrigger.addEventListener("click", function (event) {
+          event.preventDefault();
+          if (dropdownMenu.classList.contains("cts-hidden")) {
+            openDropdown();
+          } else {
+            closeDropdown();
           }
         });
 
-        inlineInput.addEventListener("blur", function () {
-          if (!inlineInput.value.trim()) hideInlineInput(true);
+        dropdownList.addEventListener("click", function (event) {
+          var selectTrigger = event.target && event.target.closest
+            ? event.target.closest("[data-action='asin-warehouse-option-select']")
+            : null;
+          if (selectTrigger) {
+            var selectedAsin = normalizeAsinCode(selectTrigger.getAttribute("data-asin"));
+            if (asinWarehouseOrder.indexOf(selectedAsin) !== -1) {
+              filter.value = selectedAsin;
+              filter.dispatchEvent(new Event("change", { bubbles: true }));
+            }
+            return;
+          }
+
+          var deleteTrigger = event.target && event.target.closest
+            ? event.target.closest("[data-action='asin-warehouse-option-delete']")
+            : null;
+          if (deleteTrigger) {
+            var asinToDelete = normalizeAsinCode(deleteTrigger.getAttribute("data-asin"));
+            if (asinWarehouseOrder.indexOf(asinToDelete) !== -1) {
+              deleteAsinByCode(asinToDelete);
+            }
+          }
+        });
+
+        if (dropdown.dataset.outsideBound !== "1") {
+          dropdown.dataset.outsideBound = "1";
+          document.addEventListener("pointerdown", function (event) {
+            if (!dropdown.contains(event.target)) {
+              closeDropdown();
+            }
+          });
+          document.addEventListener("keydown", function (event) {
+            if (event.key === "Escape") {
+              closeDropdown();
+            }
+          });
+        }
+
+        dropdown.addEventListener("keydown", function (event) {
+          if (event.key === "Escape") {
+            closeDropdown();
+          }
         });
       }
 
