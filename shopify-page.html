@@ -29,6 +29,18 @@
       --cts-copper-2: var(--primary-700);
       --cts-good: #1f8755;
       --cts-warn: #b14f43;
+      --cts-cond-green-light-bg: #eefaf3;
+      --cts-cond-green-light-text: #2f7a56;
+      --cts-cond-green-regular-bg: #ddf3e7;
+      --cts-cond-green-regular-text: #1f6a45;
+      --cts-cond-green-deep-bg: #c8e9d8;
+      --cts-cond-green-deep-text: #145438;
+      --cts-cond-red-light-bg: #fff2f2;
+      --cts-cond-red-light-text: #b45555;
+      --cts-cond-red-regular-bg: #fde4e4;
+      --cts-cond-red-regular-text: #a74646;
+      --cts-cond-red-deep-bg: #f6cdcd;
+      --cts-cond-red-deep-text: #8e3737;
       --cts-radius-lg: 18px;
       --cts-radius-md: 12px;
       --cts-shadow: 0 16px 34px rgba(30, 86, 230, 0.12);
@@ -730,22 +742,58 @@
       opacity: 0.7;
     }
 
-    #cts-shopify-reporting .cts-bench-good {
-      color: #1f6a45;
+    #cts-shopify-reporting .cts-cond-green-light {
+      color: var(--cts-cond-green-light-text);
       font-weight: 700;
     }
 
-    #cts-shopify-reporting .cts-bench-bad {
-      color: #a74646;
+    #cts-shopify-reporting .cts-cond-green-regular {
+      color: var(--cts-cond-green-regular-text);
       font-weight: 700;
     }
 
-    #cts-shopify-reporting td.cts-bench-good {
-      background: #e8f6ee;
+    #cts-shopify-reporting .cts-cond-green-deep {
+      color: var(--cts-cond-green-deep-text);
+      font-weight: 700;
     }
 
-    #cts-shopify-reporting td.cts-bench-bad {
-      background: #fdeced;
+    #cts-shopify-reporting .cts-cond-red-light {
+      color: var(--cts-cond-red-light-text);
+      font-weight: 700;
+    }
+
+    #cts-shopify-reporting .cts-cond-red-regular {
+      color: var(--cts-cond-red-regular-text);
+      font-weight: 700;
+    }
+
+    #cts-shopify-reporting .cts-cond-red-deep {
+      color: var(--cts-cond-red-deep-text);
+      font-weight: 700;
+    }
+
+    #cts-shopify-reporting td.cts-cond-green-light {
+      background: var(--cts-cond-green-light-bg);
+    }
+
+    #cts-shopify-reporting td.cts-cond-green-regular {
+      background: var(--cts-cond-green-regular-bg);
+    }
+
+    #cts-shopify-reporting td.cts-cond-green-deep {
+      background: var(--cts-cond-green-deep-bg);
+    }
+
+    #cts-shopify-reporting td.cts-cond-red-light {
+      background: var(--cts-cond-red-light-bg);
+    }
+
+    #cts-shopify-reporting td.cts-cond-red-regular {
+      background: var(--cts-cond-red-regular-bg);
+    }
+
+    #cts-shopify-reporting td.cts-cond-red-deep {
+      background: var(--cts-cond-red-deep-bg);
     }
 
     #cts-shopify-reporting .cts-card {
@@ -1391,15 +1439,39 @@
       z-index: 3;
     }
 
-    #cts-shopify-reporting .cts-analysis-table td.bg-green {
-      background: #e8f6ee;
-      color: #1f6a45;
+    #cts-shopify-reporting .cts-analysis-table td.cts-cond-green-light {
+      background: var(--cts-cond-green-light-bg);
+      color: var(--cts-cond-green-light-text);
       font-weight: 700;
     }
 
-    #cts-shopify-reporting .cts-analysis-table td.bg-red {
-      background: #fdeced;
-      color: #a74646;
+    #cts-shopify-reporting .cts-analysis-table td.cts-cond-green-regular {
+      background: var(--cts-cond-green-regular-bg);
+      color: var(--cts-cond-green-regular-text);
+      font-weight: 700;
+    }
+
+    #cts-shopify-reporting .cts-analysis-table td.cts-cond-green-deep {
+      background: var(--cts-cond-green-deep-bg);
+      color: var(--cts-cond-green-deep-text);
+      font-weight: 700;
+    }
+
+    #cts-shopify-reporting .cts-analysis-table td.cts-cond-red-light {
+      background: var(--cts-cond-red-light-bg);
+      color: var(--cts-cond-red-light-text);
+      font-weight: 700;
+    }
+
+    #cts-shopify-reporting .cts-analysis-table td.cts-cond-red-regular {
+      background: var(--cts-cond-red-regular-bg);
+      color: var(--cts-cond-red-regular-text);
+      font-weight: 700;
+    }
+
+    #cts-shopify-reporting .cts-analysis-table td.cts-cond-red-deep {
+      background: var(--cts-cond-red-deep-bg);
+      color: var(--cts-cond-red-deep-text);
       font-weight: 700;
     }
 
@@ -1413,6 +1485,11 @@
       margin-top: 2px;
       font-size: 10px;
       color: var(--cts-muted);
+    }
+
+    #cts-shopify-reporting .cts-analysis-table td[class*='cts-cond-'] .cts-sqp-wow {
+      color: currentColor;
+      opacity: 0.88;
     }
 
     #cts-shopify-reporting .cts-hidden {
@@ -4359,6 +4436,18 @@
         "TACOS": { value: 0.15, direction: "lower" },
         "Return Risk Ratio": { value: 0.10, direction: "lower" }
       };
+      var CONDITIONAL_COLOR_CLASSES = [
+        "bg-green",
+        "bg-red",
+        "cts-bench-good",
+        "cts-bench-bad",
+        "cts-cond-green-light",
+        "cts-cond-green-regular",
+        "cts-cond-green-deep",
+        "cts-cond-red-light",
+        "cts-cond-red-regular",
+        "cts-cond-red-deep"
+      ];
       var ASIN_DASHBOARD_BENCHMARKS = {
         cm3Pct: 0.25,
         tacos: 0.15,
@@ -7673,8 +7762,7 @@
               if (prevWeek && prevWeek.hasData) {
                 var wow = computeWoW(currentValue, toNumber(prevWeek[metric.key]), metric.type);
                 if (wow.abs != null) {
-                  if (wow.direction === "up") cellClass = "bg-green";
-                  if (wow.direction === "down") cellClass = "bg-red";
+                  cellClass = getSqpWoWColorClass(wow);
                   var absText = formatSqpAnalysisAbsChange(wow.abs, metric.type);
                   var pctText = formatSqpAnalysisPctChange(wow.pct);
                   wowHtml = "<span class='cts-sqp-wow'>" + absText + (pctText ? " (" + pctText + ")" : "") + "</span>";
@@ -11639,14 +11727,65 @@
         };
       }
 
+      function clearConditionalColorClasses(node) {
+        if (!node || !node.classList) return;
+        CONDITIONAL_COLOR_CLASSES.forEach(function (className) {
+          node.classList.remove(className);
+        });
+      }
+
+      function getConditionalIntensityBucket(rawMagnitude) {
+        var magnitude = Math.abs(Number(rawMagnitude));
+        if (!isFinite(magnitude) || magnitude <= 0) return "";
+        var clamped = Math.min(magnitude, 1);
+        if (clamped <= (1 / 3)) return "light";
+        if (clamped <= (2 / 3)) return "regular";
+        return "deep";
+      }
+
+      function getConditionalColorClass(tone, magnitudeRatio) {
+        var intensity = getConditionalIntensityBucket(magnitudeRatio);
+        if (!intensity) return "";
+        var normalizedTone = String(tone || "").toLowerCase();
+        if (normalizedTone === "green") return "cts-cond-green-" + intensity;
+        if (normalizedTone === "red") return "cts-cond-red-" + intensity;
+        return "";
+      }
+
+      function getBenchmarkDeviationRatio(value, benchmarkValue) {
+        var numericValue = Number(value);
+        var numericBenchmark = Number(benchmarkValue);
+        if (!isFinite(numericValue) || !isFinite(numericBenchmark)) return null;
+        if (numericBenchmark === 0) return numericValue === 0 ? 0 : 1;
+        return Math.abs(numericValue - numericBenchmark) / Math.abs(numericBenchmark);
+      }
+
+      function getAsinBenchmarkDeviationClass(value, benchmarkValue, direction) {
+        var numericValue = Number(value);
+        var numericBenchmark = Number(benchmarkValue);
+        if (!isFinite(numericValue) || !isFinite(numericBenchmark)) return "";
+        if (numericValue === numericBenchmark) return "";
+
+        var ruleDirection = String(direction || "higher").toLowerCase();
+        var isGood = ruleDirection === "lower"
+          ? numericValue < numericBenchmark
+          : numericValue > numericBenchmark;
+        var deviationRatio = getBenchmarkDeviationRatio(numericValue, numericBenchmark);
+        if (deviationRatio == null) return "";
+        return getConditionalColorClass(isGood ? "green" : "red", deviationRatio);
+      }
+
       function getAsinDashboardBenchmarkClass(metricKey, value) {
         var numericValue = Number(value);
         var benchmark = ASIN_DASHBOARD_BENCHMARKS[metricKey];
         if (!isFinite(numericValue) || benchmark == null) return "";
 
         var lowerIsBetter = metricKey === "tacos" || metricKey === "returnRiskRatio";
-        if (lowerIsBetter) return numericValue <= benchmark ? "cts-bench-good" : "cts-bench-bad";
-        return numericValue >= benchmark ? "cts-bench-good" : "cts-bench-bad";
+        return getAsinBenchmarkDeviationClass(
+          numericValue,
+          benchmark,
+          lowerIsBetter ? "lower" : "higher"
+        );
       }
 
       function sortAsinDashboardRows(rows) {
@@ -11698,7 +11837,7 @@
         var node = root.querySelector("[data-asin-kpi='" + key + "']");
         if (!node) return;
         node.textContent = text;
-        node.classList.remove("cts-bench-good", "cts-bench-bad");
+        clearConditionalColorClasses(node);
         if (benchmarkMetricKey) {
           var cls = getAsinDashboardBenchmarkClass(benchmarkMetricKey, rawValue);
           if (cls) node.classList.add(cls);
@@ -12114,10 +12253,22 @@
         var numericValue = Number(currentValue);
         var benchmarkValue = Number(benchmarkRule.value);
         if (!isFinite(numericValue) || !isFinite(benchmarkValue)) return "";
+        return getAsinBenchmarkDeviationClass(
+          numericValue,
+          benchmarkValue,
+          String(benchmarkRule.direction || "higher").toLowerCase()
+        );
+      }
 
-        var direction = String(benchmarkRule.direction || "higher").toLowerCase();
-        if (direction === "lower") return numericValue <= benchmarkValue ? "bg-green" : "bg-red";
-        return numericValue >= benchmarkValue ? "bg-green" : "bg-red";
+      function getSqpWoWColorClass(wowResult) {
+        if (!wowResult || wowResult.abs == null) return "";
+        var direction = String(wowResult.direction || "neutral").toLowerCase();
+        if (direction !== "up" && direction !== "down") return "";
+        var magnitudeRatio = isFinite(wowResult.pct)
+          ? Math.abs(Number(wowResult.pct))
+          : (Math.abs(toNumber(wowResult.abs)) > 0 ? 1 : 0);
+        if (direction === "up") return getConditionalColorClass("green", magnitudeRatio);
+        return getConditionalColorClass("red", magnitudeRatio);
       }
 
       function formatAsinAnalysisValue(type, value) {
@@ -12201,11 +12352,19 @@
       }
 
       function getExcelFillForColorClass(colorClass) {
-        if (colorClass === "bg-green") {
-          return { patternType: "solid", fgColor: { rgb: "E8F6EE" } };
-        }
-        if (colorClass === "bg-red") {
-          return { patternType: "solid", fgColor: { rgb: "FDECED" } };
+        var fillMap = {
+          "cts-cond-green-light": "EEFAF3",
+          "cts-cond-green-regular": "DDF3E7",
+          "cts-cond-green-deep": "C8E9D8",
+          "cts-cond-red-light": "FFF2F2",
+          "cts-cond-red-regular": "FDE4E4",
+          "cts-cond-red-deep": "F6CDCD",
+          "bg-green": "DDF3E7",
+          "bg-red": "FDE4E4"
+        };
+        var fillHex = fillMap[String(colorClass || "")];
+        if (fillHex) {
+          return { patternType: "solid", fgColor: { rgb: fillHex } };
         }
         return null;
       }
@@ -12302,8 +12461,7 @@
               if (prevWeek && prevWeek.hasData) {
                 var wow = computeWoW(currentValue, toNumber(prevWeek[metric.key]), metric.type);
                 if (wow.abs != null) {
-                  if (wow.direction === "up") colorClass = "bg-green";
-                  if (wow.direction === "down") colorClass = "bg-red";
+                  colorClass = getSqpWoWColorClass(wow);
                   var absText = formatSqpAnalysisAbsChange(wow.abs, metric.type);
                   var pctText = formatSqpAnalysisPctChange(wow.pct);
                   changeLine = absText + (pctText ? " (" + pctText + ")" : "");
@@ -12806,7 +12964,7 @@
         var node = root.querySelector("[data-home-asin-kpi='" + key + "']");
         if (!node) return;
         node.textContent = text;
-        node.classList.remove("cts-bench-good", "cts-bench-bad");
+        clearConditionalColorClasses(node);
         if (benchmarkMetricKey) {
           var cls = getAsinDashboardBenchmarkClass(benchmarkMetricKey, rawValue);
           if (cls) node.classList.add(cls);
