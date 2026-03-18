@@ -406,32 +406,6 @@ function renderLoginPage(nextPath, hasError) {
       pointer-events: none;
     }
 
-    .cts-login-left-inner {
-      position: relative;
-      z-index: 1;
-      max-width: 540px;
-      display: grid;
-      gap: 26px;
-    }
-
-    .cts-login-badge {
-      width: 72px;
-      height: 72px;
-      border-radius: 12px;
-      border: 0;
-      background: transparent;
-      display: block;
-      overflow: hidden;
-    }
-
-    .cts-login-badge-logo {
-      width: 100%;
-      height: 100%;
-      display: block;
-      object-fit: cover;
-      border-radius: inherit;
-    }
-
     .cts-login-brand {
       margin: 0;
       font-size: 42px;
@@ -623,11 +597,6 @@ function renderLoginPage(nextPath, hasError) {
 <body>
   <div class="cts-login-shell">
     <section class="cts-login-left">
-      <div class="cts-login-left-inner">
-        <div class="cts-login-badge">
-          <img class="cts-login-badge-logo" src="/assets/honesty-favicon.svg" alt="Honest Trading logo" />
-        </div>
-      </div>
       <p class="cts-login-foot">© ${new Date().getUTCFullYear()} HonestTrading. All rights reserved.</p>
     </section>
 
