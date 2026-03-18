@@ -2199,6 +2199,12 @@
       display: inline-flex;
       align-items: center;
       margin: 0;
+      z-index: 1;
+    }
+
+    #cts-shopify-reporting [data-table='sqp-warehouse-table'].cts-warehouse-shared-table .cts-warehouse-th-menu[open],
+    #cts-shopify-reporting [data-table='asin-warehouse-metrics'].cts-warehouse-shared-table .cts-warehouse-th-menu[open] {
+      z-index: 260;
     }
 
     #cts-shopify-reporting [data-table='sqp-warehouse-table'].cts-warehouse-shared-table .cts-warehouse-th-menu > summary,
@@ -2252,7 +2258,7 @@
       top: calc(100% + 6px);
       left: 50%;
       transform: translateX(-50%);
-      z-index: 120;
+      z-index: 280;
       background: var(--surface);
       border: 1px solid var(--cts-line);
       border-radius: 10px;
@@ -2260,6 +2266,16 @@
       padding: 6px;
       min-width: 130px;
       max-width: 170px;
+    }
+
+    #cts-shopify-reporting .cts-warehouse-shared-table thead th.is-th-menu-open {
+      z-index: 240 !important;
+      overflow: visible !important;
+    }
+
+    #cts-shopify-reporting .cts-warehouse-shared-table thead th:has(.cts-warehouse-th-menu[open]) {
+      z-index: 240 !important;
+      overflow: visible !important;
     }
 
     #cts-shopify-reporting [data-table='sqp-warehouse-table'].cts-warehouse-shared-table th:nth-child(n+4) .cts-warehouse-th-menu-panel,
@@ -11649,6 +11665,41 @@
         });
       }
 
+      function initWarehouseHeaderMenuFix() {
+        if (!root || root.dataset.warehouseHeaderMenuFixBound === "1") return;
+        root.dataset.warehouseHeaderMenuFixBound = "1";
+
+        root.addEventListener("toggle", function (event) {
+          var menu = event && event.target;
+          if (!menu || !menu.classList || !menu.classList.contains("cts-warehouse-th-menu")) return;
+
+          var th = menu.closest ? menu.closest("th") : null;
+          if (th) th.classList.toggle("is-th-menu-open", !!menu.open);
+
+          if (!menu.open) return;
+          var table = menu.closest ? menu.closest("table") : null;
+          if (!table) return;
+
+          table.querySelectorAll(".cts-warehouse-th-menu[open]").forEach(function (openMenu) {
+            if (openMenu === menu) return;
+            openMenu.open = false;
+            var openTh = openMenu.closest ? openMenu.closest("th") : null;
+            if (openTh) openTh.classList.remove("is-th-menu-open");
+          });
+        }, true);
+
+        root.addEventListener("pointerdown", function (event) {
+          var target = event && event.target;
+          if (target && target.closest && target.closest(".cts-warehouse-th-menu")) return;
+
+          root.querySelectorAll(".cts-warehouse-th-menu[open]").forEach(function (menu) {
+            menu.open = false;
+            var th = menu.closest ? menu.closest("th") : null;
+            if (th) th.classList.remove("is-th-menu-open");
+          });
+        });
+      }
+
       function initSqpAnalysisControls() {
         var keywordSelect = root.querySelector("[data-control='sqp-analysis-keyword']");
         var typeSelect = root.querySelector("[data-control='sqp-analysis-keyword-type']");
@@ -14006,6 +14057,7 @@
       initAsinImportForm();
       await initSearchImportForm();
       initSqpWarehouseControls();
+      initWarehouseHeaderMenuFix();
       initSqpAnalysisControls();
       initAnalysisExportControls();
       initSqpDashboardControls();
