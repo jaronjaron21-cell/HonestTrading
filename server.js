@@ -620,9 +620,6 @@ function renderLoginPage(nextPath, hasError) {
     <section class="cts-login-left">
       <div class="cts-login-left-inner">
         <div class="cts-login-badge" aria-hidden="true">✱</div>
-        <h1 class="cts-login-brand">Hello HonestTrading!</h1>
-        <p class="cts-login-sub">Access your ASIN Profitability and SQP dashboard.</p>
-        <p class="cts-login-copy">Uploads, warehouse data, and insights in one secure workspace.</p>
       </div>
       <p class="cts-login-foot">© ${new Date().getUTCFullYear()} HonestTrading. All rights reserved.</p>
     </section>
