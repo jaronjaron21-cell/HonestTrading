@@ -8013,6 +8013,8 @@
         };
         var trendPointTitles = weeklySeries.map(function (item) {
           var lines = ["Week " + item.week];
+          var weekDateCovered = getWeekDateCovered(item.week);
+          if (weekDateCovered) lines.push("Date Covered: " + weekDateCovered);
           var currentValue = toNumber(item[trendMetric]);
           var metricLabel = trendMetricLabels[trendMetric] || "Value";
           var metricText = (trendMetric.indexOf("Pct") > -1)
@@ -12582,7 +12584,9 @@
           return entry.metrics.cm3;
         });
         var trendPointTitles = aggregates.perFortnight.map(function (entry) {
+          var fortnightDateCovered = getFortnightDateCovered(entry.fortnight);
           return "Fortnight " + entry.fortnight
+            + (fortnightDateCovered ? "\nDate Covered: " + fortnightDateCovered : "")
             + "\nCM3: " + formatDashboardMoney(entry.metrics.cm3)
             + "\nCM3%: " + formatDashboardPercent(entry.metrics.cm3Pct);
         });
