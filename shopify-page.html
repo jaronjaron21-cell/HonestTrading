@@ -736,7 +736,7 @@
     #cts-shopify-reporting [data-table='asin-dashboard-top'],
     #cts-shopify-reporting [data-table='sqp-dashboard-top'] {
       width: 100%;
-      min-width: 1720px;
+      min-width: 0;
       table-layout: fixed;
     }
 
@@ -7894,27 +7894,26 @@
 
         var leaderboardRows = getSqpKeywordLeaderboard(rows, weekRange, selectedKeywordType, selectedKeyword);
         renderSqpDashboardBarChart(leaderboardRows, selectedKeyword, selectedKeywordType, weekRange, rows);
-        var sortedRows = sortSqpDashboardRows(leaderboardRows);
 
         var columns = [
           { key: "keyword", label: "Keyword", type: "text" },
           { key: "keywordType", label: "Type", type: "text" },
-          { key: "searchQueryVolume", label: "Search Query Volume", type: "number" },
-          { key: "impressionsTotal", label: "Impressions Total", type: "number" },
-          { key: "impressionsBrandSharePct", label: "Impressions Brand Share %", type: "percent" },
-          { key: "clicksTotal", label: "Clicks Total", type: "number" },
-          { key: "purchasesTotal", label: "Purchases Total", type: "number" },
           { key: "ctrPct", label: "CTR %", type: "percent" },
           { key: "cvrPct", label: "CVR %", type: "percent" },
           { key: "purchaseRatePct", label: "Purchase Rate %", type: "percent" }
         ];
-        if (selectedKeyword !== SQP_ALL_KEYWORDS_VALUE) {
-          columns = columns.filter(function (col) { return col.key !== "keywordType"; });
-          if (sqpDashboardSort.key === "keywordType") {
-            sqpDashboardSort.key = "purchasesTotal";
-            sqpDashboardSort.dir = "desc";
-          }
+        var allowedSortKeys = {
+          keyword: true,
+          keywordType: true,
+          ctrPct: true,
+          cvrPct: true,
+          purchaseRatePct: true
+        };
+        if (!allowedSortKeys[sqpDashboardSort.key]) {
+          sqpDashboardSort.key = "purchaseRatePct";
+          sqpDashboardSort.dir = "desc";
         }
+        var sortedRows = sortSqpDashboardRows(leaderboardRows);
 
         var headerHtml = columns.map(function (col) {
           var activeClass = sqpDashboardSort.key === col.key ? " is-active" : "";
@@ -7926,14 +7925,7 @@
         var bodyHtml = sortedRows.length ? sortedRows.map(function (row) {
           var cells = [];
           cells.push("<td>" + escapeHtml(row.keyword) + "</td>");
-          if (selectedKeyword === SQP_ALL_KEYWORDS_VALUE) {
-            cells.push("<td>" + escapeHtml(getSqpKeywordTypeLabel(row.keyword)) + "</td>");
-          }
-          cells.push("<td>" + formatDashboardNumber(row.searchQueryVolume) + "</td>");
-          cells.push("<td>" + formatDashboardNumber(row.impressionsTotal) + "</td>");
-          cells.push("<td>" + formatDashboardPercent(row.impressionsBrandSharePct) + "</td>");
-          cells.push("<td>" + formatDashboardNumber(row.clicksTotal) + "</td>");
-          cells.push("<td>" + formatDashboardNumber(row.purchasesTotal) + "</td>");
+          cells.push("<td>" + escapeHtml(getSqpKeywordTypeLabel(row.keyword)) + "</td>");
           cells.push("<td>" + formatDashboardPercent(row.ctrPct) + "</td>");
           cells.push("<td>" + formatDashboardPercent(row.cvrPct) + "</td>");
           cells.push("<td>" + formatDashboardPercent(row.purchaseRatePct) + "</td>");
@@ -12557,7 +12549,6 @@
         var table = root.querySelector("[data-table='asin-dashboard-top']");
         if (!table) return;
 
-        var sortedRows = sortAsinDashboardRows(aggregates.perAsin);
         var headers = [
           { key: "asin", label: "ASIN" },
           { key: "netRevenue", label: "Net Revenue" },
@@ -12565,6 +12556,18 @@
           { key: "cm3Pct", label: "CM3%" },
           { key: "tacos", label: "TACOS" }
         ];
+        var allowedSortKeys = {
+          asin: true,
+          netRevenue: true,
+          cm3: true,
+          cm3Pct: true,
+          tacos: true
+        };
+        if (!allowedSortKeys[asinDashboardSort.key]) {
+          asinDashboardSort.key = "cm3";
+          asinDashboardSort.dir = "desc";
+        }
+        var sortedRows = sortAsinDashboardRows(aggregates.perAsin);
 
         var headerHtml = headers.map(function (col) {
           var activeClass = asinDashboardSort.key === col.key ? " is-active" : "";
