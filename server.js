@@ -621,8 +621,8 @@ function renderLoginPage(nextPath, hasError) {
       <div class="cts-login-left-inner">
         <div class="cts-login-badge" aria-hidden="true">✱</div>
         <h1 class="cts-login-brand">Hello HonestTrading!</h1>
-        <p class="cts-login-sub">Authorized dashboard access for ASIN Profitability and Search Query Performance.</p>
-        <p class="cts-login-copy">Securely manage uploads, warehouse data, and analysis insights in one protected workspace.</p>
+        <p class="cts-login-sub">Access your ASIN Profitability and SQP dashboard.</p>
+        <p class="cts-login-copy">Uploads, warehouse data, and insights in one secure workspace.</p>
       </div>
       <p class="cts-login-foot">© ${new Date().getUTCFullYear()} HonestTrading. All rights reserved.</p>
     </section>
