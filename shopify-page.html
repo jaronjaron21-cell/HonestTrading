@@ -6228,18 +6228,34 @@
             var week = toSqpWeekLabel(row && (row.week != null ? row.week : row.fortnight));
             var keyword = collapseWhitespace(row && row.keyword);
             if (!week || !keyword) return null;
+            var searchQueryVolume = toNumber(row && (row.search_query_volume != null ? row.search_query_volume : row.searchQueryVolume));
+            var impressionsTotal = toNumber(row && (row.impressions_total != null ? row.impressions_total : row.impressions));
+            var impressionsBrandSharePct = toNumber(row && (row.impressions_brand_share_pct != null ? row.impressions_brand_share_pct : row.impressions_brand_share));
+            var clicksTotal = toNumber(row && (row.clicks_total != null ? row.clicks_total : row.clicks));
+            var purchasesTotal = toNumber(row && (row.purchases_total != null ? row.purchases_total : row.orders));
+            var ordersTotal = getSqpOrdersTotalValue(row, purchasesTotal);
+            var sessionsTotal = getSqpSessionsTotalValue(row, searchQueryVolume);
+            var derivedRates = computeSqpRateMetrics({
+              impressionsTotal: impressionsTotal,
+              clicksTotal: clicksTotal,
+              ordersTotal: ordersTotal,
+              purchasesTotal: purchasesTotal,
+              sessionsTotal: sessionsTotal
+            });
 
             return {
               week: week,
               keyword: keyword,
-              search_query_volume: toNumber(row && (row.search_query_volume != null ? row.search_query_volume : row.searchQueryVolume)),
-              impressions_total: toNumber(row && (row.impressions_total != null ? row.impressions_total : row.impressions)),
-              impressions_brand_share_pct: toNumber(row && (row.impressions_brand_share_pct != null ? row.impressions_brand_share_pct : row.impressions_brand_share)),
-              clicks_total: toNumber(row && (row.clicks_total != null ? row.clicks_total : row.clicks)),
-              purchases_total: toNumber(row && (row.purchases_total != null ? row.purchases_total : row.orders)),
-              ctr_pct: toNumber(row && (row.ctr_pct != null ? row.ctr_pct : row.ctr)),
-              cvr_pct: toNumber(row && (row.cvr_pct != null ? row.cvr_pct : row.cvr)),
-              purchase_rate_pct: toNumber(row && (row.purchase_rate_pct != null ? row.purchase_rate_pct : row.purchaseRate)),
+              search_query_volume: searchQueryVolume,
+              impressions_total: impressionsTotal,
+              impressions_brand_share_pct: impressionsBrandSharePct,
+              clicks_total: clicksTotal,
+              purchases_total: purchasesTotal,
+              orders_total: ordersTotal,
+              sessions_total: sessionsTotal,
+              ctr_pct: derivedRates.ctrPct,
+              cvr_pct: derivedRates.cvrPct,
+              purchase_rate_pct: derivedRates.purchaseRatePct,
               source_filename: String(row && row.source_filename || ""),
               uploaded_at: String(row && row.uploaded_at || ""),
               market: row && row.market ? String(row.market) : "",
@@ -6357,6 +6373,8 @@
                 impressions_brand_share_pct: toNumber(row && (row.impressions_brand_share_pct != null ? row.impressions_brand_share_pct : row.impressionsBrandSharePct)),
                 clicks_total: toNumber(row && (row.clicks_total != null ? row.clicks_total : row.clicksTotal)),
                 purchases_total: toNumber(row && (row.purchases_total != null ? row.purchases_total : row.purchasesTotal)),
+                orders_total: getSqpOrdersTotalValue(row, toNumber(row && (row.purchases_total != null ? row.purchases_total : row.purchasesTotal))),
+                sessions_total: getSqpSessionsTotalValue(row, toNumber(row && (row.search_query_volume != null ? row.search_query_volume : row.searchQueryVolume))),
                 market: row && row.market ? String(row.market) : "",
                 extra_metrics: row && row.extra_metrics && typeof row.extra_metrics === "object" ? row.extra_metrics : {}
               };
@@ -6635,26 +6653,34 @@
           }
 
           keptKeywords[key] = managedKeywordMap[key];
+          var searchQueryVolume = toNumber(row && (row.search_query_volume != null ? row.search_query_volume : row.searchQueryVolume));
+          var impressionsTotal = toNumber(row && (row.impressions_total != null ? row.impressions_total : row.impressionsTotal));
+          var impressionsBrandSharePct = toNumber(row && (row.impressions_brand_share_pct != null ? row.impressions_brand_share_pct : row.impressionsBrandSharePct));
+          var clicksTotal = toNumber(row && (row.clicks_total != null ? row.clicks_total : row.clicksTotal));
+          var purchasesTotal = toNumber(row && (row.purchases_total != null ? row.purchases_total : row.purchasesTotal));
+          var ordersTotal = getSqpOrdersTotalValue(row, purchasesTotal);
+          var sessionsTotal = getSqpSessionsTotalValue(row, searchQueryVolume);
+          var derivedRates = computeSqpRateMetrics({
+            impressionsTotal: impressionsTotal,
+            clicksTotal: clicksTotal,
+            ordersTotal: ordersTotal,
+            purchasesTotal: purchasesTotal,
+            sessionsTotal: sessionsTotal
+          });
+
           nextRows.push({
             week: weekLabel,
             keyword: managedKeywordMap[key],
-            search_query_volume: toNumber(row && (row.search_query_volume != null ? row.search_query_volume : row.searchQueryVolume)),
-            impressions_total: toNumber(row && (row.impressions_total != null ? row.impressions_total : row.impressionsTotal)),
-            impressions_brand_share_pct: toNumber(row && (row.impressions_brand_share_pct != null ? row.impressions_brand_share_pct : row.impressionsBrandSharePct)),
-            clicks_total: toNumber(row && (row.clicks_total != null ? row.clicks_total : row.clicksTotal)),
-            purchases_total: toNumber(row && (row.purchases_total != null ? row.purchases_total : row.purchasesTotal)),
-            ctr_pct: safeDivide(
-              toNumber(row && (row.clicks_total != null ? row.clicks_total : row.clicksTotal)),
-              toNumber(row && (row.search_query_volume != null ? row.search_query_volume : row.searchQueryVolume))
-            ),
-            cvr_pct: safeDivide(
-              toNumber(row && (row.purchases_total != null ? row.purchases_total : row.purchasesTotal)),
-              toNumber(row && (row.clicks_total != null ? row.clicks_total : row.clicksTotal))
-            ),
-            purchase_rate_pct: safeDivide(
-              toNumber(row && (row.purchases_total != null ? row.purchases_total : row.purchasesTotal)),
-              toNumber(row && (row.search_query_volume != null ? row.search_query_volume : row.searchQueryVolume))
-            ),
+            search_query_volume: searchQueryVolume,
+            impressions_total: impressionsTotal,
+            impressions_brand_share_pct: impressionsBrandSharePct,
+            clicks_total: clicksTotal,
+            purchases_total: purchasesTotal,
+            orders_total: ordersTotal,
+            sessions_total: sessionsTotal,
+            ctr_pct: derivedRates.ctrPct,
+            cvr_pct: derivedRates.cvrPct,
+            purchase_rate_pct: derivedRates.purchaseRatePct,
             source_filename: String(sourceFilename != null ? sourceFilename : (row && row.source_filename) || ""),
             uploaded_at: String(uploadedAt != null ? uploadedAt : (row && row.uploaded_at) || ""),
             market: row && row.market ? String(row.market) : "",
@@ -7351,7 +7377,9 @@
               impressions_total: 0,
               impressions_brand_share_weighted: 0,
               clicks_total: 0,
-              purchases_total: 0
+              purchases_total: 0,
+              orders_total: 0,
+              sessions_total: 0
             };
           }
 
@@ -7360,16 +7388,27 @@
           var brandShare = toNumber(row.impressions_brand_share_pct);
           var clicksTotal = toNumber(row.clicks_total);
           var purchasesTotal = toNumber(row.purchases_total);
+          var ordersTotal = getSqpOrdersTotalValue(row, purchasesTotal);
+          var sessionsTotal = getSqpSessionsTotalValue(row, queryVolume);
 
           keywordMap[keyword].search_query_volume += queryVolume;
           keywordMap[keyword].impressions_total += impressionsTotal;
           keywordMap[keyword].impressions_brand_share_weighted += impressionsTotal * brandShare;
           keywordMap[keyword].clicks_total += clicksTotal;
           keywordMap[keyword].purchases_total += purchasesTotal;
+          keywordMap[keyword].orders_total += ordersTotal;
+          keywordMap[keyword].sessions_total += sessionsTotal;
         });
 
         return Object.keys(keywordMap).map(function (keyword) {
           var item = keywordMap[keyword];
+          var derivedRates = computeSqpRateMetrics({
+            impressionsTotal: item.impressions_total,
+            clicksTotal: item.clicks_total,
+            ordersTotal: item.orders_total,
+            purchasesTotal: item.purchases_total,
+            sessionsTotal: item.sessions_total
+          });
           return {
             keyword: item.keyword,
             search_query_volume: item.search_query_volume,
@@ -7377,9 +7416,11 @@
             impressions_brand_share_pct: safeDivide(item.impressions_brand_share_weighted, item.impressions_total),
             clicks_total: item.clicks_total,
             purchases_total: item.purchases_total,
-            ctr_pct: safeDivide(item.clicks_total, item.search_query_volume),
-            cvr_pct: safeDivide(item.purchases_total, item.clicks_total),
-            purchase_rate_pct: safeDivide(item.purchases_total, item.search_query_volume)
+            orders_total: item.orders_total,
+            sessions_total: item.sessions_total,
+            ctr_pct: derivedRates.ctrPct,
+            cvr_pct: derivedRates.cvrPct,
+            purchase_rate_pct: derivedRates.purchaseRatePct
           };
         });
       }
@@ -7393,17 +7434,32 @@
           return week === selectedWarehouseWeek;
         }).map(function (row) {
           var week = toSqpWeekLabel(row && (row.week != null ? row.week : row.fortnight));
+          var queryVolume = toNumber(row && row.search_query_volume);
+          var impressionsTotal = toNumber(row && row.impressions_total);
+          var clicksTotal = toNumber(row && row.clicks_total);
+          var purchasesTotal = toNumber(row && row.purchases_total);
+          var ordersTotal = getSqpOrdersTotalValue(row, purchasesTotal);
+          var sessionsTotal = getSqpSessionsTotalValue(row, queryVolume);
+          var derivedRates = computeSqpRateMetrics({
+            impressionsTotal: impressionsTotal,
+            clicksTotal: clicksTotal,
+            ordersTotal: ordersTotal,
+            purchasesTotal: purchasesTotal,
+            sessionsTotal: sessionsTotal
+          });
           return {
             week: week,
             keyword: collapseWhitespace(row.keyword) || "Unknown Keyword",
-            search_query_volume: toNumber(row.search_query_volume),
-            impressions_total: toNumber(row.impressions_total),
+            search_query_volume: queryVolume,
+            impressions_total: impressionsTotal,
             impressions_brand_share_pct: toNumber(row.impressions_brand_share_pct),
-            clicks_total: toNumber(row.clicks_total),
-            purchases_total: toNumber(row.purchases_total),
-            ctr_pct: toNumber(row.ctr_pct),
-            cvr_pct: toNumber(row.cvr_pct),
-            purchase_rate_pct: toNumber(row.purchase_rate_pct),
+            clicks_total: clicksTotal,
+            purchases_total: purchasesTotal,
+            orders_total: ordersTotal,
+            sessions_total: sessionsTotal,
+            ctr_pct: derivedRates.ctrPct,
+            cvr_pct: derivedRates.cvrPct,
+            purchase_rate_pct: derivedRates.purchaseRatePct,
             source_filename: String(row.source_filename || ""),
             uploaded_at: String(row.uploaded_at || ""),
             market: row.market ? String(row.market) : "",
@@ -7458,22 +7514,74 @@
         return { from: fromWeek, to: toWeek };
       }
 
+      function getSqpMetricValueFromRow(row, keys, fallbackValue) {
+        var source = row || {};
+        for (var i = 0; i < (keys || []).length; i++) {
+          var key = keys[i];
+          if (!key) continue;
+          var value = source[key];
+          if (value === "" || value === null || value === undefined) continue;
+          return toNumber(value);
+        }
+        return toNumber(fallbackValue);
+      }
+
+      function getSqpOrdersTotalValue(row, purchasesFallback) {
+        return getSqpMetricValueFromRow(
+          row,
+          ["orders_total", "ordersTotal", "orders", "total_orders", "totalOrders"],
+          purchasesFallback
+        );
+      }
+
+      function getSqpSessionsTotalValue(row, sessionsFallback) {
+        return getSqpMetricValueFromRow(
+          row,
+          ["sessions_total", "sessionsTotal", "sessions", "total_sessions", "totalSessions"],
+          sessionsFallback
+        );
+      }
+
+      function computeSqpRateMetrics(values) {
+        var impressionsTotal = toNumber(values && values.impressionsTotal);
+        var clicksTotal = toNumber(values && values.clicksTotal);
+        var ordersTotal = toNumber(values && values.ordersTotal);
+        var purchasesTotal = toNumber(values && values.purchasesTotal);
+        var sessionsTotal = toNumber(values && values.sessionsTotal);
+
+        return {
+          ctrPct: safeDivide(clicksTotal, impressionsTotal),
+          cvrPct: safeDivide(ordersTotal, clicksTotal),
+          purchaseRatePct: safeDivide(purchasesTotal, sessionsTotal)
+        };
+      }
+
       function normalizeSqpWarehouseRow(row) {
         var weekNumber = parseSqpWeekNumber(row && (row.week != null ? row.week : row.fortnight));
         if (weekNumber < 1 || weekNumber > 52) return null;
 
         var keyword = collapseWhitespace(row && row.keyword) || "Unknown Keyword";
         var isBranded = isBrandedKeyword(keyword);
+        var searchQueryVolume = toNumber(row && (row.search_query_volume != null ? row.search_query_volume : row.searchQueryVolume));
+        var impressionsTotal = toNumber(row && (row.impressions_total != null ? row.impressions_total : row.impressionsTotal));
+        var impressionsBrandSharePct = toNumber(row && (row.impressions_brand_share_pct != null ? row.impressions_brand_share_pct : row.impressionsBrandSharePct));
+        var clicksTotal = toNumber(row && (row.clicks_total != null ? row.clicks_total : row.clicksTotal));
+        var purchasesTotal = toNumber(row && (row.purchases_total != null ? row.purchases_total : row.purchasesTotal));
+        var ordersTotal = getSqpOrdersTotalValue(row, purchasesTotal);
+        var sessionsTotal = getSqpSessionsTotalValue(row, searchQueryVolume);
+
         return {
           week: weekNumber,
           keyword: keyword,
           isBranded: isBranded,
           keywordType: isBranded ? SQP_KEYWORD_TYPE_BRANDED : SQP_KEYWORD_TYPE_GENERIC,
-          searchQueryVolume: toNumber(row && (row.search_query_volume != null ? row.search_query_volume : row.searchQueryVolume)),
-          impressionsTotal: toNumber(row && (row.impressions_total != null ? row.impressions_total : row.impressionsTotal)),
-          impressionsBrandSharePct: toNumber(row && (row.impressions_brand_share_pct != null ? row.impressions_brand_share_pct : row.impressionsBrandSharePct)),
-          clicksTotal: toNumber(row && (row.clicks_total != null ? row.clicks_total : row.clicksTotal)),
-          purchasesTotal: toNumber(row && (row.purchases_total != null ? row.purchases_total : row.purchasesTotal))
+          searchQueryVolume: searchQueryVolume,
+          impressionsTotal: impressionsTotal,
+          impressionsBrandSharePct: impressionsBrandSharePct,
+          clicksTotal: clicksTotal,
+          purchasesTotal: purchasesTotal,
+          ordersTotal: ordersTotal,
+          sessionsTotal: sessionsTotal
         };
       }
 
@@ -7490,6 +7598,8 @@
           impressionsBrandShareWeighted: 0,
           clicksTotal: 0,
           purchasesTotal: 0,
+          ordersTotal: 0,
+          sessionsTotal: 0,
           rowCount: 0
         };
       }
@@ -7500,6 +7610,8 @@
         bucket.impressionsBrandShareWeighted += toNumber(row.impressionsTotal) * toNumber(row.impressionsBrandSharePct);
         bucket.clicksTotal += toNumber(row.clicksTotal);
         bucket.purchasesTotal += toNumber(row.purchasesTotal);
+        bucket.ordersTotal += getSqpOrdersTotalValue(row, toNumber(row.purchasesTotal));
+        bucket.sessionsTotal += getSqpSessionsTotalValue(row, toNumber(row.searchQueryVolume));
         bucket.rowCount += 1;
         return bucket;
       }
@@ -7509,7 +7621,16 @@
         var impressionsTotal = toNumber(bucket.impressionsTotal);
         var clicksTotal = toNumber(bucket.clicksTotal);
         var purchasesTotal = toNumber(bucket.purchasesTotal);
+        var ordersTotal = toNumber(bucket.ordersTotal);
+        var sessionsTotal = toNumber(bucket.sessionsTotal);
         var impressionsBrandSharePct = safeDivide(toNumber(bucket.impressionsBrandShareWeighted), impressionsTotal);
+        var derivedRates = computeSqpRateMetrics({
+          impressionsTotal: impressionsTotal,
+          clicksTotal: clicksTotal,
+          ordersTotal: ordersTotal,
+          purchasesTotal: purchasesTotal,
+          sessionsTotal: sessionsTotal
+        });
 
         return {
           searchQueryVolume: searchQueryVolume,
@@ -7517,9 +7638,11 @@
           impressionsBrandSharePct: impressionsBrandSharePct,
           clicksTotal: clicksTotal,
           purchasesTotal: purchasesTotal,
-          ctrPct: safeDivide(clicksTotal, searchQueryVolume),
-          cvrPct: safeDivide(purchasesTotal, clicksTotal),
-          purchaseRatePct: safeDivide(purchasesTotal, searchQueryVolume),
+          ordersTotal: ordersTotal,
+          sessionsTotal: sessionsTotal,
+          ctrPct: derivedRates.ctrPct,
+          cvrPct: derivedRates.cvrPct,
+          purchaseRatePct: derivedRates.purchaseRatePct,
           rowCount: toNumber(bucket.rowCount)
         };
       }
@@ -7563,6 +7686,8 @@
             impressionsBrandSharePct: metrics.impressionsBrandSharePct,
             clicksTotal: metrics.clicksTotal,
             purchasesTotal: metrics.purchasesTotal,
+            ordersTotal: metrics.ordersTotal,
+            sessionsTotal: metrics.sessionsTotal,
             ctrPct: metrics.ctrPct,
             cvrPct: metrics.cvrPct,
             purchaseRatePct: metrics.purchaseRatePct
@@ -7620,6 +7745,8 @@
             impressionsBrandSharePct: metrics.impressionsBrandSharePct,
             clicksTotal: metrics.clicksTotal,
             purchasesTotal: metrics.purchasesTotal,
+            ordersTotal: metrics.ordersTotal,
+            sessionsTotal: metrics.sessionsTotal,
             ctrPct: metrics.ctrPct,
             cvrPct: metrics.cvrPct,
             purchaseRatePct: metrics.purchaseRatePct
@@ -7942,7 +8069,9 @@
             impressionsTotal: 0,
             impressionsBrandShareWeighted: 0,
             clicksTotal: 0,
-            purchasesTotal: 0
+            purchasesTotal: 0,
+            ordersTotal: 0,
+            sessionsTotal: 0
           };
         });
 
@@ -7959,6 +8088,8 @@
           var brandShare = toNumber(row && row.impressions_brand_share_pct);
           var clicks = toNumber(row && row.clicks_total);
           var purchases = toNumber(row && row.purchases_total);
+          var orders = getSqpOrdersTotalValue(row, purchases);
+          var sessions = getSqpSessionsTotalValue(row, volume);
 
           var bucket = buckets[weekNumber];
           bucket.rowCount += 1;
@@ -7967,15 +8098,21 @@
           bucket.impressionsBrandShareWeighted += impressions * brandShare;
           bucket.clicksTotal += clicks;
           bucket.purchasesTotal += purchases;
+          bucket.ordersTotal += orders;
+          bucket.sessionsTotal += sessions;
         });
 
         var metricsByWeek = {};
         for (var week = 1; week <= 52; week++) {
           var bucket = buckets[week];
           var brandSharePct = safeDivide(bucket.impressionsBrandShareWeighted, bucket.impressionsTotal);
-          var ctrPct = safeDivide(bucket.clicksTotal, bucket.searchQueryVolume);
-          var cvrPct = safeDivide(bucket.purchasesTotal, bucket.clicksTotal);
-          var purchaseRatePct = safeDivide(bucket.purchasesTotal, bucket.searchQueryVolume);
+          var derivedRates = computeSqpRateMetrics({
+            impressionsTotal: bucket.impressionsTotal,
+            clicksTotal: bucket.clicksTotal,
+            ordersTotal: bucket.ordersTotal,
+            purchasesTotal: bucket.purchasesTotal,
+            sessionsTotal: bucket.sessionsTotal
+          });
 
           metricsByWeek[week] = {
             hasData: bucket.rowCount > 0,
@@ -7984,9 +8121,11 @@
             impressionsBrandSharePct: brandSharePct,
             clicksTotal: bucket.clicksTotal,
             purchasesTotal: bucket.purchasesTotal,
-            ctrPct: ctrPct,
-            cvrPct: cvrPct,
-            purchaseRatePct: purchaseRatePct
+            ordersTotal: bucket.ordersTotal,
+            sessionsTotal: bucket.sessionsTotal,
+            ctrPct: derivedRates.ctrPct,
+            cvrPct: derivedRates.cvrPct,
+            purchaseRatePct: derivedRates.purchaseRatePct
           };
         }
 
@@ -11089,11 +11228,23 @@
             [["clicks", "total", "count"], ["clicks", "total"], ["clicks"]],
             ["brand", "share", "rate", "price", "speed"]
           ),
+          ordersTotal: findHeaderByPriority(
+            row,
+            ["Orders: Total Count", "Orders Total Count", "Orders", "Total Orders", "Total Order Items"],
+            [["orders", "total", "count"], ["orders", "total"], ["orders"], ["total", "orders"]],
+            ["price", "median", "share", "rate", "speed"]
+          ),
           purchasesTotal: findHeaderByPriority(
             row,
-            ["Purchases: Total Count", "Purchases Total Count", "Purchases", "Orders: Total Count", "Orders", "Total Orders", "Total Order Items"],
-            [["purchases", "total", "count"], ["purchases", "total"], ["purchases"], ["orders", "total", "count"], ["orders", "total"], ["orders"]],
+            ["Purchases: Total Count", "Purchases Total Count", "Purchases"],
+            [["purchases", "total", "count"], ["purchases", "total"], ["purchases"]],
             ["price", "median", "share", "rate", "speed"]
+          ),
+          sessionsTotal: findHeaderByPriority(
+            row,
+            ["Sessions: Total Count", "Sessions Total Count", "Sessions", "Session"],
+            [["sessions", "total", "count"], ["sessions", "total"], ["sessions"], ["session"]],
+            ["share", "rate", "price", "speed"]
           ),
           clicksClickRatePct: findHeaderByPriority(
             row,
@@ -11231,7 +11382,9 @@
           metricColumns.impressionsTotal,
           metricColumns.impressionsBrandSharePct,
           metricColumns.clicksTotal,
+          metricColumns.ordersTotal,
           metricColumns.purchasesTotal,
+          metricColumns.sessionsTotal,
           metricColumns.clicksClickRatePct,
           metricColumns.purchasesPurchaseRatePct,
           metricColumns.market
@@ -11264,6 +11417,8 @@
               impressionsBrandShareWeighted: 0,
               clicksTotal: 0,
               purchasesTotal: 0,
+              ordersTotal: 0,
+              sessionsTotal: 0,
               marketValues: {},
               extra_metrics: {}
             };
@@ -11275,12 +11430,16 @@
           var brandShare = metricColumns.impressionsBrandSharePct ? parsePercentToDecimal(row[metricColumns.impressionsBrandSharePct]) : 0;
           var clicksTotal = metricColumns.clicksTotal ? toNumber(row[metricColumns.clicksTotal]) : 0;
           var purchasesTotal = metricColumns.purchasesTotal ? toNumber(row[metricColumns.purchasesTotal]) : 0;
+          var ordersTotal = metricColumns.ordersTotal ? toNumber(row[metricColumns.ordersTotal]) : purchasesTotal;
+          var sessionsTotal = metricColumns.sessionsTotal ? toNumber(row[metricColumns.sessionsTotal]) : queryVolume;
 
           bucket.searchQueryVolume += queryVolume;
           bucket.impressionsTotal += impressionsTotal;
           bucket.impressionsBrandShareWeighted += impressionsTotal * brandShare;
           bucket.clicksTotal += clicksTotal;
           bucket.purchasesTotal += purchasesTotal;
+          bucket.ordersTotal += ordersTotal;
+          bucket.sessionsTotal += sessionsTotal;
 
           if (metricColumns.market) {
             var marketValue = collapseWhitespace(row[metricColumns.market]);
@@ -11307,6 +11466,13 @@
         var aggregateRows = Object.keys(aggregates).map(function (keyword) {
           var item = aggregates[keyword];
           var markets = Object.keys(item.marketValues || {});
+          var derivedRates = computeSqpRateMetrics({
+            impressionsTotal: item.impressionsTotal,
+            clicksTotal: item.clicksTotal,
+            ordersTotal: item.ordersTotal,
+            purchasesTotal: item.purchasesTotal,
+            sessionsTotal: item.sessionsTotal
+          });
           return {
             keyword: item.keyword,
             search_query_volume: item.searchQueryVolume,
@@ -11314,9 +11480,11 @@
             impressions_brand_share_pct: safeDivide(item.impressionsBrandShareWeighted, item.impressionsTotal),
             clicks_total: item.clicksTotal,
             purchases_total: item.purchasesTotal,
-            ctr_pct: safeDivide(item.clicksTotal, item.searchQueryVolume),
-            cvr_pct: metricColumns.purchasesTotal ? safeDivide(item.purchasesTotal, item.clicksTotal) : 0,
-            purchase_rate_pct: safeDivide(item.purchasesTotal, item.searchQueryVolume),
+            orders_total: item.ordersTotal,
+            sessions_total: item.sessionsTotal,
+            ctr_pct: derivedRates.ctrPct,
+            cvr_pct: derivedRates.cvrPct,
+            purchase_rate_pct: derivedRates.purchaseRatePct,
             market: markets.length === 1 ? markets[0] : (markets.length > 1 ? "Mixed" : ""),
             extra_metrics: item.extra_metrics
           };
@@ -11344,6 +11512,20 @@
 
         aggregatedRows.forEach(function (row) {
           var normalizedKeyword = normalizeKeywordKey(row.keyword);
+          var searchQueryVolume = toNumber(row.search_query_volume);
+          var impressionsTotal = toNumber(row.impressions_total);
+          var clicksTotal = toNumber(row.clicks_total);
+          var purchasesTotal = toNumber(row.purchases_total);
+          var ordersTotal = getSqpOrdersTotalValue(row, purchasesTotal);
+          var sessionsTotal = getSqpSessionsTotalValue(row, searchQueryVolume);
+          var derivedRates = computeSqpRateMetrics({
+            impressionsTotal: impressionsTotal,
+            clicksTotal: clicksTotal,
+            ordersTotal: ordersTotal,
+            purchasesTotal: purchasesTotal,
+            sessionsTotal: sessionsTotal
+          });
+
           sqpWarehouse = sqpWarehouse.filter(function (existing) {
             return !(toSqpWeekLabel(existing && (existing.week != null ? existing.week : existing.fortnight)) === targetWeek
               && normalizeKeywordKey(existing.keyword) === normalizedKeyword);
@@ -11352,14 +11534,16 @@
           sqpWarehouse.push({
             week: targetWeek,
             keyword: row.keyword,
-            search_query_volume: toNumber(row.search_query_volume),
-            impressions_total: toNumber(row.impressions_total),
+            search_query_volume: searchQueryVolume,
+            impressions_total: impressionsTotal,
             impressions_brand_share_pct: toNumber(row.impressions_brand_share_pct),
-            clicks_total: toNumber(row.clicks_total),
-            purchases_total: toNumber(row.purchases_total),
-            ctr_pct: safeDivide(row.clicks_total, row.search_query_volume),
-            cvr_pct: safeDivide(row.purchases_total, row.clicks_total),
-            purchase_rate_pct: safeDivide(row.purchases_total, row.search_query_volume),
+            clicks_total: clicksTotal,
+            purchases_total: purchasesTotal,
+            orders_total: ordersTotal,
+            sessions_total: sessionsTotal,
+            ctr_pct: derivedRates.ctrPct,
+            cvr_pct: derivedRates.cvrPct,
+            purchase_rate_pct: derivedRates.purchaseRatePct,
             source_filename: String(filename || ""),
             uploaded_at: String(uploadedAt || ""),
             market: row.market ? String(row.market) : "",
@@ -11381,6 +11565,8 @@
             impressions_brand_share_pct: toNumber(row && row.impressions_brand_share_pct),
             clicks_total: toNumber(row && row.clicks_total),
             purchases_total: toNumber(row && row.purchases_total),
+            orders_total: getSqpOrdersTotalValue(row, toNumber(row && row.purchases_total)),
+            sessions_total: getSqpSessionsTotalValue(row, toNumber(row && row.search_query_volume)),
             market: row && row.market ? String(row.market) : "",
             extra_metrics: row && row.extra_metrics && typeof row.extra_metrics === "object" ? row.extra_metrics : {}
           };
@@ -12386,11 +12572,7 @@
           { key: "netRevenue", label: "Net Revenue" },
           { key: "cm3", label: "CM3" },
           { key: "cm3Pct", label: "CM3%" },
-          { key: "tacos", label: "TACOS" },
-          { key: "organicRatio", label: "Organic Ratio" },
-          { key: "returnRiskRatio", label: "Return Risk Ratio" },
-          { key: "sessions", label: "Sessions" },
-          { key: "gpPerSession", label: "GP:Session" }
+          { key: "tacos", label: "TACOS" }
         ];
 
         var headerHtml = headers.map(function (col) {
@@ -12404,7 +12586,6 @@
           ? sortedRows.map(function (row) {
             var cm3Class = getAsinDashboardBenchmarkClass("cm3Pct", row.metrics.cm3Pct);
             var tacosClass = getAsinDashboardBenchmarkClass("tacos", row.metrics.tacos);
-            var returnRiskClass = getAsinDashboardBenchmarkClass("returnRiskRatio", row.metrics.returnRiskRatio);
 
             return "<tr>"
               + "<td>" + row.asin + "</td>"
@@ -12412,13 +12593,9 @@
               + "<td>" + formatDashboardMoney(row.metrics.cm3) + "</td>"
               + "<td class='" + cm3Class + "'>" + formatDashboardPercent(row.metrics.cm3Pct) + "</td>"
               + "<td class='" + tacosClass + "'>" + formatDashboardPercent(row.metrics.tacos) + "</td>"
-              + "<td>" + formatDashboardPercent(row.metrics.organicRatio) + "</td>"
-              + "<td class='" + returnRiskClass + "'>" + formatDashboardPercent(row.metrics.returnRiskRatio) + "</td>"
-              + "<td>" + formatDashboardNumber(row.base.sessions) + "</td>"
-              + "<td>" + formatDashboardMoney2(row.metrics.gpPerSession) + "</td>"
               + "</tr>";
           }).join("")
-          : "<tr><td colspan='9'>No Warehouse rows for current filters.</td></tr>";
+          : "<tr><td colspan='5'>No Warehouse rows for current filters.</td></tr>";
 
         table.innerHTML = "<thead><tr>" + headerHtml + "</tr></thead><tbody>" + body + "</tbody>";
       }
