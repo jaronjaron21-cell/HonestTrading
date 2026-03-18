@@ -422,9 +422,15 @@ function renderLoginPage(nextPath, hasError) {
       background: rgba(240, 246, 255, 0.12);
       display: grid;
       place-items: center;
-      font-size: 48px;
-      line-height: 1;
-      font-weight: 600;
+      overflow: hidden;
+    }
+
+    .cts-login-badge-logo {
+      width: 58px;
+      height: 58px;
+      display: block;
+      object-fit: contain;
+      border-radius: 999px;
     }
 
     .cts-login-brand {
@@ -619,7 +625,9 @@ function renderLoginPage(nextPath, hasError) {
   <div class="cts-login-shell">
     <section class="cts-login-left">
       <div class="cts-login-left-inner">
-        <div class="cts-login-badge" aria-hidden="true">✱</div>
+        <div class="cts-login-badge">
+          <img class="cts-login-badge-logo" src="/assets/honesty-favicon.svg" alt="Honest Trading logo" />
+        </div>
       </div>
       <p class="cts-login-foot">© ${new Date().getUTCFullYear()} HonestTrading. All rights reserved.</p>
     </section>
@@ -628,7 +636,6 @@ function renderLoginPage(nextPath, hasError) {
       <div class="cts-login-card">
         <p class="cts-login-card-brand">HonestTrading</p>
         <h2 class="cts-login-title">Welcome Back!</h2>
-        <p class="cts-login-desc">Authorized users only. Enter your assigned username and password to continue.</p>
         ${errorHtml}
         <form class="cts-login-form" method="post" action="/auth/login">
           <input type="hidden" name="next" value="${safeNext}" />
