@@ -6236,11 +6236,10 @@
             var ordersTotal = getSqpOrdersTotalValue(row, purchasesTotal);
             var sessionsTotal = getSqpSessionsTotalValue(row, searchQueryVolume);
             var derivedRates = computeSqpRateMetrics({
+              searchQueryVolume: searchQueryVolume,
               impressionsTotal: impressionsTotal,
               clicksTotal: clicksTotal,
-              ordersTotal: ordersTotal,
-              purchasesTotal: purchasesTotal,
-              sessionsTotal: sessionsTotal
+              purchasesTotal: purchasesTotal
             });
 
             return {
@@ -6661,11 +6660,10 @@
           var ordersTotal = getSqpOrdersTotalValue(row, purchasesTotal);
           var sessionsTotal = getSqpSessionsTotalValue(row, searchQueryVolume);
           var derivedRates = computeSqpRateMetrics({
+            searchQueryVolume: searchQueryVolume,
             impressionsTotal: impressionsTotal,
             clicksTotal: clicksTotal,
-            ordersTotal: ordersTotal,
-            purchasesTotal: purchasesTotal,
-            sessionsTotal: sessionsTotal
+            purchasesTotal: purchasesTotal
           });
 
           nextRows.push({
@@ -7403,11 +7401,10 @@
         return Object.keys(keywordMap).map(function (keyword) {
           var item = keywordMap[keyword];
           var derivedRates = computeSqpRateMetrics({
+            searchQueryVolume: item.search_query_volume,
             impressionsTotal: item.impressions_total,
             clicksTotal: item.clicks_total,
-            ordersTotal: item.orders_total,
-            purchasesTotal: item.purchases_total,
-            sessionsTotal: item.sessions_total
+            purchasesTotal: item.purchases_total
           });
           return {
             keyword: item.keyword,
@@ -7441,11 +7438,10 @@
           var ordersTotal = getSqpOrdersTotalValue(row, purchasesTotal);
           var sessionsTotal = getSqpSessionsTotalValue(row, queryVolume);
           var derivedRates = computeSqpRateMetrics({
+            searchQueryVolume: queryVolume,
             impressionsTotal: impressionsTotal,
             clicksTotal: clicksTotal,
-            ordersTotal: ordersTotal,
-            purchasesTotal: purchasesTotal,
-            sessionsTotal: sessionsTotal
+            purchasesTotal: purchasesTotal
           });
           return {
             week: week,
@@ -7543,16 +7539,15 @@
       }
 
       function computeSqpRateMetrics(values) {
+        var searchQueryVolume = toNumber(values && values.searchQueryVolume);
         var impressionsTotal = toNumber(values && values.impressionsTotal);
         var clicksTotal = toNumber(values && values.clicksTotal);
-        var ordersTotal = toNumber(values && values.ordersTotal);
         var purchasesTotal = toNumber(values && values.purchasesTotal);
-        var sessionsTotal = toNumber(values && values.sessionsTotal);
 
         return {
           ctrPct: safeDivide(clicksTotal, impressionsTotal),
-          cvrPct: safeDivide(ordersTotal, clicksTotal),
-          purchaseRatePct: safeDivide(purchasesTotal, sessionsTotal)
+          cvrPct: safeDivide(purchasesTotal, clicksTotal),
+          purchaseRatePct: safeDivide(purchasesTotal, searchQueryVolume)
         };
       }
 
@@ -7625,11 +7620,10 @@
         var sessionsTotal = toNumber(bucket.sessionsTotal);
         var impressionsBrandSharePct = safeDivide(toNumber(bucket.impressionsBrandShareWeighted), impressionsTotal);
         var derivedRates = computeSqpRateMetrics({
+          searchQueryVolume: searchQueryVolume,
           impressionsTotal: impressionsTotal,
           clicksTotal: clicksTotal,
-          ordersTotal: ordersTotal,
-          purchasesTotal: purchasesTotal,
-          sessionsTotal: sessionsTotal
+          purchasesTotal: purchasesTotal
         });
 
         return {
@@ -8107,11 +8101,10 @@
           var bucket = buckets[week];
           var brandSharePct = safeDivide(bucket.impressionsBrandShareWeighted, bucket.impressionsTotal);
           var derivedRates = computeSqpRateMetrics({
+            searchQueryVolume: bucket.searchQueryVolume,
             impressionsTotal: bucket.impressionsTotal,
             clicksTotal: bucket.clicksTotal,
-            ordersTotal: bucket.ordersTotal,
-            purchasesTotal: bucket.purchasesTotal,
-            sessionsTotal: bucket.sessionsTotal
+            purchasesTotal: bucket.purchasesTotal
           });
 
           metricsByWeek[week] = {
@@ -11467,11 +11460,10 @@
           var item = aggregates[keyword];
           var markets = Object.keys(item.marketValues || {});
           var derivedRates = computeSqpRateMetrics({
+            searchQueryVolume: item.searchQueryVolume,
             impressionsTotal: item.impressionsTotal,
             clicksTotal: item.clicksTotal,
-            ordersTotal: item.ordersTotal,
-            purchasesTotal: item.purchasesTotal,
-            sessionsTotal: item.sessionsTotal
+            purchasesTotal: item.purchasesTotal
           });
           return {
             keyword: item.keyword,
@@ -11519,11 +11511,10 @@
           var ordersTotal = getSqpOrdersTotalValue(row, purchasesTotal);
           var sessionsTotal = getSqpSessionsTotalValue(row, searchQueryVolume);
           var derivedRates = computeSqpRateMetrics({
+            searchQueryVolume: searchQueryVolume,
             impressionsTotal: impressionsTotal,
             clicksTotal: clicksTotal,
-            ordersTotal: ordersTotal,
-            purchasesTotal: purchasesTotal,
-            sessionsTotal: sessionsTotal
+            purchasesTotal: purchasesTotal
           });
 
           sqpWarehouse = sqpWarehouse.filter(function (existing) {
