@@ -13,9 +13,9 @@ const DATA_DIR = process.env.DATA_DIR
 const STORE_PATH = path.join(DATA_DIR, 'storage.json');
 const PORT = Number(process.env.PORT || 4173);
 const MAX_BODY_BYTES = 20 * 1024 * 1024;
-const AUTH_ENABLED = String(process.env.AUTH_ENABLED || 'false').toLowerCase() === 'true';
+const AUTH_ENABLED = String(process.env.AUTH_ENABLED || 'true').toLowerCase() === 'true';
 
-const AUTH_USERNAME = String(process.env.APP_USERNAME || 'HonestTrading');
+const AUTH_USERNAME = String(process.env.APP_USERNAME || 'HT-Admin');
 const AUTH_PASSWORD = String(process.env.APP_PASSWORD || 'smw08083');
 const SESSION_COOKIE_NAME = String(process.env.SESSION_COOKIE_NAME || 'cts_session');
 const SESSION_MAX_AGE_SEC = Number(process.env.SESSION_MAX_AGE_SEC || 60 * 60 * 24 * 7);
@@ -338,13 +338,17 @@ function renderLoginPage(nextPath, hasError) {
   <link rel="shortcut icon" href="/assets/honesty-favicon.svg" />
   <style>
     :root {
-      --bg: #26357a;
-      --ink: #152547;
-      --muted: #667799;
-      --line: #d5deee;
+      --bg: #e9eefc;
       --card: #ffffff;
-      --accent: #2f5d45;
-      --accent-2: #1f6a45;
+      --ink: #10213f;
+      --muted: #677a9d;
+      --line: #d8e2f5;
+      --primary: #2759dd;
+      --primary-2: #1f4fcf;
+      --primary-soft: #eff4ff;
+      --danger-bg: #ffecef;
+      --danger-line: #f2b7c2;
+      --danger-text: #9a3448;
     }
 
     * { box-sizing: border-box; }
@@ -352,109 +356,212 @@ function renderLoginPage(nextPath, hasError) {
     body {
       margin: 0;
       min-height: 100vh;
-      font-family: "Outfit", "Segoe UI", sans-serif;
+      font-family: "Inter", "Segoe UI", sans-serif;
       background: var(--bg);
-      display: grid;
-      place-items: center;
-      padding: 20px;
       color: var(--ink);
+      padding: 26px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
     .cts-login-shell {
-      width: min(1060px, 100%);
-      min-height: 560px;
-      border-radius: 22px;
+      width: min(1240px, 100%);
+      min-height: min(760px, calc(100vh - 52px));
+      border-radius: 28px;
       overflow: hidden;
       display: grid;
-      grid-template-columns: minmax(300px, 360px) minmax(0, 1fr);
+      grid-template-columns: minmax(0, 1.1fr) minmax(360px, 0.9fr);
       background: var(--card);
-      box-shadow: 0 26px 56px rgba(12, 18, 52, 0.34);
+      border: 1px solid var(--line);
+      box-shadow: 0 34px 72px rgba(33, 53, 101, 0.2);
     }
 
     .cts-login-left {
-      background: #fbfcff;
-      padding: 34px 28px;
+      position: relative;
+      overflow: hidden;
+      color: #f5f9ff;
+      padding: 56px 52px 44px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      background:
+        radial-gradient(1200px 540px at -10% -4%, rgba(255, 255, 255, 0.18), transparent 52%),
+        radial-gradient(880px 420px at 100% 0%, rgba(104, 148, 255, 0.34), transparent 58%),
+        linear-gradient(145deg, #153aa6 0%, #2056d8 45%, #2e67eb 100%);
+      border-right: 1px solid rgba(255, 255, 255, 0.15);
+    }
+
+    .cts-login-left::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(180% 80% at 24% 110%, rgba(4, 23, 85, 0.44), transparent 70%),
+        repeating-radial-gradient(
+          circle at 8% 80%,
+          transparent 0 58px,
+          rgba(255, 255, 255, 0.09) 58px 61px
+        );
+      pointer-events: none;
+    }
+
+    .cts-login-left-inner {
+      position: relative;
+      z-index: 1;
+      max-width: 540px;
       display: grid;
-      align-content: center;
-      gap: 16px;
-      border-right: 1px solid #e6ecf7;
+      gap: 26px;
+    }
+
+    .cts-login-badge {
+      width: 72px;
+      height: 72px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.36);
+      background: rgba(240, 246, 255, 0.12);
+      display: grid;
+      place-items: center;
+      font-size: 48px;
+      line-height: 1;
+      font-weight: 600;
     }
 
     .cts-login-brand {
-      font-size: 22px;
+      margin: 0;
+      font-size: 42px;
+      line-height: 1.05;
+      letter-spacing: -0.02em;
+      font-weight: 800;
+      text-wrap: balance;
+    }
+
+    .cts-login-sub {
+      margin: 0;
+      max-width: 500px;
+      font-size: 34px;
+      line-height: 1.08;
       font-weight: 700;
-      text-align: center;
-      color: #1f315e;
-      letter-spacing: 0.01em;
-      margin-bottom: 4px;
+      letter-spacing: -0.01em;
+      color: rgba(245, 249, 255, 0.95);
+      text-wrap: balance;
     }
 
-    .cts-login-avatar {
-      width: 82px;
-      height: 82px;
-      border-radius: 999px;
-      margin: 0 auto 2px;
-      background: linear-gradient(145deg, #2f4f9f, #254280);
-      display: grid;
-      place-items: center;
-      color: #ffffff;
-      box-shadow: 0 10px 22px rgba(45, 72, 138, 0.35);
+    .cts-login-copy {
+      margin: 0;
+      max-width: 460px;
+      color: rgba(242, 248, 255, 0.86);
+      font-size: 28px;
+      line-height: 1.34;
+      font-weight: 500;
     }
 
-    .cts-login-avatar::before {
-      content: "";
-      width: 34px;
-      height: 34px;
-      border: 2px solid currentColor;
-      border-radius: 999px;
-      display: block;
+    .cts-login-foot {
       position: relative;
-      transform: translateY(-6px);
-      box-shadow: 0 24px 0 -10px currentColor;
+      z-index: 1;
+      font-size: 14px;
+      color: rgba(239, 246, 255, 0.8);
+      letter-spacing: 0.01em;
+    }
+
+    .cts-login-right {
+      background: #ffffff;
+      padding: clamp(26px, 3.8vw, 56px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .cts-login-card {
+      width: min(420px, 100%);
+      display: grid;
+      gap: 18px;
+    }
+
+    .cts-login-card-brand {
+      margin: 0;
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: -0.01em;
+    }
+
+    .cts-login-error {
+      background: var(--danger-bg);
+      border: 1px solid var(--danger-line);
+      color: var(--danger-text);
+      border-radius: 12px;
+      font-size: 14px;
+      padding: 10px 12px;
+      font-weight: 600;
+    }
+
+    .cts-login-title {
+      margin: 6px 0 2px;
+      font-size: 46px;
+      line-height: 1.02;
+      letter-spacing: -0.02em;
+      font-weight: 800;
+      color: #091837;
+      text-wrap: balance;
+    }
+
+    .cts-login-desc {
+      margin: 0 0 8px;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.45;
     }
 
     .cts-login-form {
       display: grid;
-      gap: 12px;
-      margin-top: 8px;
+      gap: 14px;
+    }
+
+    .cts-login-field {
+      display: grid;
+      gap: 8px;
     }
 
     .cts-login-label {
-      font-size: 11px;
-      letter-spacing: 0.08em;
+      font-size: 12px;
       font-weight: 700;
-      color: #5e7299;
+      letter-spacing: 0.08em;
       text-transform: uppercase;
-      margin-bottom: 4px;
+      color: #607295;
     }
 
     .cts-login-input {
       width: 100%;
-      border: 1px solid #c8d4ec;
-      border-radius: 999px;
-      height: 42px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      height: 52px;
       padding: 0 14px;
-      font: inherit;
-      color: #1d2f58;
-      background: #ffffff;
+      font-size: 18px;
+      font-family: inherit;
+      color: #0f2144;
       outline: none;
-      transition: border-color .18s ease, box-shadow .18s ease;
+      transition: border-color .16s ease, box-shadow .16s ease, background-color .16s ease;
+      background: #ffffff;
     }
 
     .cts-login-input:focus {
-      border-color: #2c66b7;
-      box-shadow: 0 0 0 3px rgba(58, 107, 187, 0.18);
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(39, 89, 221, 0.2);
+      background: var(--primary-soft);
     }
 
     .cts-login-btn {
-      height: 42px;
+      margin-top: 6px;
+      width: 100%;
+      height: 54px;
       border: 0;
-      border-radius: 999px;
-      background: linear-gradient(145deg, #315eb2, #24488e);
+      border-radius: 12px;
+      background: linear-gradient(145deg, var(--primary), var(--primary-2));
       color: #ffffff;
-      font: inherit;
+      font-size: 18px;
+      font-family: inherit;
       font-weight: 700;
-      letter-spacing: 0.03em;
+      letter-spacing: 0.01em;
       cursor: pointer;
       transition: transform .14s ease, filter .14s ease;
     }
@@ -466,88 +573,44 @@ function renderLoginPage(nextPath, hasError) {
       outline: none;
     }
 
-    .cts-login-hint {
-      text-align: center;
-      font-size: 12px;
-      color: var(--muted);
-      margin-top: 4px;
-    }
-
-    .cts-login-error {
-      background: #fceceb;
-      border: 1px solid #efc5c0;
-      color: #a74646;
-      border-radius: 10px;
-      font-size: 13px;
-      padding: 8px 10px;
-      text-align: center;
-    }
-
-    .cts-login-right {
-      position: relative;
-      overflow: hidden;
-      color: #eef4ff;
-      padding: 30px 34px;
-      display: grid;
-      align-content: space-between;
-      background:
-        radial-gradient(1100px 560px at -14% 20%, rgba(234, 247, 255, 0.84), transparent 40%),
-        radial-gradient(760px 440px at 74% -10%, rgba(255, 226, 181, 0.86), transparent 48%),
-        radial-gradient(860px 520px at 28% 66%, rgba(40, 86, 174, 0.98), rgba(20, 52, 124, 0.96));
-    }
-
-    .cts-login-nav {
-      display: flex;
-      justify-content: flex-end;
-      align-items: center;
-      gap: 12px;
-      font-size: 11px;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: rgba(238, 244, 255, 0.9);
-    }
-
-    .cts-login-pill {
-      border: 1px solid rgba(255, 255, 255, 0.28);
-      border-radius: 999px;
-      padding: 6px 12px;
-      background: rgba(22, 54, 112, 0.35);
-      font-weight: 700;
-    }
-
-    .cts-login-copy {
-      margin-bottom: 34px;
-    }
-
-    .cts-login-title {
+    .cts-login-note {
       margin: 0;
-      font-size: clamp(34px, 4.6vw, 62px);
-      line-height: 1.04;
-      font-weight: 700;
-      letter-spacing: -0.01em;
-      text-shadow: 0 8px 24px rgba(17, 42, 96, 0.3);
-    }
-
-    .cts-login-sub {
-      margin: 12px 0 0;
-      max-width: 430px;
-      color: rgba(238, 244, 255, 0.92);
-      font-size: 14px;
-      line-height: 1.45;
+      text-align: center;
+      color: var(--muted);
+      font-size: 13px;
     }
 
     @media (max-width: 920px) {
+      body {
+        padding: 0;
+      }
+
       .cts-login-shell {
+        width: 100%;
+        min-height: 100vh;
+        border-radius: 0;
         grid-template-columns: 1fr;
       }
 
-      .cts-login-right {
-        min-height: 220px;
-        padding: 24px;
+      .cts-login-left {
+        min-height: 320px;
+        padding: 32px 26px;
+      }
+
+      .cts-login-brand {
+        font-size: 34px;
+      }
+
+      .cts-login-sub {
+        font-size: 28px;
       }
 
       .cts-login-copy {
-        margin-bottom: 0;
+        font-size: 22px;
+      }
+
+      .cts-login-right {
+        padding: 26px;
       }
     }
   </style>
@@ -555,34 +618,34 @@ function renderLoginPage(nextPath, hasError) {
 <body>
   <div class="cts-login-shell">
     <section class="cts-login-left">
-      <div class="cts-login-brand">HonestTrading</div>
-      <div class="cts-login-avatar" aria-hidden="true"></div>
-      ${errorHtml}
-      <form class="cts-login-form" method="post" action="/auth/login">
-        <input type="hidden" name="next" value="${safeNext}" />
-        <div>
-          <div class="cts-login-label">Username</div>
-          <input class="cts-login-input" type="text" name="username" autocomplete="username" required />
-        </div>
-        <div>
-          <div class="cts-login-label">Password</div>
-          <input class="cts-login-input" type="password" name="password" autocomplete="current-password" required />
-        </div>
-        <button class="cts-login-btn" type="submit">Login</button>
-      </form>
-      <p class="cts-login-hint">Access is restricted to authorized users.</p>
+      <div class="cts-login-left-inner">
+        <div class="cts-login-badge" aria-hidden="true">✱</div>
+        <h1 class="cts-login-brand">Hello HonestTrading!</h1>
+        <p class="cts-login-sub">Authorized dashboard access for ASIN Profitability and Search Query Performance.</p>
+        <p class="cts-login-copy">Securely manage uploads, warehouse data, and analysis insights in one protected workspace.</p>
+      </div>
+      <p class="cts-login-foot">© ${new Date().getUTCFullYear()} HonestTrading. All rights reserved.</p>
     </section>
 
     <section class="cts-login-right">
-      <div class="cts-login-nav">
-        <span>Analytics</span>
-        <span>Warehouse</span>
-        <span>Import</span>
-        <span class="cts-login-pill">Secure Sign In</span>
-      </div>
-      <div class="cts-login-copy">
-        <h1 class="cts-login-title">Welcome.</h1>
-        <p class="cts-login-sub">Sign in to access synchronized ASIN Profitability and Search Query Performance dashboards for HonestTrading operations.</p>
+      <div class="cts-login-card">
+        <p class="cts-login-card-brand">HonestTrading</p>
+        <h2 class="cts-login-title">Welcome Back!</h2>
+        <p class="cts-login-desc">Authorized users only. Enter your assigned username and password to continue.</p>
+        ${errorHtml}
+        <form class="cts-login-form" method="post" action="/auth/login">
+          <input type="hidden" name="next" value="${safeNext}" />
+          <label class="cts-login-field">
+            <span class="cts-login-label">Username</span>
+            <input class="cts-login-input" type="text" name="username" autocomplete="username" required />
+          </label>
+          <label class="cts-login-field">
+            <span class="cts-login-label">Password</span>
+            <input class="cts-login-input" type="password" name="password" autocomplete="current-password" required />
+          </label>
+          <button class="cts-login-btn" type="submit">Login Now</button>
+        </form>
+        <p class="cts-login-note">Restricted access for approved team members.</p>
       </div>
     </section>
   </div>
