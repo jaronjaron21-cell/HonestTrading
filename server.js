@@ -417,20 +417,19 @@ function renderLoginPage(nextPath, hasError) {
     .cts-login-badge {
       width: 72px;
       height: 72px;
-      border-radius: 999px;
-      border: 1px solid rgba(255, 255, 255, 0.36);
-      background: rgba(240, 246, 255, 0.12);
-      display: grid;
-      place-items: center;
+      border-radius: 12px;
+      border: 0;
+      background: transparent;
+      display: block;
       overflow: hidden;
     }
 
     .cts-login-badge-logo {
-      width: 58px;
-      height: 58px;
+      width: 100%;
+      height: 100%;
       display: block;
-      object-fit: contain;
-      border-radius: 999px;
+      object-fit: cover;
+      border-radius: inherit;
     }
 
     .cts-login-brand {
