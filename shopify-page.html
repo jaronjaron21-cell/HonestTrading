@@ -9602,6 +9602,10 @@
         return isNegative ? -num : num;
       }
 
+      function toMoneyUnit(value) {
+        return Math.round(toNumber(value));
+      }
+
       function parseFortnightIndex(label) {
         var match = String(label || "").match(/(\d+)/);
         if (!match) return -1;
@@ -12026,13 +12030,13 @@
 
       function normalizeDashboardWarehouseRow(row) {
         return {
-          sales: toNumber(row && row[WAREHOUSE_FIELD_KEYS.sales]),
-          adSales: toNumber(row && row[WAREHOUSE_FIELD_KEYS.adSales]),
-          promotion: toNumber(row && row[WAREHOUSE_FIELD_KEYS.promotion]),
-          refundCost: toNumber(row && row[WAREHOUSE_FIELD_KEYS.refundCost]),
-          cogs: toNumber(row && row[WAREHOUSE_FIELD_KEYS.cogs]),
-          amazonFees: toNumber(row && row[WAREHOUSE_FIELD_KEYS.amazonFees]),
-          adCost: toNumber(row && row[WAREHOUSE_FIELD_KEYS.adCost]),
+          sales: toMoneyUnit(row && row[WAREHOUSE_FIELD_KEYS.sales]),
+          adSales: toMoneyUnit(row && row[WAREHOUSE_FIELD_KEYS.adSales]),
+          promotion: toMoneyUnit(row && row[WAREHOUSE_FIELD_KEYS.promotion]),
+          refundCost: toMoneyUnit(row && row[WAREHOUSE_FIELD_KEYS.refundCost]),
+          cogs: toMoneyUnit(row && row[WAREHOUSE_FIELD_KEYS.cogs]),
+          amazonFees: toMoneyUnit(row && row[WAREHOUSE_FIELD_KEYS.amazonFees]),
+          adCost: toMoneyUnit(row && row[WAREHOUSE_FIELD_KEYS.adCost]),
           sessions: toNumber(row && row[WAREHOUSE_FIELD_KEYS.sessions]),
           totalOrders: toNumber(row && row[WAREHOUSE_FIELD_KEYS.totalOrders]),
           totalUnitsSold: toNumber(row && row[WAREHOUSE_FIELD_KEYS.totalUnitsSold]),
@@ -12525,13 +12529,13 @@
             var rawReturnsUnits = row && row[WAREHOUSE_FIELD_KEYS.returnsUnits];
             var rawSellableReturns = row && row[WAREHOUSE_FIELD_KEYS.sellableReturns];
 
-            var sales = toNumber(rawSales);
-            var adSales = toNumber(rawAdSales);
-            var promotion = toNumber(rawPromotion);
-            var refundCost = toNumber(rawRefundCost);
-            var cogs = toNumber(rawCogs);
-            var amazonFees = toNumber(rawAmazonFees);
-            var adCost = toNumber(rawAdCost);
+            var sales = toMoneyUnit(rawSales);
+            var adSales = toMoneyUnit(rawAdSales);
+            var promotion = toMoneyUnit(rawPromotion);
+            var refundCost = toMoneyUnit(rawRefundCost);
+            var cogs = toMoneyUnit(rawCogs);
+            var amazonFees = toMoneyUnit(rawAmazonFees);
+            var adCost = toMoneyUnit(rawAdCost);
             var sessions = toNumber(rawSessions);
             var totalOrders = toNumber(rawTotalOrders);
             var totalUnitsSold = toNumber(rawTotalUnitsSold);
