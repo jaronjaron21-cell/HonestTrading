@@ -12026,25 +12026,26 @@
 
       function normalizeDashboardWarehouseRow(row) {
         return {
-          sales: Math.abs(toNumber(row && row[WAREHOUSE_FIELD_KEYS.sales])),
-          adSales: Math.abs(toNumber(row && row[WAREHOUSE_FIELD_KEYS.adSales])),
-          promotion: Math.abs(toNumber(row && row[WAREHOUSE_FIELD_KEYS.promotion])),
-          refundCost: Math.abs(toNumber(row && row[WAREHOUSE_FIELD_KEYS.refundCost])),
-          cogs: Math.abs(toNumber(row && row[WAREHOUSE_FIELD_KEYS.cogs])),
-          amazonFees: Math.abs(toNumber(row && row[WAREHOUSE_FIELD_KEYS.amazonFees])),
-          adCost: Math.abs(toNumber(row && row[WAREHOUSE_FIELD_KEYS.adCost])),
+          sales: toNumber(row && row[WAREHOUSE_FIELD_KEYS.sales]),
+          adSales: toNumber(row && row[WAREHOUSE_FIELD_KEYS.adSales]),
+          promotion: toNumber(row && row[WAREHOUSE_FIELD_KEYS.promotion]),
+          refundCost: toNumber(row && row[WAREHOUSE_FIELD_KEYS.refundCost]),
+          cogs: toNumber(row && row[WAREHOUSE_FIELD_KEYS.cogs]),
+          amazonFees: toNumber(row && row[WAREHOUSE_FIELD_KEYS.amazonFees]),
+          adCost: toNumber(row && row[WAREHOUSE_FIELD_KEYS.adCost]),
           sessions: toNumber(row && row[WAREHOUSE_FIELD_KEYS.sessions]),
           totalOrders: toNumber(row && row[WAREHOUSE_FIELD_KEYS.totalOrders]),
           totalUnitsSold: toNumber(row && row[WAREHOUSE_FIELD_KEYS.totalUnitsSold]),
-          returnsUnits: Math.abs(toNumber(row && row[WAREHOUSE_FIELD_KEYS.returnsUnits]))
+          returnsUnits: toNumber(row && row[WAREHOUSE_FIELD_KEYS.returnsUnits])
         };
       }
 
       function computeAsinDashboardMetrics(base) {
-        var netRevenue = base.sales - base.promotion - base.refundCost;
-        var cm1 = netRevenue - base.cogs;
-        var cm2 = cm1 - base.amazonFees;
-        var cm3 = cm2 - base.adCost;
+        var netRevenue = base.sales + base.adSales + base.promotion + base.refundCost;
+        var cm1 = netRevenue + base.cogs;
+        var cm2 = cm1 + base.amazonFees;
+        var cm3 = cm2 + base.adCost;
+        var tacosDenominator = base.sales + base.adSales + base.promotion;
 
         return {
           netRevenue: netRevenue,
@@ -12054,11 +12055,11 @@
           cm2Pct: safeDivide(cm2, netRevenue),
           cm3: cm3,
           cm3Pct: safeDivide(cm3, netRevenue),
-          tacos: safeDivide(base.adCost, base.sales),
+          tacos: safeDivide(Math.abs(base.adCost), tacosDenominator),
           organicRatio: safeDivide(base.sales - base.adSales, base.sales),
           returnRiskRatio: safeDivide(base.returnsUnits, base.totalUnitsSold),
           conversion: safeDivide(base.totalUnitsSold, base.sessions),
-          aov: safeDivide(base.sales, base.totalOrders),
+          aov: safeDivide(netRevenue, base.totalOrders),
           gpPerSession: safeDivide(cm2, base.sessions)
         };
       }
@@ -12471,26 +12472,26 @@
       function buildAsinAnalysisFortnightBuckets(selectedAsin) {
         var buckets = Array.from({ length: 26 }, function () {
           return {
-            salesPos: 0,
-            adSalesPos: 0,
-            promoCost: 0,
-            refundCostCost: 0,
-            cogsCost: 0,
-            amazonFeesCost: 0,
-            adCostCost: 0,
+            sales: 0,
+            adSales: 0,
+            promotion: 0,
+            refundCost: 0,
+            cogs: 0,
+            amazonFees: 0,
+            adCost: 0,
             sessions: 0,
             totalOrders: 0,
             unitsSold: 0,
             returnUnits: 0,
             hasData: false,
             sourceFlags: {
-              salesPos: false,
-              adSalesPos: false,
-              promoCost: false,
-              refundCostCost: false,
-              cogsCost: false,
-              amazonFeesCost: false,
-              adCostCost: false,
+              sales: false,
+              adSales: false,
+              promotion: false,
+              refundCost: false,
+              cogs: false,
+              amazonFees: false,
+              adCost: false,
               sessions: false,
               totalOrders: false,
               unitsSold: false,
@@ -12552,29 +12553,29 @@
             ].some(hasWarehouseSourceValue);
             if (rowHasAnyData) bucket.hasData = true;
 
-            if (hasWarehouseSourceValue(rawSales)) bucket.sourceFlags.salesPos = true;
-            if (hasWarehouseSourceValue(rawAdSales)) bucket.sourceFlags.adSalesPos = true;
-            if (hasWarehouseSourceValue(rawPromotion)) bucket.sourceFlags.promoCost = true;
-            if (hasWarehouseSourceValue(rawRefundCost)) bucket.sourceFlags.refundCostCost = true;
-            if (hasWarehouseSourceValue(rawCogs)) bucket.sourceFlags.cogsCost = true;
-            if (hasWarehouseSourceValue(rawAmazonFees)) bucket.sourceFlags.amazonFeesCost = true;
-            if (hasWarehouseSourceValue(rawAdCost)) bucket.sourceFlags.adCostCost = true;
+            if (hasWarehouseSourceValue(rawSales)) bucket.sourceFlags.sales = true;
+            if (hasWarehouseSourceValue(rawAdSales)) bucket.sourceFlags.adSales = true;
+            if (hasWarehouseSourceValue(rawPromotion)) bucket.sourceFlags.promotion = true;
+            if (hasWarehouseSourceValue(rawRefundCost)) bucket.sourceFlags.refundCost = true;
+            if (hasWarehouseSourceValue(rawCogs)) bucket.sourceFlags.cogs = true;
+            if (hasWarehouseSourceValue(rawAmazonFees)) bucket.sourceFlags.amazonFees = true;
+            if (hasWarehouseSourceValue(rawAdCost)) bucket.sourceFlags.adCost = true;
             if (hasWarehouseSourceValue(rawSessions)) bucket.sourceFlags.sessions = true;
             if (hasWarehouseSourceValue(rawTotalOrders)) bucket.sourceFlags.totalOrders = true;
             if (hasWarehouseSourceValue(rawTotalUnitsSold)) bucket.sourceFlags.unitsSold = true;
             if (hasWarehouseSourceValue(rawReturnsUnits)) bucket.sourceFlags.returnUnits = true;
 
-            bucket.salesPos += Math.abs(sales);
-            bucket.adSalesPos += Math.abs(adSales);
-            bucket.promoCost += Math.abs(promotion);
-            bucket.refundCostCost += Math.abs(refundCost);
-            bucket.cogsCost += Math.abs(cogs);
-            bucket.amazonFeesCost += Math.abs(amazonFees);
-            bucket.adCostCost += Math.abs(adCost);
-            bucket.sessions += sessions < 0 ? Math.abs(sessions) : sessions;
-            bucket.totalOrders += totalOrders < 0 ? Math.abs(totalOrders) : totalOrders;
-            bucket.unitsSold += totalUnitsSold < 0 ? Math.abs(totalUnitsSold) : totalUnitsSold;
-            bucket.returnUnits += Math.abs(returnsUnits);
+            bucket.sales += sales;
+            bucket.adSales += adSales;
+            bucket.promotion += promotion;
+            bucket.refundCost += refundCost;
+            bucket.cogs += cogs;
+            bucket.amazonFees += amazonFees;
+            bucket.adCost += adCost;
+            bucket.sessions += sessions;
+            bucket.totalOrders += totalOrders;
+            bucket.unitsSold += totalUnitsSold;
+            bucket.returnUnits += returnsUnits;
           });
         });
 
@@ -12603,22 +12604,23 @@
             };
           }
 
-          var salesPos = toNumber(bucket.salesPos);
-          var adSalesPos = toNumber(bucket.adSalesPos);
-          var promoCost = toNumber(bucket.promoCost);
-          var refundCostCost = toNumber(bucket.refundCostCost);
-          var cogsCost = toNumber(bucket.cogsCost);
-          var amazonFeesCost = toNumber(bucket.amazonFeesCost);
-          var adCostCost = toNumber(bucket.adCostCost);
+          var sales = toNumber(bucket.sales);
+          var adSales = toNumber(bucket.adSales);
+          var promotion = toNumber(bucket.promotion);
+          var refundCost = toNumber(bucket.refundCost);
+          var cogs = toNumber(bucket.cogs);
+          var amazonFees = toNumber(bucket.amazonFees);
+          var adCost = toNumber(bucket.adCost);
           var sessions = toNumber(bucket.sessions);
           var totalOrders = toNumber(bucket.totalOrders);
           var unitsSold = toNumber(bucket.unitsSold);
           var returnUnits = toNumber(bucket.returnUnits);
 
-          var netRevenueRaw = salesPos - promoCost - refundCostCost;
-          var cm1Raw = netRevenueRaw - cogsCost;
-          var cm2Raw = cm1Raw - amazonFeesCost;
-          var cm3Raw = cm2Raw - adCostCost;
+          var netRevenueRaw = sales + adSales + promotion + refundCost;
+          var cm1Raw = netRevenueRaw + cogs;
+          var cm2Raw = cm1Raw + amazonFees;
+          var cm3Raw = cm2Raw + adCost;
+          var tacosDenominator = sales + adSales + promotion;
 
           return {
             hasData: true,
@@ -12629,11 +12631,11 @@
             cm2Pct: safeDivide(cm2Raw, netRevenueRaw),
             cm3: cm3Raw,
             cm3Pct: safeDivide(cm3Raw, netRevenueRaw),
-            tacos: safeDivide(adCostCost, salesPos),
-            organicRatio: safeDivide(salesPos - adSalesPos, salesPos),
+            tacos: safeDivide(Math.abs(adCost), tacosDenominator),
+            organicRatio: safeDivide(sales - adSales, sales),
             returnRiskRatio: safeDivide(returnUnits, unitsSold),
             conversion: safeDivide(unitsSold, sessions),
-            aov: safeDivide(salesPos, totalOrders),
+            aov: safeDivide(netRevenueRaw, totalOrders),
             gpPerSession: safeDivide(cm2Raw, sessions)
           };
         });
