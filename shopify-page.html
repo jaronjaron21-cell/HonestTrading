@@ -12313,12 +12313,23 @@
         };
       }
 
-      function computeAsinDashboardMetrics(base) {
-        var netRevenue = base.sales + base.adSales + base.promotion + base.refundCost;
-        var cm1 = netRevenue + base.cogs;
-        var cm2 = cm1 + base.amazonFees;
-        var cm3 = cm2 + base.adCost;
-        var tacosDenominator = base.sales + base.adSales + base.promotion;
+      function computeAsinProfitabilityMetrics(base) {
+        var sales = toNumber(base && base.sales);
+        var adSales = toNumber(base && base.adSales);
+        var promotion = toNumber(base && base.promotion);
+        var refundCost = toNumber(base && base.refundCost);
+        var cogs = toNumber(base && base.cogs);
+        var amazonFees = toNumber(base && base.amazonFees);
+        var adCost = toNumber(base && base.adCost);
+        var sessions = toNumber(base && base.sessions);
+        var totalOrders = toNumber(base && base.totalOrders);
+        var totalUnitsSold = toNumber(base && base.totalUnitsSold);
+        var returnsUnits = toNumber(base && base.returnsUnits);
+
+        var netRevenue = sales + promotion + refundCost;
+        var cm1 = netRevenue + cogs;
+        var cm2 = cm1 + amazonFees;
+        var cm3 = cm2 + adCost;
 
         return {
           netRevenue: netRevenue,
@@ -12328,13 +12339,17 @@
           cm2Pct: safeDivide(cm2, netRevenue),
           cm3: cm3,
           cm3Pct: safeDivide(cm3, netRevenue),
-          tacos: safeDivide(Math.abs(base.adCost), tacosDenominator),
-          organicRatio: safeDivide(base.sales - base.adSales, base.sales),
-          returnRiskRatio: safeDivide(base.returnsUnits, base.totalUnitsSold),
-          conversion: safeDivide(base.totalUnitsSold, base.sessions),
-          aov: safeDivide(netRevenue, base.totalOrders),
-          gpPerSession: safeDivide(cm2, base.sessions)
+          tacos: safeDivide(Math.abs(adCost), sales),
+          organicRatio: safeDivide(sales - adSales, sales),
+          returnRiskRatio: safeDivide(returnsUnits, totalUnitsSold),
+          conversion: safeDivide(totalUnitsSold, sessions),
+          aov: safeDivide(netRevenue, totalOrders),
+          gpPerSession: safeDivide(cm2, sessions)
         };
+      }
+
+      function computeAsinDashboardMetrics(base) {
+        return computeAsinProfitabilityMetrics(base || {});
       }
 
       function buildAsinDashboardAggregates(filters) {
@@ -12880,40 +12895,21 @@
             };
           }
 
-          var sales = toNumber(bucket.sales);
-          var adSales = toNumber(bucket.adSales);
-          var promotion = toNumber(bucket.promotion);
-          var refundCost = toNumber(bucket.refundCost);
-          var cogs = toNumber(bucket.cogs);
-          var amazonFees = toNumber(bucket.amazonFees);
-          var adCost = toNumber(bucket.adCost);
-          var sessions = toNumber(bucket.sessions);
-          var totalOrders = toNumber(bucket.totalOrders);
-          var unitsSold = toNumber(bucket.unitsSold);
-          var returnUnits = toNumber(bucket.returnUnits);
+          var metrics = computeAsinProfitabilityMetrics({
+            sales: bucket.sales,
+            adSales: bucket.adSales,
+            promotion: bucket.promotion,
+            refundCost: bucket.refundCost,
+            cogs: bucket.cogs,
+            amazonFees: bucket.amazonFees,
+            adCost: bucket.adCost,
+            sessions: bucket.sessions,
+            totalOrders: bucket.totalOrders,
+            totalUnitsSold: bucket.unitsSold,
+            returnsUnits: bucket.returnUnits
+          });
 
-          var netRevenueRaw = sales + adSales + promotion + refundCost;
-          var cm1Raw = netRevenueRaw + cogs;
-          var cm2Raw = cm1Raw + amazonFees;
-          var cm3Raw = cm2Raw + adCost;
-          var tacosDenominator = sales + adSales + promotion;
-
-          return {
-            hasData: true,
-            netRevenue: netRevenueRaw,
-            cm1: cm1Raw,
-            cm1Pct: safeDivide(cm1Raw, netRevenueRaw),
-            cm2: cm2Raw,
-            cm2Pct: safeDivide(cm2Raw, netRevenueRaw),
-            cm3: cm3Raw,
-            cm3Pct: safeDivide(cm3Raw, netRevenueRaw),
-            tacos: safeDivide(Math.abs(adCost), tacosDenominator),
-            organicRatio: safeDivide(sales - adSales, sales),
-            returnRiskRatio: safeDivide(returnUnits, unitsSold),
-            conversion: safeDivide(unitsSold, sessions),
-            aov: safeDivide(netRevenueRaw, totalOrders),
-            gpPerSession: safeDivide(cm2Raw, sessions)
-          };
+          return Object.assign({ hasData: true }, metrics);
         });
 
         var hasDataByFortnight = byFortnight.map(function (item) {
