@@ -4644,6 +4644,7 @@
       var SQP_KEYWORDS_STORAGE_KEY = "cts_sqp_keywords_v1";
       var SQP_WAREHOUSE_STORAGE_KEY = "cts_sqp_warehouse_v1";
       var SQP_IMPORT_AUDIT_STORAGE_KEY = "cts_sqp_import_audit_v1";
+      var SQP_RAW_UPLOADS_STORAGE_KEY = "cts_sqp_raw_uploads_v1";
       var SQP_WEEK_CACHE_STORAGE_KEY = "cts_sqp_week_cache_v1";
       var SQP_ANALYSIS_METRIC_DEFINITIONS = [
         { key: "searchQueryVolume", label: "Search Query Volume", type: "count" },
@@ -4662,6 +4663,7 @@
         sqpKeywords: "sqp_keywords",
         sqpWarehouse: "sqp_warehouse",
         sqpImportAudit: "sqp_import_audit",
+        sqpRawUploads: "sqp_raw_uploads",
         sqpWeekCache: "sqp_week_cache"
       };
       var storageBackendState = {
@@ -4693,6 +4695,7 @@
       var sqpKeywords = [];
       var sqpWarehouse = [];
       var sqpImportAudit = {};
+      var sqpRawUploads = {};
       var sqpWeekCache = {};
       var asinAddMessageTimer = null;
       var asinImportMessageTimer = null;
@@ -6203,6 +6206,249 @@
         writeBackendStoreValue(STORAGE_REMOTE_KEYS.sqpImportAudit, sqpImportAudit);
       }
 
+      function saveSqpRawUploadsState() {
+        try {
+          window.localStorage.setItem(SQP_RAW_UPLOADS_STORAGE_KEY, JSON.stringify(sqpRawUploads));
+        } catch (error) {}
+        writeBackendStoreValue(STORAGE_REMOTE_KEYS.sqpRawUploads, sqpRawUploads);
+      }
+
+      function compactSqpRawUploadRows(rows) {
+        var sourceRows = Array.isArray(rows) ? rows : [];
+        if (!sourceRows.length) return { headers: [], rows: [] };
+        var seenHeaders = {};
+        var headers = [];
+
+        sourceRows.forEach(function (row) {
+          if (!row || typeof row !== "object") return;
+          Object.keys(row).forEach(function (header) {
+            if (seenHeaders[header]) return;
+            seenHeaders[header] = true;
+            headers.push(header);
+          });
+        });
+
+        var compactRows = sourceRows.map(function (row) {
+          return headers.map(function (header) {
+            var value = row && Object.prototype.hasOwnProperty.call(row, header) ? row[header] : "";
+            return value == null ? "" : value;
+          });
+        });
+
+        return {
+          headers: headers,
+          rows: compactRows
+        };
+      }
+
+      function expandSqpRawUploadRows(entry) {
+        if (!entry || typeof entry !== "object") return [];
+        var headers = Array.isArray(entry.headers) ? entry.headers.map(function (header) {
+          return String(header == null ? "" : header).trim();
+        }).filter(Boolean) : [];
+        var rows = Array.isArray(entry.rows) ? entry.rows : [];
+        if (!headers.length || !rows.length) return [];
+
+        return rows.map(function (cells) {
+          if (!Array.isArray(cells)) return null;
+          var obj = {};
+          headers.forEach(function (header, index) {
+            obj[header] = cells[index] == null ? "" : cells[index];
+          });
+          return obj;
+        }).filter(Boolean);
+      }
+
+      function decodeBase64ToArrayBuffer(base64Text) {
+        var text = String(base64Text || "").trim();
+        if (!text) return new ArrayBuffer(0);
+        var binary = typeof window !== "undefined" && typeof window.atob === "function"
+          ? window.atob(text)
+          : "";
+        var length = binary.length;
+        var bytes = new Uint8Array(length);
+        for (var i = 0; i < length; i++) {
+          bytes[i] = binary.charCodeAt(i);
+        }
+        return bytes.buffer;
+      }
+
+      function decodeBase64ToUtf8(base64Text) {
+        var buffer = decodeBase64ToArrayBuffer(base64Text);
+        if (typeof TextDecoder !== "undefined") {
+          try {
+            return new TextDecoder("utf-8").decode(new Uint8Array(buffer));
+          } catch (error) {}
+        }
+        var bytes = new Uint8Array(buffer);
+        var binary = "";
+        for (var i = 0; i < bytes.length; i++) {
+          binary += String.fromCharCode(bytes[i]);
+        }
+        try {
+          return decodeURIComponent(escape(binary));
+        } catch (error) {
+          return binary;
+        }
+      }
+
+      function parseSqpRowsFromStoredRawPayload(entry) {
+        if (!entry || typeof entry !== "object") return [];
+        var filename = String(entry.source_filename || entry.filename || "").trim();
+        var payload = entry.payload;
+        if (!filename || !payload) return [];
+        var ext = getFileExtension(filename);
+        if (!ext) return [];
+
+        if (ext === "csv") {
+          var csvText = entry.encoding === "base64"
+            ? decodeBase64ToUtf8(payload)
+            : String(payload || "");
+          var delimiter = detectCsvDelimiter(csvText);
+          var csvRows = parseCsvText(csvText, delimiter);
+          if (!csvRows.length) return [];
+          var csvHeaderIndex = detectHeaderRowIndex(csvRows, []);
+          return rowsToObjectsFromHeader(csvRows, csvHeaderIndex);
+        }
+
+        if (ext === "xlsx") {
+          if (!window.XLSX) return [];
+          var buffer = decodeBase64ToArrayBuffer(payload);
+          if (!buffer || !buffer.byteLength) return [];
+          var workbook = window.XLSX.read(buffer, { type: "array" });
+          var sheetNames = workbook.SheetNames || [];
+          if (!sheetNames.length) return [];
+          var targetSheet = workbook.Sheets[sheetNames[0]];
+          var sheetRows = window.XLSX.utils.sheet_to_json(targetSheet, { header: 1, defval: "", blankrows: false });
+          if (!sheetRows.length) return [];
+          var headerIndex = detectHeaderRowIndex(sheetRows, []);
+          return rowsToObjectsFromHeader(sheetRows, headerIndex);
+        }
+
+        return [];
+      }
+
+      function normalizeSqpRawUploadEntry(entry, keyHint) {
+        if (!entry || typeof entry !== "object") return null;
+        var weekLabel = toSqpWeekLabel(entry.week || String(keyHint || "").replace(/^WEEK__/, ""));
+        if (!weekLabel) return null;
+
+        var rows = expandSqpRawUploadRows(entry);
+        if (!rows.length && Array.isArray(entry.parsed_rows)) {
+          rows = entry.parsed_rows.filter(function (row) {
+            return row && typeof row === "object" && !Array.isArray(row);
+          }).map(function (row) {
+            var clone = {};
+            Object.keys(row).forEach(function (header) {
+              clone[String(header)] = row[header];
+            });
+            return clone;
+          });
+        }
+        if (!rows.length && entry.payload) {
+          rows = parseSqpRowsFromStoredRawPayload(entry);
+        }
+
+        var compact = compactSqpRawUploadRows(rows);
+        return {
+          week: weekLabel,
+          source_filename: String(entry.source_filename || entry.filename || ""),
+          uploaded_at: String(entry.uploaded_at || ""),
+          headers: compact.headers,
+          rows: compact.rows,
+          encoding: entry.encoding ? String(entry.encoding) : "",
+          payload: entry.payload || ""
+        };
+      }
+
+      async function readLegacySqpRawUploadsStore() {
+        if (!canUseBackendStorage()) return null;
+        if (storageBackendState.checked && !storageBackendState.available) return null;
+
+        try {
+          var response = await fetch(STORAGE_API_BASE, {
+            method: "GET",
+            credentials: "same-origin",
+            headers: {
+              "Accept": "application/json"
+            }
+          });
+          if (!response.ok) return null;
+          var payload = await response.json();
+          var data = payload && payload.data && typeof payload.data === "object" ? payload.data : null;
+          if (!data) return null;
+
+          var candidateKeys = [
+            "sqp_raw_uploads",
+            "sqp_raw_uploads_v1",
+            "sqp_week_raw_uploads",
+            "sqp_week_raw",
+            "sqp_raw_files",
+            "sqp_upload_raw",
+            "sqp_uploaded_files"
+          ];
+          for (var i = 0; i < candidateKeys.length; i++) {
+            var candidate = data[candidateKeys[i]];
+            if (candidate && typeof candidate === "object" && !Array.isArray(candidate)) {
+              return candidate;
+            }
+          }
+        } catch (error) {}
+
+        return null;
+      }
+
+      async function loadSqpRawUploadsState() {
+        var parsed = null;
+        var backend = await readBackendStoreValue(STORAGE_REMOTE_KEYS.sqpRawUploads);
+        var shouldHydrateBackend = false;
+        if (backend.available && backend.data && typeof backend.data === "object" && !Array.isArray(backend.data)) {
+          parsed = backend.data;
+          try {
+            window.localStorage.setItem(SQP_RAW_UPLOADS_STORAGE_KEY, JSON.stringify(parsed));
+          } catch (error) {}
+        }
+
+        if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+          var legacyBackend = await readLegacySqpRawUploadsStore();
+          if (legacyBackend && typeof legacyBackend === "object" && !Array.isArray(legacyBackend)) {
+            parsed = legacyBackend;
+          }
+        }
+
+        if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+          try {
+            var raw = window.localStorage.getItem(SQP_RAW_UPLOADS_STORAGE_KEY);
+            if (raw) {
+              var localParsed = JSON.parse(raw);
+              if (localParsed && typeof localParsed === "object" && !Array.isArray(localParsed)) parsed = localParsed;
+            }
+          } catch (error) {}
+        }
+
+        if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+          sqpRawUploads = {};
+          return;
+        }
+        shouldHydrateBackend = backend.available && (!backend.data || typeof backend.data !== "object" || Array.isArray(backend.data));
+
+        try {
+          var normalized = {};
+          Object.keys(parsed).forEach(function (key) {
+            var normalizedEntry = normalizeSqpRawUploadEntry(parsed[key], key);
+            if (!normalizedEntry) return;
+            normalized[getSearchImportStorageKey(normalizedEntry.week)] = normalizedEntry;
+          });
+          sqpRawUploads = normalized;
+        } catch (error) {
+          sqpRawUploads = {};
+        }
+
+        if (shouldHydrateBackend && sqpRawUploads && Object.keys(sqpRawUploads).length) {
+          writeBackendStoreValue(STORAGE_REMOTE_KEYS.sqpRawUploads, sqpRawUploads);
+        }
+      }
+
       function saveSqpWeekCacheState() {
         var serialized = sqpWeekCache;
         try {
@@ -6542,6 +6788,7 @@
         await loadSqpKeywordsState();
         await loadSqpWarehouseState();
         await loadSqpImportAuditState();
+        await loadSqpRawUploadsState();
         await loadSqpWeekCacheState();
         cleanupSqpWarehouseAgainstKeywordList();
       }
@@ -6649,6 +6896,15 @@
         ));
         if (hasAudit) return true;
 
+        var rawEntry = sqpRawUploads && sqpRawUploads[storageKey];
+        var hasRaw = !!(rawEntry && (
+          (rawEntry.source_filename && String(rawEntry.source_filename).trim())
+          || (rawEntry.uploaded_at && String(rawEntry.uploaded_at).trim())
+          || (Array.isArray(rawEntry.rows) && rawEntry.rows.length)
+          || (rawEntry.payload && String(rawEntry.payload).trim())
+        ));
+        if (hasRaw) return true;
+
         return (sqpWarehouse || []).some(function (row) {
           return toSqpWeekLabel(row && (row.week != null ? row.week : row.fortnight)) === weekLabel;
         });
@@ -6676,6 +6932,18 @@
           if (!weekLabel) return;
           rowsByWeek[weekLabel] = rowsByWeek[weekLabel] || { week: weekLabel, source: "", uploadedAt: "", keywords: 0 };
           if (!rowsByWeek[weekLabel].source && entry.filename) rowsByWeek[weekLabel].source = String(entry.filename);
+          if (entry.uploaded_at && (!rowsByWeek[weekLabel].uploadedAt || entry.uploaded_at > rowsByWeek[weekLabel].uploadedAt)) {
+            rowsByWeek[weekLabel].uploadedAt = String(entry.uploaded_at);
+          }
+        });
+
+        Object.keys(sqpRawUploads || {}).forEach(function (storageKey) {
+          var entry = sqpRawUploads[storageKey];
+          if (!entry || typeof entry !== "object") return;
+          var weekLabel = toSqpWeekLabel(entry.week || String(storageKey || "").replace(/^WEEK__/, ""));
+          if (!weekLabel) return;
+          rowsByWeek[weekLabel] = rowsByWeek[weekLabel] || { week: weekLabel, source: "", uploadedAt: "", keywords: 0 };
+          if (!rowsByWeek[weekLabel].source && entry.source_filename) rowsByWeek[weekLabel].source = String(entry.source_filename);
           if (entry.uploaded_at && (!rowsByWeek[weekLabel].uploadedAt || entry.uploaded_at > rowsByWeek[weekLabel].uploadedAt)) {
             rowsByWeek[weekLabel].uploadedAt = String(entry.uploaded_at);
           }
@@ -6774,13 +7042,22 @@
         var rows = Array.isArray(sqpWarehouse) ? sqpWarehouse : [];
         var cacheMap = sqpWeekCache && typeof sqpWeekCache === "object" ? sqpWeekCache : {};
         var cacheKeys = Object.keys(cacheMap);
+        var rawMap = sqpRawUploads && typeof sqpRawUploads === "object" ? sqpRawUploads : {};
+        var rawKeys = Object.keys(rawMap);
         var weeksFromCache = {};
+        var weeksFromRaw = {};
         var weeksWithoutCache = {};
         var cacheWeekFlags = {};
+        var rawWeekFlags = {};
         cacheKeys.forEach(function (cacheKey) {
           cacheWeekFlags[cacheKey] = true;
           var cacheWeekLabel = toSqpWeekLabel(cacheMap[cacheKey] && cacheMap[cacheKey].week || String(cacheKey).replace(/^WEEK__/, ""));
           if (cacheWeekLabel) weeksFromCache[cacheWeekLabel] = true;
+        });
+        rawKeys.forEach(function (rawKey) {
+          rawWeekFlags[rawKey] = true;
+          var rawWeekLabel = toSqpWeekLabel(rawMap[rawKey] && rawMap[rawKey].week || String(rawKey).replace(/^WEEK__/, ""));
+          if (rawWeekLabel) weeksFromRaw[rawWeekLabel] = true;
         });
 
         var seenKeywords = {};
@@ -6853,6 +7130,7 @@
           if (!weekLabel) return;
           var weekKey = getSearchImportStorageKey(weekLabel);
           if (cacheWeekFlags[weekKey]) return;
+          if (rawWeekFlags[weekKey]) return;
           weeksWithoutCache[weekLabel] = true;
           includeWarehouseRow(row, weekLabel, row && row.source_filename, row && row.uploaded_at);
         });
@@ -6865,6 +7143,33 @@
           var cacheRows = Array.isArray(entry.rows) ? entry.rows : [];
           cacheRows.forEach(function (cacheRow) {
             includeWarehouseRow(cacheRow, weekLabel, entry.source_filename, entry.uploaded_at);
+          });
+        });
+
+        rawKeys.forEach(function (rawKey) {
+          if (cacheWeekFlags[rawKey]) return;
+          var entry = rawMap[rawKey];
+          if (!entry || typeof entry !== "object") return;
+          var weekLabel = toSqpWeekLabel(entry.week || String(rawKey).replace(/^WEEK__/, ""));
+          if (!weekLabel) return;
+
+          var rawRows = expandSqpRawUploadRows(entry);
+          if (!rawRows.length && entry.payload) {
+            rawRows = parseSqpRowsFromStoredRawPayload(entry);
+          }
+          if (!rawRows.length) return;
+
+          var sampleRow = rawRows[0] || {};
+          var queryKey = detectSqpQueryColumn(sampleRow);
+          if (!queryKey) return;
+          var metricColumns = detectSqpMetricColumns(sampleRow);
+          if (!metricColumns.searchQueryVolume || !metricColumns.impressionsTotal || !metricColumns.clicksTotal || !metricColumns.purchasesTotal) {
+            return;
+          }
+
+          var aggregated = aggregateSqpRowsByTrackedKeywords(rawRows, queryKey, metricColumns, managedKeywordMap);
+          aggregated.rows.forEach(function (aggregateRow) {
+            includeWarehouseRow(aggregateRow, weekLabel, entry.source_filename, entry.uploaded_at);
           });
         });
 
@@ -6896,6 +7201,7 @@
           invalidKeywordsRemoved: Object.keys(removedKeywords).length,
           affectedRecordsRemoved: removedRowsCount,
           cacheWeeksProcessed: Object.keys(weeksFromCache).length,
+          rawWeeksProcessed: Object.keys(weeksFromRaw).length,
           weeksWithoutCache: Object.keys(weeksWithoutCache).length
         };
 
@@ -7339,7 +7645,7 @@
         });
       }
 
-      function addSqpKeyword(keywordInput) {
+      async function addSqpKeyword(keywordInput) {
         var keyword = collapseWhitespace(keywordInput);
         if (!keyword) {
           setSqpKeywordMessage("Keyword is required.", "warn");
@@ -7361,29 +7667,59 @@
         });
         sortSqpKeywords();
         saveSqpKeywordsState();
-        var matchedCachedRows = countSqpWeekCacheRowsForKeyword(keyword);
-        var cleanupResult = cleanupSqpWarehouseAgainstKeywordList();
+        setSqpKeywordMessage("Keyword added. Backfilling historical data...", "");
+        var backfillResult = await backfillKeywordFromStoredSQPUploads(keyword);
         renderSqpKeywordList();
-        if (matchedCachedRows > 0) {
-          setSqpKeywordMessage(
-            "Keyword added. Parsed " + matchedCachedRows.toLocaleString()
-              + " cached uploaded row" + (matchedCachedRows === 1 ? "" : "s") + ".",
-            "ok"
+        try {
+          console.info("[SQP Backfill Result]", backfillResult);
+        } catch (logError) {}
+
+        var backfilledCount = toNumber(backfillResult.backfilledFromCacheWeeks.length)
+          + toNumber(backfillResult.backfilledFromStoredRawWeeks.length);
+        var missingRawCount = toNumber(backfillResult.missingRawSourceWeeks.length);
+        var notFoundCount = toNumber(backfillResult.keywordNotFoundWeeks.length);
+        var failedCount = toNumber(backfillResult.failedWeeks.length);
+        var totalWeeks = toNumber(backfillResult.totalWeeksChecked);
+
+        var messageParts = [];
+        if (!totalWeeks) {
+          messageParts.push("Keyword added successfully. No historical uploads were found yet.");
+        } else if (backfilledCount > 0) {
+          messageParts.push(
+            "Keyword added successfully. Historical data was backfilled from stored raw uploads for "
+              + backfilledCount.toLocaleString() + " week" + (backfilledCount === 1 ? "" : "s") + "."
           );
         } else {
-          var missingCacheWeeks = toNumber(cleanupResult && cleanupResult.weeksWithoutCache);
-          if (missingCacheWeeks > 0) {
-            setSqpKeywordMessage(
-              "Keyword added. No cached historical rows found yet for this keyword. "
-                + missingCacheWeeks.toLocaleString()
-                + " uploaded week" + (missingCacheWeeks === 1 ? " is" : "s are")
-                + " missing cache memory; re-upload those weeks once to enable backfill.",
-              "warn"
-            );
-          } else {
-            setSqpKeywordMessage("Keyword added.", "ok");
-          }
+          messageParts.push("Keyword added successfully. No historical rows were backfilled yet.");
         }
+
+        if (notFoundCount > 0) {
+          messageParts.push(
+            "Keyword not found in " + notFoundCount.toLocaleString()
+              + " stored week file" + (notFoundCount === 1 ? "" : "s") + "."
+          );
+        }
+
+        if (missingRawCount > 0) {
+          messageParts.push(
+            missingRawCount.toLocaleString()
+              + " week" + (missingRawCount === 1 ? "" : "s")
+              + " could not be backfilled because raw source files are missing."
+          );
+        }
+
+        if (failedCount > 0) {
+          messageParts.push(
+            failedCount.toLocaleString()
+              + " week" + (failedCount === 1 ? "" : "s")
+              + " could not be backfilled due to parse/column issues in stored sources."
+          );
+        }
+
+        setSqpKeywordMessage(
+          messageParts.join(" "),
+          missingRawCount > 0 || failedCount > 0 ? "warn" : "ok"
+        );
         fillSearchTables();
         return true;
       }
@@ -7485,8 +7821,8 @@
         var table = root.querySelector("[data-table='sqp-keyword-list']");
         if (!input || !addBtn || !table) return;
 
-        function submitKeyword() {
-          var added = addSqpKeyword(input.value);
+        async function submitKeyword() {
+          var added = await addSqpKeyword(input.value);
           if (added) input.value = "";
         }
 
@@ -11739,6 +12075,211 @@
         saveSqpWeekCacheState();
       }
 
+      function upsertSqpRawUploadSnapshot(week, filename, uploadedAt, parsedRows) {
+        var targetWeek = toSqpWeekLabel(week) || "Week 1";
+        var storageKey = getSearchImportStorageKey(targetWeek);
+        var compact = compactSqpRawUploadRows(parsedRows);
+        sqpRawUploads[storageKey] = {
+          week: targetWeek,
+          source_filename: String(filename || ""),
+          uploaded_at: String(uploadedAt || ""),
+          headers: compact.headers,
+          rows: compact.rows
+        };
+        saveSqpRawUploadsState();
+      }
+
+      function getSqpUploadedWeekLabelsForBackfill() {
+        var weekMap = {};
+
+        (sqpWarehouse || []).forEach(function (row) {
+          var weekLabel = toSqpWeekLabel(row && (row.week != null ? row.week : row.fortnight));
+          if (weekLabel) weekMap[weekLabel] = true;
+        });
+
+        Object.keys(sqpImportAudit || {}).forEach(function (storageKey) {
+          var weekLabel = toSqpWeekLabel(String(storageKey || "").replace(/^WEEK__/, ""));
+          if (weekLabel) weekMap[weekLabel] = true;
+        });
+
+        Object.keys(sqpWeekCache || {}).forEach(function (storageKey) {
+          var entry = sqpWeekCache[storageKey];
+          var weekLabel = toSqpWeekLabel(entry && entry.week || String(storageKey || "").replace(/^WEEK__/, ""));
+          if (weekLabel) weekMap[weekLabel] = true;
+        });
+
+        Object.keys(sqpRawUploads || {}).forEach(function (storageKey) {
+          var entry = sqpRawUploads[storageKey];
+          var weekLabel = toSqpWeekLabel(entry && entry.week || String(storageKey || "").replace(/^WEEK__/, ""));
+          if (weekLabel) weekMap[weekLabel] = true;
+        });
+
+        return Object.keys(weekMap).sort(function (left, right) {
+          return parseSqpWeekNumber(left) - parseSqpWeekNumber(right);
+        });
+      }
+
+      function getSqpWarehouseRowForWeekAndKeyword(weekLabel, keywordKey) {
+        var targetWeek = toSqpWeekLabel(weekLabel);
+        if (!targetWeek || !keywordKey) return null;
+        return (sqpWarehouse || []).find(function (row) {
+          return toSqpWeekLabel(row && (row.week != null ? row.week : row.fortnight)) === targetWeek
+            && normalizeKeywordKey(row && row.keyword) === keywordKey;
+        }) || null;
+      }
+
+      function getSqpCacheRowForWeekAndKeyword(weekLabel, keywordKey) {
+        var targetWeek = toSqpWeekLabel(weekLabel);
+        if (!targetWeek || !keywordKey) return null;
+        var storageKey = getSearchImportStorageKey(targetWeek);
+        var entry = sqpWeekCache && sqpWeekCache[storageKey];
+        if (!entry || typeof entry !== "object") return null;
+        var rows = Array.isArray(entry.rows) ? entry.rows : [];
+        var matched = rows.find(function (row) {
+          return normalizeKeywordKey(row && row.keyword) === keywordKey;
+        }) || null;
+        if (!matched) return null;
+        return {
+          row: matched,
+          source_filename: entry.source_filename || "",
+          uploaded_at: entry.uploaded_at || ""
+        };
+      }
+
+      function getSqpRawRowsForWeek(weekLabel) {
+        var targetWeek = toSqpWeekLabel(weekLabel);
+        if (!targetWeek) {
+          return { rows: [], source_filename: "", uploaded_at: "", exists: false };
+        }
+        var storageKey = getSearchImportStorageKey(targetWeek);
+        var entry = sqpRawUploads && sqpRawUploads[storageKey];
+        if (!entry || typeof entry !== "object") {
+          return { rows: [], source_filename: "", uploaded_at: "", exists: false };
+        }
+        var rows = expandSqpRawUploadRows(entry);
+        if (!rows.length && entry.payload) {
+          rows = parseSqpRowsFromStoredRawPayload(entry);
+        }
+        return {
+          rows: rows,
+          source_filename: entry.source_filename || "",
+          uploaded_at: entry.uploaded_at || "",
+          exists: true
+        };
+      }
+
+      async function backfillKeywordFromStoredSQPUploads(keywordValue) {
+        var keyword = collapseWhitespace(keywordValue);
+        var keywordKey = normalizeKeywordKey(keyword);
+        var result = {
+          keyword: keyword,
+          totalWeeksChecked: 0,
+          alreadyExistsWeeks: [],
+          backfilledFromCacheWeeks: [],
+          backfilledFromStoredRawWeeks: [],
+          keywordNotFoundWeeks: [],
+          missingRawSourceWeeks: [],
+          failedWeeks: []
+        };
+        if (!keywordKey) return result;
+
+        var weeks = getSqpUploadedWeekLabelsForBackfill();
+        result.totalWeeksChecked = weeks.length;
+        if (!weeks.length) return result;
+
+        for (var i = 0; i < weeks.length; i++) {
+          var weekLabel = weeks[i];
+          if (!weekLabel) continue;
+
+          if (getSqpWarehouseRowForWeekAndKeyword(weekLabel, keywordKey)) {
+            result.alreadyExistsWeeks.push(weekLabel);
+            continue;
+          }
+
+          var cacheMatch = getSqpCacheRowForWeekAndKeyword(weekLabel, keywordKey);
+          if (cacheMatch && cacheMatch.row) {
+            applySqpWarehouseRows(
+              weekLabel,
+              [cacheMatch.row],
+              cacheMatch.source_filename,
+              cacheMatch.uploaded_at
+            );
+            result.backfilledFromCacheWeeks.push(weekLabel);
+            continue;
+          }
+
+          var rawWeek = getSqpRawRowsForWeek(weekLabel);
+          if (!rawWeek.exists) {
+            result.missingRawSourceWeeks.push(weekLabel);
+            continue;
+          }
+          if (!rawWeek.rows.length) {
+            result.failedWeeks.push({
+              week: weekLabel,
+              reason: "Stored raw source file is unreadable or empty."
+            });
+            continue;
+          }
+
+          var sampleRow = rawWeek.rows[0] || {};
+          var queryKey = detectSqpQueryColumn(sampleRow);
+          if (!queryKey) {
+            result.failedWeeks.push({
+              week: weekLabel,
+              reason: "Missing query column in stored source file."
+            });
+            continue;
+          }
+          var metricColumns = detectSqpMetricColumns(sampleRow);
+          var missingRequired = [
+            metricColumns.searchQueryVolume,
+            metricColumns.impressionsTotal,
+            metricColumns.clicksTotal,
+            metricColumns.purchasesTotal
+          ].some(function (value) { return !value; });
+          if (missingRequired) {
+            result.failedWeeks.push({
+              week: weekLabel,
+              reason: "Missing required metric columns in stored source file."
+            });
+            continue;
+          }
+
+          var allKeywordAggregate = aggregateSqpRowsByAllKeywords(rawWeek.rows, queryKey, metricColumns);
+          upsertSqpWeekCacheRows(
+            weekLabel,
+            allKeywordAggregate.rows,
+            rawWeek.source_filename,
+            rawWeek.uploaded_at || new Date().toISOString()
+          );
+
+          var singleKeywordMap = {};
+          singleKeywordMap[keywordKey] = keyword;
+          var aggregated = aggregateSqpRowsByTrackedKeywords(
+            rawWeek.rows,
+            queryKey,
+            metricColumns,
+            singleKeywordMap
+          );
+
+          if (!aggregated.rows.length) {
+            result.keywordNotFoundWeeks.push(weekLabel);
+            continue;
+          }
+
+          applySqpWarehouseRows(
+            weekLabel,
+            aggregated.rows,
+            rawWeek.source_filename,
+            rawWeek.uploaded_at || new Date().toISOString()
+          );
+          result.backfilledFromStoredRawWeeks.push(weekLabel);
+        }
+
+        cleanupSqpWarehouseAgainstKeywordList();
+        return result;
+      }
+
       function initSqpWarehouseControls() {
         var weekSelect = root.querySelector("[data-control='sqp-warehouse-week']");
         var keywordSelect = root.querySelector("[data-control='sqp-warehouse-keyword']");
@@ -11981,6 +12522,7 @@
 
         var selectedWeek = toSqpWeekLabel(queueRow.week) || "Week 1";
         var uploadedAt = new Date().toISOString();
+        upsertSqpRawUploadSnapshot(selectedWeek, queueRow.filename, uploadedAt, rows);
         var allKeywordAggregate = aggregateSqpRowsByAllKeywords(rows, queryKey, metricColumns);
         upsertSqpWeekCacheRows(selectedWeek, allKeywordAggregate.rows, queueRow.filename, uploadedAt);
 

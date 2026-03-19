@@ -29,6 +29,7 @@ const DEFAULT_STORE = {
   sqp_keywords: null,
   sqp_warehouse: null,
   sqp_import_audit: null,
+  sqp_raw_uploads: null,
   sqp_week_cache: null,
   updated_at: null
 };
@@ -39,6 +40,7 @@ const ALLOWED_STORE_KEYS = new Set([
   'sqp_keywords',
   'sqp_warehouse',
   'sqp_import_audit',
+  'sqp_raw_uploads',
   'sqp_week_cache'
 ]);
 
