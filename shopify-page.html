@@ -6666,6 +6666,22 @@
         return managed;
       }
 
+      function countSqpWeekCacheRowsForKeyword(keywordValue) {
+        var key = normalizeKeywordKey(keywordValue);
+        if (!key) return 0;
+        var cacheMap = sqpWeekCache && typeof sqpWeekCache === "object" ? sqpWeekCache : {};
+        var total = 0;
+        Object.keys(cacheMap).forEach(function (cacheKey) {
+          var entry = cacheMap[cacheKey];
+          if (!entry || typeof entry !== "object") return;
+          var rows = Array.isArray(entry.rows) ? entry.rows : [];
+          rows.forEach(function (row) {
+            if (normalizeKeywordKey(row && row.keyword) === key) total += 1;
+          });
+        });
+        return total;
+      }
+
       function formatSqpCleanupSummaryHtml() {
         if (!sqpCleanupSummary) return "";
         return "Cleanup: "
@@ -6680,9 +6696,13 @@
         var rows = Array.isArray(sqpWarehouse) ? sqpWarehouse : [];
         var cacheMap = sqpWeekCache && typeof sqpWeekCache === "object" ? sqpWeekCache : {};
         var cacheKeys = Object.keys(cacheMap);
+        var weeksFromCache = {};
+        var weeksWithoutCache = {};
         var cacheWeekFlags = {};
         cacheKeys.forEach(function (cacheKey) {
           cacheWeekFlags[cacheKey] = true;
+          var cacheWeekLabel = toSqpWeekLabel(cacheMap[cacheKey] && cacheMap[cacheKey].week || String(cacheKey).replace(/^WEEK__/, ""));
+          if (cacheWeekLabel) weeksFromCache[cacheWeekLabel] = true;
         });
 
         var seenKeywords = {};
@@ -6755,6 +6775,7 @@
           if (!weekLabel) return;
           var weekKey = getSearchImportStorageKey(weekLabel);
           if (cacheWeekFlags[weekKey]) return;
+          weeksWithoutCache[weekLabel] = true;
           includeWarehouseRow(row, weekLabel, row && row.source_filename, row && row.uploaded_at);
         });
 
@@ -6795,7 +6816,9 @@
           checkedKeywords: Object.keys(seenKeywords).length,
           validKeywordsKept: Object.keys(keptKeywords).length,
           invalidKeywordsRemoved: Object.keys(removedKeywords).length,
-          affectedRecordsRemoved: removedRowsCount
+          affectedRecordsRemoved: removedRowsCount,
+          cacheWeeksProcessed: Object.keys(weeksFromCache).length,
+          weeksWithoutCache: Object.keys(weeksWithoutCache).length
         };
 
         return sqpCleanupSummary;
@@ -7260,9 +7283,29 @@
         });
         sortSqpKeywords();
         saveSqpKeywordsState();
-        cleanupSqpWarehouseAgainstKeywordList();
+        var matchedCachedRows = countSqpWeekCacheRowsForKeyword(keyword);
+        var cleanupResult = cleanupSqpWarehouseAgainstKeywordList();
         renderSqpKeywordList();
-        setSqpKeywordMessage("Keyword added.", "ok");
+        if (matchedCachedRows > 0) {
+          setSqpKeywordMessage(
+            "Keyword added. Parsed " + matchedCachedRows.toLocaleString()
+              + " cached uploaded row" + (matchedCachedRows === 1 ? "" : "s") + ".",
+            "ok"
+          );
+        } else {
+          var missingCacheWeeks = toNumber(cleanupResult && cleanupResult.weeksWithoutCache);
+          if (missingCacheWeeks > 0) {
+            setSqpKeywordMessage(
+              "Keyword added. No cached historical rows found yet for this keyword. "
+                + missingCacheWeeks.toLocaleString()
+                + " uploaded week" + (missingCacheWeeks === 1 ? " is" : "s are")
+                + " missing cache memory; re-upload those weeks once to enable backfill.",
+              "warn"
+            );
+          } else {
+            setSqpKeywordMessage("Keyword added.", "ok");
+          }
+        }
         fillSearchTables();
         return true;
       }
