@@ -6172,7 +6172,12 @@
           if (!response.ok) throw new Error("HTTP " + response.status);
           storageBackendState.checked = true;
           storageBackendState.available = true;
-        }).catch(function () {
+        }).catch(function (error) {
+          if (remoteKey === STORAGE_REMOTE_KEYS.sqpWeekCache) {
+            try {
+              console.warn("[SQP cache] Failed to persist week cache to backend store:", error && error.message ? error.message : error);
+            } catch (warnError) {}
+          }
           if (!storageBackendState.checked) storageBackendState.checked = true;
         });
       }
@@ -6199,10 +6204,96 @@
       }
 
       function saveSqpWeekCacheState() {
+        var serialized = sqpWeekCache;
         try {
-          window.localStorage.setItem(SQP_WEEK_CACHE_STORAGE_KEY, JSON.stringify(sqpWeekCache));
+          serialized = serializeSqpWeekCacheForStorage(sqpWeekCache);
+        } catch (error) {
+          serialized = sqpWeekCache;
+        }
+        try {
+          window.localStorage.setItem(SQP_WEEK_CACHE_STORAGE_KEY, JSON.stringify(serialized));
         } catch (error) {}
-        writeBackendStoreValue(STORAGE_REMOTE_KEYS.sqpWeekCache, sqpWeekCache);
+        writeBackendStoreValue(STORAGE_REMOTE_KEYS.sqpWeekCache, serialized);
+      }
+
+      function compactSqpWeekCacheRow(row) {
+        var keyword = collapseWhitespace(row && row.keyword);
+        if (!keyword) return null;
+
+        return [
+          keyword,
+          toNumber(row && row.search_query_volume),
+          toNumber(row && row.impressions_total),
+          toNumber(row && row.impressions_brand_share_pct),
+          toNumber(row && row.clicks_total),
+          toNumber(row && row.purchases_total),
+          getSqpOrdersTotalValue(row, toNumber(row && row.purchases_total)),
+          getSqpSessionsTotalValue(row, toNumber(row && row.search_query_volume)),
+          row && row.market ? String(row.market) : ""
+        ];
+      }
+
+      function normalizeSqpWeekCacheRow(row) {
+        if (Array.isArray(row)) {
+          var keywordFromArray = collapseWhitespace(row[0]);
+          if (!keywordFromArray) return null;
+          var purchasesFromArray = toNumber(row[5]);
+          var queryVolumeFromArray = toNumber(row[1]);
+          return {
+            keyword: keywordFromArray,
+            search_query_volume: queryVolumeFromArray,
+            impressions_total: toNumber(row[2]),
+            impressions_brand_share_pct: toNumber(row[3]),
+            clicks_total: toNumber(row[4]),
+            purchases_total: purchasesFromArray,
+            orders_total: getSqpOrdersTotalValue({ orders_total: row[6] }, purchasesFromArray),
+            sessions_total: getSqpSessionsTotalValue({ sessions_total: row[7] }, queryVolumeFromArray),
+            market: row[8] ? String(row[8]) : "",
+            extra_metrics: {}
+          };
+        }
+
+        var keyword = collapseWhitespace(row && row.keyword);
+        if (!keyword) return null;
+        var purchases = toNumber(row && (row.purchases_total != null ? row.purchases_total : row.purchasesTotal));
+        var searchQueryVolume = toNumber(row && (row.search_query_volume != null ? row.search_query_volume : row.searchQueryVolume));
+        return {
+          keyword: keyword,
+          search_query_volume: searchQueryVolume,
+          impressions_total: toNumber(row && (row.impressions_total != null ? row.impressions_total : row.impressionsTotal)),
+          impressions_brand_share_pct: toNumber(row && (row.impressions_brand_share_pct != null ? row.impressions_brand_share_pct : row.impressionsBrandSharePct)),
+          clicks_total: toNumber(row && (row.clicks_total != null ? row.clicks_total : row.clicksTotal)),
+          purchases_total: purchases,
+          orders_total: getSqpOrdersTotalValue(row, purchases),
+          sessions_total: getSqpSessionsTotalValue(row, searchQueryVolume),
+          market: row && row.market ? String(row.market) : "",
+          extra_metrics: row && row.extra_metrics && typeof row.extra_metrics === "object" ? row.extra_metrics : {}
+        };
+      }
+
+      function serializeSqpWeekCacheForStorage(cacheMap) {
+        var source = cacheMap && typeof cacheMap === "object" ? cacheMap : {};
+        var output = {};
+        Object.keys(source).forEach(function (storageKey) {
+          var entry = source[storageKey];
+          if (!entry || typeof entry !== "object") return;
+          var weekLabel = toSqpWeekLabel(entry.week || String(storageKey).replace(/^WEEK__/, ""));
+          if (!weekLabel) return;
+          var rows = Array.isArray(entry.rows)
+            ? entry.rows.map(function (row) {
+              var normalized = normalizeSqpWeekCacheRow(row);
+              return compactSqpWeekCacheRow(normalized);
+            }).filter(Boolean)
+            : [];
+
+          output[getSearchImportStorageKey(weekLabel)] = {
+            week: weekLabel,
+            source_filename: entry.source_filename ? String(entry.source_filename) : "",
+            uploaded_at: entry.uploaded_at ? String(entry.uploaded_at) : "",
+            rows: rows
+          };
+        });
+        return output;
       }
 
       async function loadSqpKeywordsState() {
@@ -6426,22 +6517,9 @@
             if (!weekLabel) return;
             var storageKey = getSearchImportStorageKey(weekLabel);
 
-            var rows = Array.isArray(entry.rows) ? entry.rows.map(function (row) {
-              var keyword = collapseWhitespace(row && row.keyword);
-              if (!keyword) return null;
-              return {
-                keyword: keyword,
-                search_query_volume: toNumber(row && (row.search_query_volume != null ? row.search_query_volume : row.searchQueryVolume)),
-                impressions_total: toNumber(row && (row.impressions_total != null ? row.impressions_total : row.impressionsTotal)),
-                impressions_brand_share_pct: toNumber(row && (row.impressions_brand_share_pct != null ? row.impressions_brand_share_pct : row.impressionsBrandSharePct)),
-                clicks_total: toNumber(row && (row.clicks_total != null ? row.clicks_total : row.clicksTotal)),
-                purchases_total: toNumber(row && (row.purchases_total != null ? row.purchases_total : row.purchasesTotal)),
-                orders_total: getSqpOrdersTotalValue(row, toNumber(row && (row.purchases_total != null ? row.purchases_total : row.purchasesTotal))),
-                sessions_total: getSqpSessionsTotalValue(row, toNumber(row && (row.search_query_volume != null ? row.search_query_volume : row.searchQueryVolume))),
-                market: row && row.market ? String(row.market) : "",
-                extra_metrics: row && row.extra_metrics && typeof row.extra_metrics === "object" ? row.extra_metrics : {}
-              };
-            }).filter(Boolean) : [];
+            var rows = Array.isArray(entry.rows)
+              ? entry.rows.map(function (row) { return normalizeSqpWeekCacheRow(row); }).filter(Boolean)
+              : [];
 
             normalized[storageKey] = {
               week: weekLabel,
@@ -11648,22 +11726,9 @@
       function upsertSqpWeekCacheRows(week, aggregatedRows, filename, uploadedAt) {
         var targetWeek = toSqpWeekLabel(week) || "Week 1";
         var storageKey = getSearchImportStorageKey(targetWeek);
-        var safeRows = Array.isArray(aggregatedRows) ? aggregatedRows.map(function (row) {
-          return {
-            keyword: collapseWhitespace(row && row.keyword),
-            search_query_volume: toNumber(row && row.search_query_volume),
-            impressions_total: toNumber(row && row.impressions_total),
-            impressions_brand_share_pct: toNumber(row && row.impressions_brand_share_pct),
-            clicks_total: toNumber(row && row.clicks_total),
-            purchases_total: toNumber(row && row.purchases_total),
-            orders_total: getSqpOrdersTotalValue(row, toNumber(row && row.purchases_total)),
-            sessions_total: getSqpSessionsTotalValue(row, toNumber(row && row.search_query_volume)),
-            market: row && row.market ? String(row.market) : "",
-            extra_metrics: row && row.extra_metrics && typeof row.extra_metrics === "object" ? row.extra_metrics : {}
-          };
-        }).filter(function (row) {
-          return !!normalizeKeywordKey(row.keyword);
-        }) : [];
+        var safeRows = Array.isArray(aggregatedRows)
+          ? aggregatedRows.map(function (row) { return normalizeSqpWeekCacheRow(row); }).filter(Boolean)
+          : [];
 
         sqpWeekCache[storageKey] = {
           week: targetWeek,

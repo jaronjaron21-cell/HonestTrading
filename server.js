@@ -12,7 +12,7 @@ const DATA_DIR = process.env.DATA_DIR
   : path.join(ROOT_DIR, 'data');
 const STORE_PATH = path.join(DATA_DIR, 'storage.json');
 const PORT = Number(process.env.PORT || 4173);
-const MAX_BODY_BYTES = 20 * 1024 * 1024;
+const MAX_BODY_BYTES = 80 * 1024 * 1024;
 const AUTH_ENABLED = String(process.env.AUTH_ENABLED || 'true').toLowerCase() === 'true';
 
 const AUTH_USERNAME = String(process.env.APP_USERNAME || 'HT-Admin');
