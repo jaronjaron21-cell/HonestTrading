@@ -12976,19 +12976,21 @@
         var totalUnitsSold = toNumber(base && base.totalUnitsSold);
         var returnsUnits = toNumber(base && base.returnsUnits);
 
+        var grossRevenue = sales;
         var netRevenue = sales + promotion + refundCost;
-        var cm1 = netRevenue + cogs;
-        var cm2 = cm1 + amazonFees;
+        var cm1 = sales + cogs;
+        var cm2 = cm1 + amazonFees + promotion + refundCost;
         var cm3 = cm2 + adCost;
 
         return {
+          grossRevenue: grossRevenue,
           netRevenue: netRevenue,
           cm1: cm1,
-          cm1Pct: safeDivide(cm1, netRevenue),
+          cm1Pct: safeDivide(cm1, sales),
           cm2: cm2,
-          cm2Pct: safeDivide(cm2, netRevenue),
+          cm2Pct: safeDivide(cm2, sales),
           cm3: cm3,
-          cm3Pct: safeDivide(cm3, netRevenue),
+          cm3Pct: safeDivide(cm3, sales),
           tacos: safeDivide(Math.abs(adCost), sales),
           organicRatio: safeDivide(sales - adSales, sales),
           returnRiskRatio: safeDivide(returnsUnits, totalUnitsSold),
