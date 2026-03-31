@@ -8493,9 +8493,15 @@
             ? formatDashboardPercent(currentValue)
             : formatDashboardNumber(currentValue);
           lines.push(metricLabel + ": " + metricText);
-          lines.push("Purchases: " + formatDashboardNumber(item.purchasesTotal));
-          lines.push("CVR: " + formatDashboardPercent(item.cvrPct));
-          lines.push("CTR: " + formatDashboardPercent(item.ctrPct));
+          if (trendMetric !== "purchasesTotal") {
+            lines.push("Purchases: " + formatDashboardNumber(item.purchasesTotal));
+          }
+          if (trendMetric !== "cvrPct") {
+            lines.push("CVR: " + formatDashboardPercent(item.cvrPct));
+          }
+          if (trendMetric !== "ctrPct") {
+            lines.push("CTR: " + formatDashboardPercent(item.ctrPct));
+          }
           return lines.join("\n");
         });
         if (!trendSeries.length) trendSeries = [0];
