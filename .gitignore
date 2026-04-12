@@ -1,5 +1,11 @@
 .DS_Store
 node_modules/
+.env
+.env.local
+.env.*.local
+local-data/
+.local-data/
+*.log
 *.swp
 *.swo
 *.tmp
