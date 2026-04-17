@@ -13929,23 +13929,7 @@
       }
 
       function buildAsinAnalysisMetricLabelHtml(metric) {
-        var label = escapeHtml(metric && metric.label ? metric.label : "");
-        var formulaLines = Array.isArray(metric && metric.formulaLines)
-          ? metric.formulaLines.filter(Boolean)
-          : [];
-        if (!formulaLines.length) return label;
-
-        return "<span class='cts-analysis-metric-help' tabindex='0' aria-label='"
-          + escapeAttr("View formula for " + (metric && metric.label ? metric.label : "metric"))
-          + "'>"
-          + "<span class='cts-analysis-metric-help-text'>" + label + "</span>"
-          + "<span class='cts-analysis-metric-bubble' role='tooltip'>"
-          + "<span class='cts-analysis-metric-bubble-title'>Formula</span>"
-          + formulaLines.map(function (line) {
-            return "<span class='cts-analysis-metric-bubble-line'>" + escapeHtml(line) + "</span>";
-          }).join("")
-          + "</span>"
-          + "</span>";
+        return renderMetricFormulaLabel(metric && metric.label ? metric.label : "", "asin");
       }
 
       function getCellClass(metricName, currentValue, currHasData) {
