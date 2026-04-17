@@ -944,6 +944,57 @@
       font-variant-numeric: tabular-nums;
     }
 
+    #cts-shopify-reporting .cts-metric-formula-trigger {
+      display: inline-flex;
+      align-items: center;
+      border-bottom: 1px dotted rgba(30, 86, 230, 0.55);
+      cursor: help;
+      line-height: 1.2;
+    }
+
+    #cts-shopify-reporting .cts-metric-formula-trigger:focus-visible {
+      outline: none;
+      border-bottom-color: var(--primary-600);
+      box-shadow: 0 2px 0 rgba(30, 86, 230, 0.12);
+    }
+
+    #cts-shopify-reporting .cts-metric-formula-tooltip {
+      position: fixed;
+      left: 0;
+      top: 0;
+      z-index: 380;
+      display: none;
+      pointer-events: none;
+      max-width: min(360px, calc(100vw - 24px));
+      border: 1px solid var(--primary-200);
+      background: var(--cts-card);
+      border-radius: 14px;
+      box-shadow: 0 12px 28px rgba(15, 23, 42, 0.14);
+      padding: 12px 14px;
+      color: var(--cts-ink);
+    }
+
+    #cts-shopify-reporting .cts-metric-formula-tooltip.is-visible {
+      display: block;
+    }
+
+    #cts-shopify-reporting .cts-metric-formula-tooltip-title {
+      margin: 0 0 6px;
+      font-size: 12px;
+      font-weight: 700;
+      line-height: 1.3;
+      color: var(--cts-ink);
+    }
+
+    #cts-shopify-reporting .cts-metric-formula-tooltip-line {
+      margin: 0;
+      font-size: 12px;
+      line-height: 1.45;
+      color: var(--cts-ink);
+      white-space: normal;
+      word-break: break-word;
+    }
+
     #cts-shopify-reporting .cts-table {
       width: 100%;
       border-collapse: collapse;
@@ -4842,6 +4893,32 @@
         { key: "aov", label: "AOV", type: "money", formulaLines: ["AOV = Net Revenue / Total Orders"] },
         { key: "gpPerSession", label: "GP:Session", type: "money2", formulaLines: ["GP:Session = CM2 / Sessions"] }
       ];
+      var ASIN_METRIC_FORMULA_MAP = {
+        "Gross Revenue": "Gross Revenue = Sales",
+        "Net Revenue": "Net Revenue = Sales + Promotion + Refund Cost",
+        "CM1": "CM1 = Sales + COGS",
+        "CM1%": "CM1% = CM1 / Sales",
+        "CM2": "CM2 = CM1 + Amazon Fees + Promotion + Refund Cost",
+        "CM2%": "CM2% = CM2 / Sales",
+        "CM3": "CM3 = CM2 + Ad Cost",
+        "CM3%": "CM3% = CM3 / Sales",
+        "TACOS": "TACOS = ABS(Ad Cost) / Sales",
+        "Organic Ratio": "Organic Ratio = (Sales - Ad Sales) / Sales",
+        "Return Risk Ratio": "Return Risk Ratio = Return Units / Total Units Sold",
+        "Conversion (Unit/Session)": "Conversion (Unit/Session) = Total Units Sold / Sessions",
+        "AOV": "AOV = Net Revenue / Total Orders",
+        "GP:Session": "GP:Session = CM2 / Sessions"
+      };
+      var SQP_METRIC_FORMULA_MAP = {
+        "Search Query Volume": "Search Query Volume = SUM(Search Query Volume)",
+        "Impressions Total": "Impressions Total = SUM(Impressions Total)",
+        "Impressions Brand Share %": "Impressions Brand Share % = SUM(Impressions Total × Brand Share) / SUM(Impressions Total)",
+        "Clicks Total": "Clicks Total = SUM(Clicks Total)",
+        "Purchases Total": "Purchases Total = SUM(Purchases Total)",
+        "CTR %": "CTR% = (Clicks Total / Impressions Total) × 100",
+        "CVR %": "CVR% = (Purchases Total / Clicks Total) × 100",
+        "Purchase Rate %": "Purchase Rate % = (Purchases Total / Search Query Volume) × 100"
+      };
       var BENCHMARKS = {
         "CM1%": { value: 0.70, direction: "higher" },
         "CM2%": { value: 0.35, direction: "higher" },
@@ -4995,6 +5072,122 @@
         svg.addEventListener("mouseleave", function () {
           hideChartTooltip(svg);
         });
+      }
+
+      function getMetricFormulaText(label, moduleName) {
+        var metricLabel = collapseWhitespace(String(label == null ? "" : label));
+        if (!metricLabel) return "";
+        if (moduleName === "asin") return ASIN_METRIC_FORMULA_MAP[metricLabel] || "";
+        if (moduleName === "sqp") return SQP_METRIC_FORMULA_MAP[metricLabel] || "";
+        return ASIN_METRIC_FORMULA_MAP[metricLabel] || SQP_METRIC_FORMULA_MAP[metricLabel] || "";
+      }
+
+      function getOrCreateMetricFormulaTooltip() {
+        var tip = root.querySelector(".cts-metric-formula-tooltip");
+        if (!tip) {
+          tip = document.createElement("div");
+          tip.className = "cts-metric-formula-tooltip";
+          tip.setAttribute("aria-hidden", "true");
+          root.appendChild(tip);
+        }
+        return tip;
+      }
+
+      function hideMetricFormulaTooltip() {
+        var tip = getOrCreateMetricFormulaTooltip();
+        if (!tip) return;
+        tip.classList.remove("is-visible");
+        tip.setAttribute("aria-hidden", "true");
+      }
+
+      function positionMetricFormulaTooltip(tip, clientX, clientY) {
+        if (!tip) return;
+        var left = Number(clientX) + 14;
+        var top = Number(clientY) + 14;
+        tip.style.left = "0px";
+        tip.style.top = "0px";
+
+        var tipRect = tip.getBoundingClientRect();
+        var maxLeft = window.innerWidth - tipRect.width - 12;
+        var maxTop = window.innerHeight - tipRect.height - 12;
+
+        if (left > maxLeft) left = Number(clientX) - tipRect.width - 14;
+        if (top > maxTop) top = Number(clientY) - tipRect.height - 14;
+
+        if (!isFinite(left)) left = 12;
+        if (!isFinite(top)) top = 12;
+        left = Math.max(12, Math.min(left, Math.max(12, maxLeft)));
+        top = Math.max(12, Math.min(top, Math.max(12, maxTop)));
+
+        tip.style.left = left + "px";
+        tip.style.top = top + "px";
+      }
+
+      function showMetricFormulaTooltip(trigger, clientX, clientY) {
+        if (!trigger) {
+          hideMetricFormulaTooltip();
+          return;
+        }
+
+        var formulaText = trigger.getAttribute("data-formula-tooltip");
+        var metricLabel = trigger.getAttribute("data-formula-label");
+        if (!formulaText) {
+          hideMetricFormulaTooltip();
+          return;
+        }
+
+        var tip = getOrCreateMetricFormulaTooltip();
+        if (!tip) return;
+
+        var title = metricLabel ? "<p class='cts-metric-formula-tooltip-title'>" + escapeHtml(metricLabel) + "</p>" : "";
+        var lines = String(formulaText).split(/\r?\n/).filter(function (line) {
+          return collapseWhitespace(line).length > 0;
+        });
+        var body = lines.map(function (line) {
+          return "<p class='cts-metric-formula-tooltip-line'>" + escapeHtml(line) + "</p>";
+        }).join("");
+
+        tip.innerHTML = title + body;
+        tip.classList.add("is-visible");
+        tip.setAttribute("aria-hidden", "false");
+        positionMetricFormulaTooltip(tip, clientX, clientY);
+      }
+
+      function bindMetricFormulaTooltips() {
+        if (!root || root.dataset.metricFormulaBound === "1") return;
+        root.dataset.metricFormulaBound = "1";
+
+        root.addEventListener("mousemove", function (event) {
+          var trigger = event.target && typeof event.target.closest === "function"
+            ? event.target.closest("[data-formula-tooltip]")
+            : null;
+          if (!trigger || !root.contains(trigger)) {
+            hideMetricFormulaTooltip();
+            return;
+          }
+          showMetricFormulaTooltip(trigger, event.clientX, event.clientY);
+        });
+
+        root.addEventListener("mouseleave", function () {
+          hideMetricFormulaTooltip();
+        });
+
+        root.addEventListener("focusin", function (event) {
+          var trigger = event.target && typeof event.target.closest === "function"
+            ? event.target.closest("[data-formula-tooltip]")
+            : null;
+          if (!trigger || !root.contains(trigger)) return;
+          var rect = trigger.getBoundingClientRect();
+          showMetricFormulaTooltip(trigger, rect.right, rect.top + rect.height / 2);
+        });
+
+        root.addEventListener("focusout", function (event) {
+          var target = event.target;
+          if (!target || !(target.matches && target.matches("[data-formula-tooltip]"))) return;
+          hideMetricFormulaTooltip();
+        });
+
+        document.addEventListener("scroll", hideMetricFormulaTooltip, true);
       }
 
       function renderNoDataChart(svg, label) {
@@ -8834,6 +9027,19 @@
         });
       }
 
+      function renderMetricFormulaLabel(label, moduleName) {
+        var metricLabel = String(label == null ? "" : label);
+        var formulaText = getMetricFormulaText(metricLabel, moduleName);
+        if (!formulaText) return escapeHtml(metricLabel);
+        return "<span class='cts-metric-formula-trigger' tabindex='0' data-formula-label='"
+          + escapeAttr(metricLabel)
+          + "' data-formula-tooltip='"
+          + escapeAttr(formulaText)
+          + "'>"
+          + escapeHtml(metricLabel)
+          + "</span>";
+      }
+
       function fillSearchAnalysisView() {
         var table = root.querySelector("[data-table='sqp-analysis-matrix']");
         if (!table) return;
@@ -8886,7 +9092,7 @@
             return "<td class='" + cellClass + "'><span class='cts-sqp-main'>" + escapeHtml(mainValue) + "</span>" + wowHtml + "</td>";
           }).join("");
 
-          return "<tr><td>" + escapeHtml(metric.label) + "</td>" + cells + "</tr>";
+          return "<tr><td>" + renderMetricFormulaLabel(metric.label, "sqp") + "</td>" + cells + "</tr>";
         }).join("");
 
         table.innerHTML = "<thead><tr><th>Metric</th>" + headerHtml + "</tr></thead><tbody>" + bodyHtml + "</tbody>";
@@ -13924,7 +14130,7 @@
         }).join("");
 
         var body = metrics.map(function (metric) {
-          return "<tr><th scope='row'>" + buildAsinAnalysisMetricLabelHtml(metric) + "</th>"
+          return "<tr><th scope='row'>" + renderMetricFormulaLabel(metric.label, "asin") + "</th>"
             + metric.values.map(function (value, idx) {
               var hasDataFlags = Array.isArray(metric.hasData) ? metric.hasData : null;
               var currHasData = hasDataFlags ? !!hasDataFlags[idx] : !(value === null || value === undefined || value === "");
@@ -14872,6 +15078,7 @@
       initSqpDashboardControls();
       initHomeSnapshotControls();
       initSidebarToggle();
+      bindMetricFormulaTooltips();
       initCommandPalette();
       initScrollDeadZoneFixes();
       fillHomeView();
