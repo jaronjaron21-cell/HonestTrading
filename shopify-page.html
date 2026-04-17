@@ -1520,6 +1520,62 @@
       z-index: 3;
     }
 
+    #cts-shopify-reporting .cts-analysis-metric-help {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      cursor: help;
+      outline: none;
+    }
+
+    #cts-shopify-reporting .cts-analysis-metric-help-text {
+      text-decoration: underline dotted rgba(39, 89, 221, 0.55);
+      text-underline-offset: 3px;
+    }
+
+    #cts-shopify-reporting .cts-analysis-metric-help:focus-visible .cts-analysis-metric-help-text {
+      text-decoration-color: rgba(39, 89, 221, 0.9);
+    }
+
+    #cts-shopify-reporting .cts-analysis-metric-bubble {
+      position: absolute;
+      left: 0;
+      top: calc(100% + 10px);
+      z-index: 24;
+      display: none;
+      pointer-events: none;
+      width: min(360px, calc(100vw - 80px));
+      border: 1px solid var(--primary-200);
+      background: var(--cts-card);
+      border-radius: 12px;
+      box-shadow: 0 10px 18px rgba(20, 39, 28, 0.12);
+      padding: 10px 12px;
+      white-space: normal;
+      text-align: left;
+    }
+
+    #cts-shopify-reporting .cts-analysis-metric-help:hover .cts-analysis-metric-bubble,
+    #cts-shopify-reporting .cts-analysis-metric-help:focus .cts-analysis-metric-bubble,
+    #cts-shopify-reporting .cts-analysis-metric-help:focus-within .cts-analysis-metric-bubble {
+      display: block;
+    }
+
+    #cts-shopify-reporting .cts-analysis-metric-bubble-title {
+      display: block;
+      margin: 0 0 4px;
+      color: var(--cts-ink);
+      font-size: 12px;
+      font-weight: 700;
+      line-height: 1.3;
+    }
+
+    #cts-shopify-reporting .cts-analysis-metric-bubble-line {
+      display: block;
+      color: var(--cts-ink);
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
     #cts-shopify-reporting .cts-analysis-table td.cts-cond-green-light {
       background: var(--cts-cond-green-light-bg);
       color: var(--cts-cond-green-light-text);
@@ -4594,9 +4650,9 @@
         PPC: "PPC Data"
       };
       var ASIN_IMPORT_SOURCE_FIELDS = {
-        AMZ: ["totalOrders", "totalUnitsSold"],
+        AMZ: ["totalOrders", "totalUnitsSold", "orderedProductSales"],
         SB: ["sales", "promotion", "adCost", "cogs", "sessions", "refundCost", "amazonFees", "returnsUnits", "sellableReturns"],
-        PPC: ["adSales"]
+        PPC: ["ppcSales"]
       };
       var asinImportQueues = {
         bulk: []
@@ -4716,14 +4772,17 @@
         { key: "organicRank", label: "Organic Rank", type: "number" },
         { key: "organicRankingScreenshot", label: "Organic Ranking Screenshot", type: "text" }
       ];
+      var ASIN_WAREHOUSE_HIDDEN_FIELD_KEYS = ["orderedProductSales", "ppcSales"];
       var WAREHOUSE_FIELD_KEYS = {
         sales: "sales",
         adSales: "adSales",
+        orderedProductSales: "orderedProductSales",
         promotion: "promotion",
         refundCost: "refundCost",
         cogs: "cogs",
         amazonFees: "amazonFees",
         adCost: "adCost",
+        ppcSales: "ppcSales",
         sessions: "sessions",
         totalOrders: "totalOrders",
         totalUnitsSold: "totalUnitsSold",
@@ -4761,19 +4820,27 @@
         editSellerRating: false
       };
       var ASIN_ANALYSIS_METRIC_DEFINITIONS = [
-        { key: "netRevenue", label: "Net Revenue", type: "money" },
-        { key: "cm1", label: "CM1", type: "money" },
-        { key: "cm1Pct", label: "CM1%", type: "percent" },
-        { key: "cm2", label: "CM2", type: "money" },
-        { key: "cm2Pct", label: "CM2%", type: "percent" },
-        { key: "cm3", label: "CM3", type: "money" },
-        { key: "cm3Pct", label: "CM3%", type: "percent" },
-        { key: "tacos", label: "TACOS", type: "percent" },
-        { key: "organicRatio", label: "Organic Ratio", type: "percent" },
-        { key: "returnRiskRatio", label: "Return Risk Ratio", type: "percent" },
-        { key: "conversion", label: "Conversion (Unit/Session)", type: "percent" },
-        { key: "aov", label: "AOV", type: "money" },
-        { key: "gpPerSession", label: "GP:Session", type: "money2" }
+        { key: "netRevenue", label: "Net Revenue", type: "money", formulaLines: ["Net Revenue = Sales + Promotion + Refund Cost"] },
+        { key: "cm1", label: "CM1", type: "money", formulaLines: ["CM1 = Sales + COGs"] },
+        { key: "cm1Pct", label: "CM1%", type: "percent", formulaLines: ["CM1% = CM1 / Sales"] },
+        { key: "cm2", label: "CM2", type: "money", formulaLines: ["CM2 = CM1 + Amazon Fees + Promotion + Refund Cost"] },
+        { key: "cm2Pct", label: "CM2%", type: "percent", formulaLines: ["CM2% = CM2 / Sales"] },
+        { key: "cm3", label: "CM3", type: "money", formulaLines: ["CM3 = CM2 + Ad Cost"] },
+        { key: "cm3Pct", label: "CM3%", type: "percent", formulaLines: ["CM3% = CM3 / Sales"] },
+        { key: "tacos", label: "TACOS", type: "percent", formulaLines: ["TACOS = |Ad Cost| / Sales"] },
+        {
+          key: "organicRatio",
+          label: "Organic Ratio",
+          type: "percent",
+          formulaLines: [
+            "Organic Ratio = (Sales - Ad Sales) / Sales",
+            "Ad Sales = [Sales (from PPC_W#) / Ordered Product Sales (from AMZ_W#)] * Sales (from SB_W#)"
+          ]
+        },
+        { key: "returnRiskRatio", label: "Return Risk Ratio", type: "percent", formulaLines: ["Return Risk Ratio = Returns Units / Total Units Sold"] },
+        { key: "conversion", label: "Conversion (Unit/Session)", type: "percent", formulaLines: ["Conversion = Total Units Sold / Sessions"] },
+        { key: "aov", label: "AOV", type: "money", formulaLines: ["AOV = Net Revenue / Total Orders"] },
+        { key: "gpPerSession", label: "GP:Session", type: "money2", formulaLines: ["GP:Session = CM2 / Sessions"] }
       ];
       var BENCHMARKS = {
         "CM1%": { value: 0.70, direction: "higher" },
@@ -6839,7 +6906,7 @@
         if (!row) return false;
         var fieldKeys = ASIN_IMPORT_SOURCE_FIELDS[tag] || [];
         if (!fieldKeys.length) return false;
-        return fieldKeys.some(function (key) {
+        return fieldKeys.every(function (key) {
           return hasMeaningfulWarehouseFieldValue(row[key]);
         });
       }
@@ -9089,7 +9156,9 @@
 
           if (existing) {
             var normalizedExisting = Object.assign({}, existing);
+            var derivedAdSales = getDerivedAdSalesState(normalizedExisting);
             normalizedExisting.fortnight = "Fortnight " + fortnightNumber;
+            normalizedExisting.adSales = derivedAdSales.available ? derivedAdSales.value : null;
             normalizedExisting.isPlaceholder = false;
             return normalizedExisting;
           }
@@ -9104,6 +9173,35 @@
           });
           return placeholder;
         });
+      }
+
+      function getDerivedAdSalesState(row) {
+        var rawSales = row && row[WAREHOUSE_FIELD_KEYS.sales];
+        var rawOrderedProductSales = row && row[WAREHOUSE_FIELD_KEYS.orderedProductSales];
+        var rawPpcSales = row && row[WAREHOUSE_FIELD_KEYS.ppcSales];
+
+        var hasSales = hasWarehouseSourceValue(rawSales);
+        var hasOrderedProductSales = hasWarehouseSourceValue(rawOrderedProductSales);
+        var hasPpcSales = hasWarehouseSourceValue(rawPpcSales);
+        var relevant = hasSales || hasOrderedProductSales || hasPpcSales;
+
+        if (!(hasSales && hasOrderedProductSales && hasPpcSales)) {
+          return { relevant: relevant, available: false, value: null };
+        }
+
+        var sales = toMoneyUnit(rawSales);
+        var orderedProductSales = toMoneyUnit(rawOrderedProductSales);
+        var ppcSales = toMoneyUnit(rawPpcSales);
+
+        if (!(orderedProductSales > 0)) {
+          return { relevant: relevant, available: false, value: null };
+        }
+
+        return {
+          relevant: true,
+          available: true,
+          value: (ppcSales / orderedProductSales) * sales
+        };
       }
 
       function normalizeAsinCode(value) {
@@ -9272,11 +9370,13 @@
           fortnight: "Fortnight " + fortnightNumber,
           sales: "",
           adSales: "",
+          orderedProductSales: "",
           promotion: "",
           refundCost: "",
           cogs: "",
           amazonFees: "",
           adCost: "",
+          ppcSales: "",
           sessions: "",
           totalOrders: "",
           totalUnitsSold: "",
@@ -9290,8 +9390,9 @@
 
       function hasAsinWarehouseMetricValue(row) {
         if (!row || typeof row !== "object") return false;
-        return asinWarehouseColumns.some(function (col) {
-          var value = row[col.key];
+        var fieldKeys = asinWarehouseColumns.map(function (col) { return col.key; }).concat(ASIN_WAREHOUSE_HIDDEN_FIELD_KEYS);
+        return fieldKeys.some(function (key) {
+          var value = row[key];
           return !(value === "" || value === null || value === undefined);
         });
       }
@@ -10520,20 +10621,21 @@
 
       async function applyAmazonImportToWarehouse(selectedAsin, selectedFortnight, amazonFile) {
         var rows = await readTabularFile(amazonFile, [
-          "ASIN", "Child ASIN", "SKU ASIN",
-          "Total Order Items", "Total Orders", "Ordered Product Sales Total Order Items",
+          "ASIN", "(Parent) ASIN", "Child ASIN", "SKU ASIN",
+          "Total Order Items", "Total Orders", "Ordered Product Sales Total Order Items", "Ordered Product Sales",
           "Units Ordered", "Units"
         ]);
         if (!rows.length) {
           return { ok: false, message: "Amazon Data has no rows." };
         }
 
-        var asinKey = findHeaderKey(rows[0], ["ASIN", "Child ASIN", "SKU ASIN"]);
+        var asinKey = findHeaderKey(rows[0], ["ASIN", "(Parent) ASIN", "Child ASIN", "SKU ASIN"]);
         var totalOrderItemsKey = findHeaderKey(rows[0], ["Total Order Items", "Total Orders", "Ordered Product Sales Total Order Items"]);
+        var orderedProductSalesKey = findHeaderKey(rows[0], ["Ordered Product Sales"]);
         var unitsOrderedKey = findHeaderKey(rows[0], ["Units Ordered", "Units"]);
 
-        if (!totalOrderItemsKey || !unitsOrderedKey) {
-          return { ok: false, message: "Amazon Data must include columns: Total Order Items and Units Ordered." };
+        if (!totalOrderItemsKey || !orderedProductSalesKey || !unitsOrderedKey) {
+          return { ok: false, message: "Amazon Data must include columns: Total Order Items, Ordered Product Sales, and Units Ordered." };
         }
 
         var normalizedSelectedAsin = normalizeAsinCode(selectedAsin);
@@ -10557,6 +10659,9 @@
         var sumOrderItems = matchedRows.reduce(function (sum, row) {
           return sum + toNumber(row[totalOrderItemsKey]);
         }, 0);
+        var sumOrderedProductSales = matchedRows.reduce(function (sum, row) {
+          return sum + toNumber(row[orderedProductSalesKey]);
+        }, 0);
         var sumUnitsOrdered = matchedRows.reduce(function (sum, row) {
           return sum + toNumber(row[unitsOrderedKey]);
         }, 0);
@@ -10566,6 +10671,7 @@
         if (!fortnightRow) return { ok: false, message: "Selected Fortnight row not found." };
 
         fortnightRow.totalOrders = sumOrderItems;
+        fortnightRow.orderedProductSales = sumOrderedProductSales;
         fortnightRow.totalUnitsSold = sumUnitsOrdered;
 
         saveAsinMasterState();
@@ -10580,6 +10686,7 @@
         return {
           ok: true,
           orderItems: sumOrderItems,
+          orderedProductSales: sumOrderedProductSales,
           unitsOrdered: sumUnitsOrdered,
           rowCount: matchedRows.length
         };
@@ -10765,7 +10872,8 @@
         var fortnightRow = ensureAsinFortnightRow(normalizedSelectedAsin, fortnightIdx);
         if (!fortnightRow) return { ok: false, message: "Selected Fortnight row not found." };
 
-        fortnightRow.adSales = sumSales;
+        fortnightRow.ppcSales = sumSales;
+        fortnightRow.adSales = "";
 
         saveAsinMasterState();
         saveAsinWarehouseState();
@@ -10776,7 +10884,7 @@
         }
         refreshAsinProfitabilityViews();
 
-        return { ok: true, rowCount: rows.length, adSales: sumSales };
+        return { ok: true, rowCount: rows.length, ppcSales: sumSales };
       }
 
       function setImportMessage(text, type) {
@@ -12926,6 +13034,10 @@
         return {
           sales: 0,
           adSales: 0,
+          adSalesMeta: {
+            relevantCount: 0,
+            availableCount: 0
+          },
           promotion: 0,
           refundCost: 0,
           cogs: 0,
@@ -12941,6 +13053,8 @@
       function addAsinDashboardAccumulator(target, source) {
         target.sales += toNumber(source.sales);
         target.adSales += toNumber(source.adSales);
+        target.adSalesMeta.relevantCount += toNumber(source && source.adSalesMeta && source.adSalesMeta.relevantCount);
+        target.adSalesMeta.availableCount += toNumber(source && source.adSalesMeta && source.adSalesMeta.availableCount);
         target.promotion += toNumber(source.promotion);
         target.refundCost += toNumber(source.refundCost);
         target.cogs += toNumber(source.cogs);
@@ -12954,9 +13068,14 @@
       }
 
       function normalizeDashboardWarehouseRow(row) {
+        var derivedAdSales = getDerivedAdSalesState(row || {});
         return {
           sales: toMoneyUnit(row && row[WAREHOUSE_FIELD_KEYS.sales]),
-          adSales: toMoneyUnit(row && row[WAREHOUSE_FIELD_KEYS.adSales]),
+          adSales: derivedAdSales.available ? toMoneyUnit(derivedAdSales.value) : 0,
+          adSalesMeta: {
+            relevantCount: derivedAdSales.relevant ? 1 : 0,
+            availableCount: derivedAdSales.available ? 1 : 0
+          },
           promotion: toMoneyUnit(row && row[WAREHOUSE_FIELD_KEYS.promotion]),
           refundCost: toMoneyUnit(row && row[WAREHOUSE_FIELD_KEYS.refundCost]),
           cogs: toMoneyUnit(row && row[WAREHOUSE_FIELD_KEYS.cogs]),
@@ -12972,6 +13091,8 @@
       function computeAsinProfitabilityMetrics(base) {
         var sales = toNumber(base && base.sales);
         var adSales = toNumber(base && base.adSales);
+        var adSalesRelevantCount = toNumber(base && base.adSalesMeta && base.adSalesMeta.relevantCount);
+        var adSalesAvailableCount = toNumber(base && base.adSalesMeta && base.adSalesMeta.availableCount);
         var promotion = toNumber(base && base.promotion);
         var refundCost = toNumber(base && base.refundCost);
         var cogs = toNumber(base && base.cogs);
@@ -12987,6 +13108,7 @@
         var cm1 = sales + cogs;
         var cm2 = cm1 + amazonFees + promotion + refundCost;
         var cm3 = cm2 + adCost;
+        var hasCompleteDerivedAdSales = adSalesRelevantCount > 0 && adSalesRelevantCount === adSalesAvailableCount;
 
         return {
           grossRevenue: grossRevenue,
@@ -12998,7 +13120,7 @@
           cm3: cm3,
           cm3Pct: safeDivide(cm3, sales),
           tacos: safeDivide(Math.abs(adCost), sales),
-          organicRatio: safeDivide(sales - adSales, sales),
+          organicRatio: hasCompleteDerivedAdSales ? safeDivide(sales - adSales, sales) : null,
           returnRiskRatio: safeDivide(returnsUnits, totalUnitsSold),
           conversion: safeDivide(totalUnitsSold, sessions),
           aov: safeDivide(netRevenue, totalOrders),
@@ -13183,6 +13305,7 @@
       }
 
       function formatDashboardPercent(value) {
+        if (value === null || value === undefined || value === "") return "—";
         var numericValue = isFinite(value) ? Number(value) : 0;
         return (numericValue * 100).toFixed(2) + "%";
       }
@@ -13423,6 +13546,10 @@
           return {
             sales: 0,
             adSales: 0,
+            adSalesMeta: {
+              relevantCount: 0,
+              availableCount: 0
+            },
             promotion: 0,
             refundCost: 0,
             cogs: 0,
@@ -13462,20 +13589,22 @@
 
             var bucket = buckets[fortnightNumber - 1];
             var rawSales = row && row[WAREHOUSE_FIELD_KEYS.sales];
-            var rawAdSales = row && row[WAREHOUSE_FIELD_KEYS.adSales];
+            var rawOrderedProductSales = row && row[WAREHOUSE_FIELD_KEYS.orderedProductSales];
             var rawPromotion = row && row[WAREHOUSE_FIELD_KEYS.promotion];
             var rawRefundCost = row && row[WAREHOUSE_FIELD_KEYS.refundCost];
             var rawCogs = row && row[WAREHOUSE_FIELD_KEYS.cogs];
             var rawAmazonFees = row && row[WAREHOUSE_FIELD_KEYS.amazonFees];
             var rawAdCost = row && row[WAREHOUSE_FIELD_KEYS.adCost];
+            var rawPpcSales = row && row[WAREHOUSE_FIELD_KEYS.ppcSales];
             var rawSessions = row && row[WAREHOUSE_FIELD_KEYS.sessions];
             var rawTotalOrders = row && row[WAREHOUSE_FIELD_KEYS.totalOrders];
             var rawTotalUnitsSold = row && row[WAREHOUSE_FIELD_KEYS.totalUnitsSold];
             var rawReturnsUnits = row && row[WAREHOUSE_FIELD_KEYS.returnsUnits];
             var rawSellableReturns = row && row[WAREHOUSE_FIELD_KEYS.sellableReturns];
+            var derivedAdSales = getDerivedAdSalesState(row || {});
 
             var sales = toMoneyUnit(rawSales);
-            var adSales = toMoneyUnit(rawAdSales);
+            var adSales = derivedAdSales.available ? toMoneyUnit(derivedAdSales.value) : 0;
             var promotion = toMoneyUnit(rawPromotion);
             var refundCost = toMoneyUnit(rawRefundCost);
             var cogs = toMoneyUnit(rawCogs);
@@ -13498,12 +13627,13 @@
               rawTotalUnitsSold,
               rawReturnsUnits,
               rawSellableReturns,
-              rawAdSales
+              rawOrderedProductSales,
+              rawPpcSales
             ].some(hasWarehouseSourceValue);
             if (rowHasAnyData) bucket.hasData = true;
 
             if (hasWarehouseSourceValue(rawSales)) bucket.sourceFlags.sales = true;
-            if (hasWarehouseSourceValue(rawAdSales)) bucket.sourceFlags.adSales = true;
+            if (derivedAdSales.available) bucket.sourceFlags.adSales = true;
             if (hasWarehouseSourceValue(rawPromotion)) bucket.sourceFlags.promotion = true;
             if (hasWarehouseSourceValue(rawRefundCost)) bucket.sourceFlags.refundCost = true;
             if (hasWarehouseSourceValue(rawCogs)) bucket.sourceFlags.cogs = true;
@@ -13516,6 +13646,8 @@
 
             bucket.sales += sales;
             bucket.adSales += adSales;
+            bucket.adSalesMeta.relevantCount += derivedAdSales.relevant ? 1 : 0;
+            bucket.adSalesMeta.availableCount += derivedAdSales.available ? 1 : 0;
             bucket.promotion += promotion;
             bucket.refundCost += refundCost;
             bucket.cogs += cogs;
@@ -13556,6 +13688,7 @@
           var metrics = computeAsinProfitabilityMetrics({
             sales: bucket.sales,
             adSales: bucket.adSales,
+            adSalesMeta: bucket.adSalesMeta,
             promotion: bucket.promotion,
             refundCost: bucket.refundCost,
             cogs: bucket.cogs,
@@ -13570,21 +13703,43 @@
           return Object.assign({ hasData: true }, metrics);
         });
 
-        var hasDataByFortnight = byFortnight.map(function (item) {
-          return !!(item && item.hasData);
-        });
-
         return ASIN_ANALYSIS_METRIC_DEFINITIONS.map(function (metricDef) {
+          var values = byFortnight.map(function (item) {
+            return item[metricDef.key];
+          });
+          var hasData = byFortnight.map(function (item) {
+            var value = item && item[metricDef.key];
+            return !!(item && item.hasData && !(value === null || value === undefined || value === ""));
+          });
           return {
             key: metricDef.key,
             label: metricDef.label,
             type: metricDef.type,
-            hasData: hasDataByFortnight,
-            values: byFortnight.map(function (item) {
-              return item[metricDef.key];
-            })
+            formulaLines: metricDef.formulaLines || [],
+            hasData: hasData,
+            values: values
           };
         });
+      }
+
+      function buildAsinAnalysisMetricLabelHtml(metric) {
+        var label = escapeHtml(metric && metric.label ? metric.label : "");
+        var formulaLines = Array.isArray(metric && metric.formulaLines)
+          ? metric.formulaLines.filter(Boolean)
+          : [];
+        if (!formulaLines.length) return label;
+
+        return "<span class='cts-analysis-metric-help' tabindex='0' aria-label='"
+          + escapeAttr("View formula for " + (metric && metric.label ? metric.label : "metric"))
+          + "'>"
+          + "<span class='cts-analysis-metric-help-text'>" + label + "</span>"
+          + "<span class='cts-analysis-metric-bubble' role='tooltip'>"
+          + "<span class='cts-analysis-metric-bubble-title'>Formula</span>"
+          + formulaLines.map(function (line) {
+            return "<span class='cts-analysis-metric-bubble-line'>" + escapeHtml(line) + "</span>";
+          }).join("")
+          + "</span>"
+          + "</span>";
       }
 
       function getCellClass(metricName, currentValue, currHasData) {
@@ -13769,7 +13924,7 @@
         }).join("");
 
         var body = metrics.map(function (metric) {
-          return "<tr><th scope='row'>" + metric.label + "</th>"
+          return "<tr><th scope='row'>" + buildAsinAnalysisMetricLabelHtml(metric) + "</th>"
             + metric.values.map(function (value, idx) {
               var hasDataFlags = Array.isArray(metric.hasData) ? metric.hasData : null;
               var currHasData = hasDataFlags ? !!hasDataFlags[idx] : !(value === null || value === undefined || value === "");
