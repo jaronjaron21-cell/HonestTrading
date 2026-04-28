@@ -4805,6 +4805,14 @@
         B0GF9Y2TZG: "Copper Tech 1st Generation (2-Pack) | Men",
         B0GFB4L4S4: "Copper Tech 1st Generation (2-Pack) | Ladies"
       };
+      var ASIN_AMZ_IMPORT_ALIAS_RULES = [
+        {
+          asin: "B0GSGZ1VG8",
+          fromFortnight: 1,
+          toFortnight: 5,
+          acceptedAsins: ["B0FQ1LRMT8"]
+        }
+      ];
       var ASIN_MASTER_STORAGE_KEY = "cts_asin_master_v1";
       var ASIN_WAREHOUSE_STORAGE_KEY = "cts_asin_warehouse_state_v1";
       var asinMaster = [];
@@ -10366,6 +10374,24 @@
         return value >= 0 && value < 26 ? value : -1;
       }
 
+      function getAcceptedAmazonImportAsins(selectedAsin, selectedFortnight) {
+        var normalizedSelectedAsin = normalizeAsinCode(selectedAsin);
+        var fortnightNumber = parseFortnightIndex(selectedFortnight) + 1;
+        var acceptedMap = {};
+        if (normalizedSelectedAsin) acceptedMap[normalizedSelectedAsin] = true;
+
+        ASIN_AMZ_IMPORT_ALIAS_RULES.forEach(function (rule) {
+          if (normalizeAsinCode(rule && rule.asin) !== normalizedSelectedAsin) return;
+          if (fortnightNumber < toNumber(rule && rule.fromFortnight) || fortnightNumber > toNumber(rule && rule.toFortnight)) return;
+          (rule.acceptedAsins || []).forEach(function (asinCode) {
+            var normalizedAlias = normalizeAsinCode(asinCode);
+            if (normalizedAlias) acceptedMap[normalizedAlias] = true;
+          });
+        });
+
+        return Object.keys(acceptedMap);
+      }
+
       function parseImportFilename(filename) {
         var rawName = String(filename || "").trim();
         if (!rawName) {
@@ -10642,8 +10668,9 @@
         var matchedRows = rows;
 
         if (asinKey) {
+          var acceptedAmazonAsins = getAcceptedAmazonImportAsins(normalizedSelectedAsin, selectedFortnight);
           matchedRows = rows.filter(function (row) {
-            return normalizeAsinCode(row[asinKey]) === normalizedSelectedAsin;
+            return acceptedAmazonAsins.indexOf(normalizeAsinCode(row[asinKey])) !== -1;
           });
         }
 
