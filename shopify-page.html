@@ -6449,10 +6449,10 @@
       }
 
       function writeBackendStoreValue(remoteKey, data) {
-        if (!canUseBackendStorage() || !remoteKey) return;
-        if (storageBackendState.checked && !storageBackendState.available) return;
+        if (!canUseBackendStorage() || !remoteKey) return Promise.resolve(false);
+        if (storageBackendState.checked && !storageBackendState.available) return Promise.resolve(false);
 
-        fetch(STORAGE_API_BASE + "/" + encodeURIComponent(remoteKey), {
+        return fetch(STORAGE_API_BASE + "/" + encodeURIComponent(remoteKey), {
           method: "PUT",
           credentials: "same-origin",
           headers: {
@@ -6463,6 +6463,7 @@
           if (!response.ok) throw new Error("HTTP " + response.status);
           storageBackendState.checked = true;
           storageBackendState.available = true;
+          return true;
         }).catch(function (error) {
           if (remoteKey === STORAGE_REMOTE_KEYS.sqpWeekCache) {
             try {
@@ -6470,6 +6471,7 @@
             } catch (warnError) {}
           }
           if (!storageBackendState.checked) storageBackendState.checked = true;
+          return false;
         });
       }
 
@@ -9534,7 +9536,7 @@
         try {
           window.localStorage.setItem(ASIN_MASTER_STORAGE_KEY, JSON.stringify(asinMaster));
         } catch (error) {}
-        writeBackendStoreValue(STORAGE_REMOTE_KEYS.asinMaster, asinMaster);
+        return writeBackendStoreValue(STORAGE_REMOTE_KEYS.asinMaster, asinMaster);
       }
 
       function upsertAsinMasterAsin(asinCode, productTitle) {
@@ -9664,7 +9666,7 @@
         try {
           window.localStorage.setItem(ASIN_WAREHOUSE_STORAGE_KEY, JSON.stringify(payload));
         } catch (error) {}
-        writeBackendStoreValue(STORAGE_REMOTE_KEYS.asinWarehouse, payload);
+        return writeBackendStoreValue(STORAGE_REMOTE_KEYS.asinWarehouse, payload);
       }
 
       async function loadAsinWarehouseState() {
@@ -9672,10 +9674,13 @@
         var legacyOrder = [];
         var remoteWarehousePayload = null;
         var remoteMasterPayload = null;
+        var hasStoredWarehouseState = false;
+        var hasStoredMasterState = false;
 
         var backendWarehouse = await readBackendStoreValue(STORAGE_REMOTE_KEYS.asinWarehouse);
         if (backendWarehouse.available && backendWarehouse.data && typeof backendWarehouse.data === "object") {
           remoteWarehousePayload = backendWarehouse.data;
+          hasStoredWarehouseState = true;
           try {
             window.localStorage.setItem(ASIN_WAREHOUSE_STORAGE_KEY, JSON.stringify(remoteWarehousePayload));
           } catch (error) {}
@@ -9684,6 +9689,7 @@
         var backendMaster = await readBackendStoreValue(STORAGE_REMOTE_KEYS.asinMaster);
         if (backendMaster.available && Array.isArray(backendMaster.data)) {
           remoteMasterPayload = backendMaster.data;
+          hasStoredMasterState = true;
           try {
             window.localStorage.setItem(ASIN_MASTER_STORAGE_KEY, JSON.stringify(remoteMasterPayload));
           } catch (error) {}
@@ -9693,7 +9699,10 @@
           var parsedWarehouse = remoteWarehousePayload;
           if (!parsedWarehouse) {
             var rawWarehouse = window.localStorage.getItem(ASIN_WAREHOUSE_STORAGE_KEY);
-            if (rawWarehouse) parsedWarehouse = JSON.parse(rawWarehouse);
+            if (rawWarehouse) {
+              parsedWarehouse = JSON.parse(rawWarehouse);
+              hasStoredWarehouseState = true;
+            }
           }
 
           if (parsedWarehouse && typeof parsedWarehouse === "object" && parsedWarehouse.data && typeof parsedWarehouse.data === "object") {
@@ -9721,7 +9730,10 @@
           var parsedMaster = remoteMasterPayload;
           if (!Array.isArray(parsedMaster)) {
             var rawMaster = window.localStorage.getItem(ASIN_MASTER_STORAGE_KEY);
-            if (rawMaster) parsedMaster = JSON.parse(rawMaster);
+            if (rawMaster) {
+              parsedMaster = JSON.parse(rawMaster);
+              hasStoredMasterState = true;
+            }
           }
           if (Array.isArray(parsedMaster)) {
             parsedMasterRecords = parsedMaster.map(function (entry) {
@@ -9763,10 +9775,13 @@
           var normalized = normalizeAsinCode(code);
           if (isValidAsinCode(normalized)) finalCodeMap[normalized] = true;
         });
-        Object.keys(ASIN_PRODUCT_TITLE_DEFAULTS).forEach(function (code) {
-          var normalized = normalizeAsinCode(code);
-          if (isValidAsinCode(normalized)) finalCodeMap[normalized] = true;
-        });
+        var hasAnyStoredAsinState = hasStoredMasterState || hasStoredWarehouseState;
+        if (!hasAnyStoredAsinState && !Object.keys(finalCodeMap).length) {
+          Object.keys(ASIN_PRODUCT_TITLE_DEFAULTS).forEach(function (code) {
+            var normalized = normalizeAsinCode(code);
+            if (isValidAsinCode(normalized)) finalCodeMap[normalized] = true;
+          });
+        }
 
         var finalCodes = sortAsinCodes(Object.keys(finalCodeMap));
         asinMaster = finalCodes.map(function (code) {
@@ -10266,7 +10281,7 @@
           dropdownTrigger.setAttribute("aria-expanded", "true");
         }
 
-        function deleteAsinByCode(selected) {
+        async function deleteAsinByCode(selected) {
           if (!selected || selected === ASIN_ADD_OPTION_VALUE || selected === ASIN_ADD_DIVIDER_OPTION_VALUE) {
             setAsinAddMessage("Select an ASIN to delete.", "warn");
             return;
@@ -10287,8 +10302,10 @@
           removeAsinMasterAsin(selected);
           delete asinWarehouseData[selected];
 
-          saveAsinMasterState();
-          saveAsinWarehouseState();
+          await Promise.all([
+            saveAsinMasterState(),
+            saveAsinWarehouseState()
+          ]);
           var nextAsin = asinWarehouseOrder[Math.min(optionIndex, asinWarehouseOrder.length - 1)] || "";
           renderAsinWarehouseOptions(filter, nextAsin);
           if (nextAsin) renderAsinWarehouseTable(nextAsin);
