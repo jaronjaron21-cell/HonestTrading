@@ -4716,6 +4716,39 @@
         SB: ["sales", "promotion", "adCost", "cogs", "sessions", "refundCost", "amazonFees", "returnsUnits", "sellableReturns"],
         PPC: ["ppcSales"]
       };
+      var PPC_SALES_HEADER_ALIASES = [
+        "Sales (USD)",
+        "Sales(USD)",
+        "Sales",
+        "Total Sales",
+        "Attributed Sales",
+        "7 Day Total Sales",
+        "14 Day Total Sales"
+      ];
+      var PPC_ASIN_HEADER_ALIASES = [
+        "Advertised ASIN",
+        "Advertised Asin",
+        "Advertised Product ASIN",
+        "Purchased ASIN",
+        "ASIN",
+        "Child ASIN",
+        "SKU ASIN"
+      ];
+      var PPC_PRODUCT_HEADER_ALIASES = [
+        "Product",
+        "Product Name",
+        "Advertised Product",
+        "Advertised SKU",
+        "SKU",
+        "Campaign",
+        "Campaign Name",
+        "Ad Group",
+        "Ad Group Name",
+        "Ad Name"
+      ];
+      var PPC_IMPORT_HEADER_ALIASES = PPC_SALES_HEADER_ALIASES
+        .concat(PPC_ASIN_HEADER_ALIASES)
+        .concat(PPC_PRODUCT_HEADER_ALIASES);
       var asinImportQueues = {
         bulk: []
       };
@@ -4861,11 +4894,41 @@
       var ASIN_ALL_SELECTOR_LABEL = "All ASINs";
       var ASIN_ADD_OPTION_LABEL = "Add New ASIN...";
       var ASIN_PRODUCT_TITLE_DEFAULTS = {
-        B0F38CWNDB: "Copper Tech Plus | Men",
-        B0FQ1LRMT8: "Copper ADV Tech 2.0 | Men",
-        B0FQ25WN7C: "Copper Tech Plus | Ladies",
-        B0GF9Y2TZG: "Copper Tech 1st Generation (2-Pack) | Men",
-        B0GFB4L4S4: "Copper Tech 1st Generation (2-Pack) | Ladies"
+        B0F38CWNDB: "Copper Tech Plus Golf Gloves Men Right Handed Golfer or Left Handed Golfer (2nd Gen)",
+        B0FQ25WN7C: "Copper Tech Plus Ladies Golf Gloves Women (2nd Gen)",
+        B0GF9Y2TZG: "Copper Tech Golf Gloves Men Right Handed Golfer Or Left Handed Golfer (2 Pack)",
+        B0GFB4L4S4: "Copper Tech Ladies Golf Gloves Women Right Handed Golfer or Left Handed Golfer 2 Pack",
+        B0GSGZ1VG8: "Copper Advanced Tech 2.0 Golf Gloves for Men"
+      };
+      var ASIN_PRODUCT_TITLE_ALIASES = {
+        B0F38CWNDB: [
+          "Copper Tech Plus | Men",
+          "Copper Tech Plus Men",
+          "Copper Tech Plus Golf Gloves Men"
+        ],
+        B0FQ25WN7C: [
+          "Copper Tech Plus | Ladies",
+          "Copper Tech Plus Ladies",
+          "Copper Tech Plus Ladies Golf Gloves Women"
+        ],
+        B0GF9Y2TZG: [
+          "Copper Tech 1st Generation (2-Pack) | Men",
+          "Copper Tech 2 Pack Men",
+          "Copper Tech Golf Gloves Men",
+          "Copper Tech Golf Gloves Men 2 Pack"
+        ],
+        B0GFB4L4S4: [
+          "Copper Tech 1st Generation (2-Pack) | Ladies",
+          "Copper Tech 2 Pack Ladies",
+          "Copper Tech Ladies Golf Gloves Women",
+          "Copper Tech Ladies Golf Gloves Women 2 Pack"
+        ],
+        B0GSGZ1VG8: [
+          "Copper ADV Tech 2.0 | Men",
+          "Copper Advanced Tech 2.0",
+          "Copper Advanced Tech 2.0 Men",
+          "Copper Advanced Tech 2.0 Golf Gloves for Men"
+        ]
       };
       var ASIN_AMZ_IMPORT_ALIAS_RULES = [
         {
@@ -10656,9 +10719,20 @@
         }
 
         var basename = rawName.slice(0, rawName.length - extMatch[0].length);
+        var multiProductPpcMatch = basename.match(/^PPC_F([1-9]|1[0-9]|2[0-6])$/i);
+        if (multiProductPpcMatch) {
+          return {
+            ok: true,
+            asin: "",
+            tag: "PPC",
+            fortnight: Number(multiProductPpcMatch[1]),
+            multiProductPpc: true
+          };
+        }
+
         var parts = basename.split("_");
         if (parts.length !== 3) {
-          return { ok: false, error: "Filename must match {ASIN}_{AMZ|SB|PPC}_F{1..26}." };
+          return { ok: false, error: "Filename must match {ASIN}_{AMZ|SB|PPC}_F{1..26}, or PPC_F{1..26} for multi-product PPC files." };
         }
 
         var asin = normalizeAsinCode(parts[0]);
@@ -10681,7 +10755,8 @@
           ok: true,
           asin: asin,
           tag: tag,
-          fortnight: fortnightNumber
+          fortnight: fortnightNumber,
+          multiProductPpc: false
         };
       }
 
@@ -11107,38 +11182,182 @@
         return { ok: true, rowCount: 1 };
       }
 
-      async function applyPpcImportToWarehouse(selectedAsin, selectedFortnight, ppcFile) {
-        var rows = await readTabularFile(ppcFile, [
-          "Sales (USD)",
-          "Sales(USD)",
-          "Sales",
-          "Total Sales",
-          "Attributed Sales",
-          "7 Day Total Sales",
-          "14 Day Total Sales"
-        ]);
+      function resolvePpcSalesHeaderKey(row) {
+        return resolveHeaderKey(
+          row,
+          PPC_SALES_HEADER_ALIASES,
+          [["sales"], ["total", "sales"], ["attributed", "sales"], ["day", "sales"]],
+          ["acos", "roas", "click", "impression", "order", "ntb"]
+        );
+      }
+
+      function resolvePpcAsinHeaderKey(row) {
+        return resolveHeaderKey(
+          row,
+          PPC_ASIN_HEADER_ALIASES,
+          [["advertised", "asin"], ["product", "asin"], ["purchased", "asin"], ["child", "asin"], ["sku", "asin"], ["asin"]],
+          []
+        );
+      }
+
+      function normalizePpcProductText(value) {
+        return normalizeHeader(value).replace(/[^a-z0-9]+/g, " ").trim();
+      }
+
+      function getAsinProductTitleAliases(asinCode) {
+        var normalized = normalizeAsinCode(asinCode);
+        if (!isValidAsinCode(normalized)) return [];
+
+        var aliases = [];
+        function includeAlias(value) {
+          var text = normalizeAsinProductTitle(value);
+          if (text && aliases.indexOf(text) === -1) aliases.push(text);
+        }
+
+        includeAlias(getAsinDefaultProductTitle(normalized));
+        includeAlias(getAsinProductTitle(normalized));
+        (ASIN_PRODUCT_TITLE_ALIASES[normalized] || []).forEach(includeAlias);
+
+        return aliases;
+      }
+
+      function getPpcProductTextKeys(row) {
+        var keys = Object.keys(row || {});
+        return keys.filter(function (key) {
+          if (PPC_PRODUCT_HEADER_ALIASES.some(function (alias) { return headerKeyMatches(key, alias); })) return true;
+          var tokens = headerTokens(key);
+          return containsToken(tokens, "product")
+            || containsToken(tokens, "sku")
+            || containsToken(tokens, "campaign")
+            || (containsToken(tokens, "ad") && containsToken(tokens, "name"))
+            || (containsToken(tokens, "group") && containsToken(tokens, "name"));
+        });
+      }
+
+      function rowContainsPpcProductTitle(row, asinCode, productTextKeys) {
+        var aliases = getAsinProductTitleAliases(asinCode).map(normalizePpcProductText).filter(function (alias) {
+          return alias.length >= 8;
+        });
+        if (!aliases.length) return false;
+
+        var keys = productTextKeys && productTextKeys.length ? productTextKeys : Object.keys(row || {});
+        return keys.some(function (key) {
+          var valueText = normalizePpcProductText(row && row[key]);
+          if (valueText.length < 8) return false;
+          return aliases.some(function (alias) {
+            return valueText.indexOf(alias) !== -1;
+          });
+        });
+      }
+
+      function rowMatchesPpcProduct(row, asinCode, asinKey, productTextKeys) {
+        var normalized = normalizeAsinCode(asinCode);
+        if (!isValidAsinCode(normalized)) return false;
+
+        if (asinKey) {
+          if (valueContainsAsin(row && row[asinKey], normalized)) return true;
+        } else if (rowContainsAsin(row, normalized)) {
+          return true;
+        }
+
+        return rowContainsPpcProductTitle(row, normalized, productTextKeys);
+      }
+
+      function filterPpcRowsForAsin(rows, asinCode) {
+        var normalized = normalizeAsinCode(asinCode);
+        if (!rows || !rows.length || !isValidAsinCode(normalized)) return [];
+
+        var sampleRow = rows[0] || {};
+        var asinKey = resolvePpcAsinHeaderKey(sampleRow);
+        var productTextKeys = getPpcProductTextKeys(sampleRow);
+        return rows.filter(function (row) {
+          return rowMatchesPpcProduct(row, normalized, asinKey, productTextKeys);
+        });
+      }
+
+      function getKnownPpcProductAsins() {
+        var map = Object.create(null);
+        Object.keys(ASIN_PRODUCT_TITLE_DEFAULTS || {}).forEach(function (code) {
+          var normalized = normalizeAsinCode(code);
+          if (isValidAsinCode(normalized)) map[normalized] = true;
+        });
+        (asinWarehouseOrder || []).forEach(function (code) {
+          var normalized = normalizeAsinCode(code);
+          if (isValidAsinCode(normalized)) map[normalized] = true;
+        });
+        return sortAsinCodes(Object.keys(map));
+      }
+
+      async function detectMultiProductPpcAsinsFromFile(ppcFile) {
+        var rows = await readTabularFile(ppcFile, PPC_IMPORT_HEADER_ALIASES);
+        if (!rows.length) {
+          return { ok: false, asins: [], message: "PPC Data has no rows." };
+        }
+
+        var sampleRow = rows[0] || {};
+        var salesKey = resolvePpcSalesHeaderKey(sampleRow);
+        if (!salesKey) {
+          return { ok: false, asins: [], message: "PPC Data missing column: Sales (USD)." };
+        }
+
+        var asinMap = Object.create(null);
+        var asinKey = resolvePpcAsinHeaderKey(sampleRow);
+        if (asinKey) {
+          rows.forEach(function (row) {
+            extractAsinCandidates(row && row[asinKey]).forEach(function (candidate) {
+              var normalized = normalizeAsinCode(candidate);
+              if (isValidAsinCode(normalized)) asinMap[normalized] = true;
+            });
+          });
+        }
+
+        var productTextKeys = getPpcProductTextKeys(sampleRow);
+        getKnownPpcProductAsins().forEach(function (asinCode) {
+          var hasMatch = rows.some(function (row) {
+            return rowMatchesPpcProduct(row, asinCode, asinKey, productTextKeys);
+          });
+          if (hasMatch) asinMap[asinCode] = true;
+        });
+
+        var asins = sortAsinCodes(Object.keys(asinMap));
+        if (!asins.length) {
+          return {
+            ok: false,
+            asins: [],
+            message: "PPC_F# files must include an ASIN or product column that matches at least one product."
+          };
+        }
+
+        return { ok: true, asins: asins, rowCount: rows.length };
+      }
+
+      async function applyPpcImportToWarehouse(selectedAsin, selectedFortnight, ppcFile, options) {
+        var rows = await readTabularFile(ppcFile, PPC_IMPORT_HEADER_ALIASES);
         if (!rows.length) {
           return { ok: false, message: "PPC Data has no rows." };
         }
 
-        var salesKey = resolveHeaderKey(
-          rows[0],
-          ["Sales (USD)", "Sales(USD)", "Sales", "Total Sales", "Attributed Sales", "7 Day Total Sales", "14 Day Total Sales"],
-          [["sales"], ["total", "sales"], ["attributed", "sales"], ["day", "sales"]],
-          ["acos", "roas", "click", "impression", "order", "ntb"]
-        );
+        var salesKey = resolvePpcSalesHeaderKey(rows[0]);
         if (!salesKey) {
           return { ok: false, message: "PPC Data missing column: Sales (USD)." };
         }
         var normalizedSelectedAsin = normalizeAsinCode(selectedAsin);
+        var config = options || {};
 
         var fortnightIdx = parseFortnightIndex(selectedFortnight);
         if (fortnightIdx < 0) {
           return { ok: false, message: "Select a valid Fortnight." };
         }
 
-        // PPC import is filename-context driven: sum the whole file's sales column.
-        var sumSales = rows.reduce(function (sum, row) {
+        var matchedRows = rows;
+        if (config.multiProductPpc) {
+          matchedRows = filterPpcRowsForAsin(rows, normalizedSelectedAsin);
+          if (!matchedRows.length) {
+            return { ok: false, message: "No PPC Data rows found for ASIN " + normalizedSelectedAsin + "." };
+          }
+        }
+
+        var sumSales = matchedRows.reduce(function (sum, row) {
           return sum + toNumber(row[salesKey]);
         }, 0);
 
@@ -11158,7 +11377,15 @@
         }
         refreshAsinProfitabilityViews();
 
-        return { ok: true, rowCount: rows.length, ppcSales: sumSales };
+        return {
+          ok: true,
+          rowCount: matchedRows.length,
+          scannedRowCount: rows.length,
+          ppcSales: sumSales,
+          message: config.multiProductPpc
+            ? ("Imported " + matchedRows.length + " PPC row" + (matchedRows.length === 1 ? "" : "s") + " for " + normalizedSelectedAsin + ".")
+            : "Imported."
+        };
       }
 
       function setImportMessage(text, type) {
@@ -11253,12 +11480,14 @@
         return normalizeAsinCode(asinCode) + "__F" + String(fortnightNumber || 0);
       }
 
-      function buildAsinBulkQueueFromFiles() {
+      async function buildAsinBulkQueueFromFiles() {
         var files = Array.isArray(asinImportFiles.bulk) ? asinImportFiles.bulk : [];
-        var queueRows = files.map(function (file, index) {
-          var parsed = parseImportFilename(file && file.name);
+        var queueRows = [];
+
+        function makeQueueRow(file, index, parsedInfo, overrides) {
+          var parsed = parsedInfo || parseImportFilename(file && file.name);
           var row = {
-            id: "asin-bulk__" + String(index) + "__" + String(file && file.name || ""),
+            id: "asin-bulk__" + String(index) + "__" + String(file && file.name || "") + "__" + String(overrides && overrides.asin || ""),
             index: index,
             file: file || null,
             filename: file && file.name ? file.name : "",
@@ -11269,7 +11498,8 @@
             status: "Rejected",
             message: "",
             valid: false,
-            isDuplicate: false
+            isDuplicate: false,
+            multiProductPpc: false
           };
 
           if (!file) {
@@ -11280,15 +11510,62 @@
             row.message = parsed.error || "Filename parse failed.";
             return row;
           }
+          if (overrides && overrides.reject) {
+            row.tag = parsed.tag || "";
+            row.fortnight = parsed.fortnight || 0;
+            row.multiProductPpc = !!parsed.multiProductPpc;
+            row.message = overrides.message || "Rejected.";
+            return row;
+          }
 
-          row.asin = parsed.asin;
+          row.asin = overrides && overrides.asin ? normalizeAsinCode(overrides.asin) : parsed.asin;
+          if (!isValidAsinCode(row.asin)) {
+            row.message = "No valid ASIN detected.";
+            return row;
+          }
           row.tag = parsed.tag;
           row.fortnight = parsed.fortnight;
-          row.groupKey = getAsinImportGroupKey(parsed.asin, parsed.fortnight);
+          row.groupKey = getAsinImportGroupKey(row.asin, parsed.fortnight);
           row.status = "Pending";
           row.valid = true;
+          row.multiProductPpc = !!(parsed.multiProductPpc || (overrides && overrides.multiProductPpc));
+          if (overrides && overrides.message) row.message = overrides.message;
           return row;
-        });
+        }
+
+        for (var fileIndex = 0; fileIndex < files.length; fileIndex++) {
+          var file = files[fileIndex];
+          var parsed = parseImportFilename(file && file.name);
+          if (!parsed.ok || !parsed.multiProductPpc) {
+            queueRows.push(makeQueueRow(file, fileIndex, parsed, null));
+            continue;
+          }
+
+          try {
+            var detected = await detectMultiProductPpcAsinsFromFile(file);
+            if (!detected || !detected.ok || !detected.asins.length) {
+              queueRows.push(makeQueueRow(file, fileIndex, parsed, {
+                reject: true,
+                multiProductPpc: true,
+                message: (detected && detected.message) || "No PPC products detected."
+              }));
+              continue;
+            }
+
+            detected.asins.forEach(function (asinCode) {
+              queueRows.push(makeQueueRow(file, fileIndex, parsed, {
+                asin: asinCode,
+                multiProductPpc: true
+              }));
+            });
+          } catch (error) {
+            queueRows.push(makeQueueRow(file, fileIndex, parsed, {
+              reject: true,
+              multiProductPpc: true,
+              message: error && error.message ? error.message : "Unable to inspect PPC file."
+            }));
+          }
+        }
 
         var latestByComposite = Object.create(null);
         queueRows.forEach(function (row, idx) {
@@ -11628,7 +11905,7 @@
         }
 
         async function importPpcFile(file, context) {
-          return applyPpcImportToWarehouse(context.asin, toFortnightLabel(context.fortnight), file);
+          return applyPpcImportToWarehouse(context.asin, toFortnightLabel(context.fortnight), file, context);
         }
 
         async function runSingleAsinFileImport(fileKey) {
@@ -11713,7 +11990,11 @@
                 continue;
               }
 
-              var result = await importer(row.file, { asin: row.asin, fortnight: row.fortnight });
+              var result = await importer(row.file, {
+                asin: row.asin,
+                fortnight: row.fortnight,
+                multiProductPpc: !!row.multiProductPpc
+              });
               if (!result || !result.ok) {
                 row.status = "Failed";
                 row.message = (result && result.message) || "Import failed.";
@@ -11722,7 +12003,7 @@
               }
 
               row.status = "Imported";
-              row.message = "Imported.";
+              row.message = result.message || "Imported.";
               refreshAsinImportCardUi(fileKey);
             } catch (error) {
               row.status = "Failed";
@@ -11862,9 +12143,9 @@
         var bulkBtn = form.querySelector("[data-action='asin-import-bulk']");
         var bulkDropzone = form.querySelector("[data-dropzone='asin-import']");
 
-        function onBulkFilesSelected(selectedFiles) {
+        async function onBulkFilesSelected(selectedFiles) {
           updateAsinImportFileSelectionState(bulkFileKey, selectedFiles);
-          buildAsinBulkQueueFromFiles();
+          await buildAsinBulkQueueFromFiles();
           refreshAsinImportCardUi(bulkFileKey);
           renderAsinImportChecklist();
           setImportMessage("", "");
