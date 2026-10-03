@@ -4,6 +4,12 @@
   "private": true,
   "description": "Amazon reporting dashboard with JSON-backed persistent storage",
   "scripts": {
+    "build:ui": "sass --quiet-deps --load-path=node_modules --no-source-map --style=compressed assets/ui-refresh.scss assets/ui-refresh.css",
+    "prestart": "npm run build:ui",
     "start": "node server.js"
+  },
+  "devDependencies": {
+    "@carbon/styles": "^1.116.0",
+    "sass": "^1.99.0"
   }
 }
