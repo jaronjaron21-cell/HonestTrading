@@ -595,9 +595,8 @@ function renderLoginPage(nextPath, hasError) {
       }
     }
   </style>
-  <link rel="stylesheet" href="/assets/ui-refresh.css" />
 </head>
-<body class="cts-login-page">
+<body>
   <div class="cts-login-shell">
     <section class="cts-login-left">
       <p class="cts-login-foot">© ${new Date().getUTCFullYear()} HonestTrading. All rights reserved.</p>
@@ -618,7 +617,7 @@ function renderLoginPage(nextPath, hasError) {
             <span class="cts-login-label">Password</span>
             <input class="cts-login-input" type="password" name="password" autocomplete="current-password" required />
           </label>
-          <button class="cts-login-btn cds--btn cds--btn--primary" type="submit">Login Now</button>
+          <button class="cts-login-btn" type="submit">Login Now</button>
         </form>
         <p class="cts-login-note">Restricted access for approved team members.</p>
       </div>
@@ -633,8 +632,7 @@ function isPublicRoute(pathname) {
   return route === '/api/health'
     || route === '/login'
     || route === '/auth/login'
-    || route === '/auth/logout'
-    || route === '/assets/ui-refresh.css';
+    || route === '/auth/logout';
 }
 
 function handleAuthRoutes(req, res, urlObj) {

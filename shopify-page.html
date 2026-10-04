@@ -1,5 +1,7 @@
 <div id="cts-shopify-reporting" class="cts-app">
   <style>
+    @import url("https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Outfit:wght@400;500;600;700&display=swap");
+
     #cts-shopify-reporting {
       --bg: #F6F8FB;
       --surface: #FFFFFF;
@@ -3958,7 +3960,6 @@
       }
     }
   </style>
-  <link rel="stylesheet" href="/assets/ui-refresh.css" />
 
   <div class="cts-shell">
     <aside class="cts-sidebar">
@@ -4033,30 +4034,6 @@
         </div>
       </section>
     </aside>
-
-    <nav class="cts-mobile-nav" aria-label="Main navigation">
-      <div class="cts-mobile-brand">
-        <img src="assets/coppertech-logo.jpeg" alt="" />
-        <span>Copper Tech Sports</span>
-      </div>
-      <div class="cts-mobile-modules" role="group" aria-label="Reporting area">
-        <button class="cts-mobile-module is-active" type="button" data-mobile-module="home" aria-current="page">Home</button>
-        <button class="cts-mobile-module" type="button" data-mobile-module="search">Search</button>
-        <button class="cts-mobile-module" type="button" data-mobile-module="asin">ASIN</button>
-      </div>
-      <div class="cts-mobile-pages" data-module="search" hidden>
-        <button class="cts-mobile-page is-active" type="button" data-mobile-view="search-dashboard" data-module="search" data-subtab="dashboard" aria-current="page">Dashboard</button>
-        <button class="cts-mobile-page" type="button" data-mobile-view="search-import" data-module="search" data-subtab="import">Import</button>
-        <button class="cts-mobile-page" type="button" data-mobile-view="search-warehouse" data-module="search" data-subtab="warehouse">Warehouse</button>
-        <button class="cts-mobile-page" type="button" data-mobile-view="search-analysis" data-module="search" data-subtab="analysis">Analysis</button>
-      </div>
-      <div class="cts-mobile-pages" data-module="asin" hidden>
-        <button class="cts-mobile-page" type="button" data-mobile-view="asin-dashboard" data-module="asin" data-subtab="dashboard">Dashboard</button>
-        <button class="cts-mobile-page" type="button" data-mobile-view="asin-import" data-module="asin" data-subtab="import">Import</button>
-        <button class="cts-mobile-page" type="button" data-mobile-view="asin-warehouse" data-module="asin" data-subtab="warehouse">Warehouse</button>
-        <button class="cts-mobile-page" type="button" data-mobile-view="asin-analysis" data-module="asin" data-subtab="analysis">Analysis</button>
-      </div>
-    </nav>
 
     <main class="cts-main">
       <section class="cts-workspace">
@@ -4402,7 +4379,7 @@
 
           <section class="cts-card">
             <h4>SQP Weekly Matrix</h4>
-            <div class="cts-analysis-wrap" tabindex="0" role="region" aria-label="Search Query Performance weekly matrix. Scroll horizontally to compare all weeks.">
+            <div class="cts-analysis-wrap">
               <table class="cts-table cts-analysis-table" data-table="sqp-analysis-matrix"></table>
             </div>
           </section>
@@ -4603,7 +4580,7 @@
           </section>
 
           <section class="cts-card">
-            <div class="cts-analysis-wrap" tabindex="0" role="region" aria-label="ASIN profitability fortnight matrix. Scroll horizontally to compare all fortnights.">
+            <div class="cts-analysis-wrap">
               <table class="cts-table cts-analysis-table" data-table="asin-analysis-matrix"></table>
             </div>
           </section>
@@ -5309,7 +5286,7 @@
         hideChartTooltip(svg);
         svg.innerHTML = ""
           + "<rect x='0' y='0' width='760' height='210' fill='transparent'></rect>"
-          + "<text x='380' y='106' text-anchor='middle' fill='var(--cts-muted)' font-size='22' font-weight='500' font-family='IBM Plex Sans, sans-serif'>"
+          + "<text x='380' y='106' text-anchor='middle' fill='var(--cts-muted)' font-size='14' font-family='Outfit, sans-serif'>"
           + escapeHtml(label || "No data")
           + "</text>";
       }
@@ -15366,13 +15343,6 @@
       }
 
       function render() {
-        root.querySelectorAll(".cts-btn").forEach(function (button) {
-          button.classList.add("cds--btn", "cds--btn--primary");
-        });
-        root.querySelectorAll(".cts-table").forEach(function (table) {
-          table.classList.add("cds--data-table");
-        });
-
         root.querySelectorAll(".cts-group").forEach(function (group) {
           var active = group.getAttribute("data-module") === state.module;
           group.classList.toggle("is-active", active);
@@ -15386,24 +15356,6 @@
         root.querySelectorAll(".cts-subtab").forEach(function (btn) {
           var active = btn.getAttribute("data-module") === state.module && btn.getAttribute("data-subtab") === state.subtab;
           btn.classList.toggle("is-active", active);
-        });
-
-        root.querySelectorAll("[data-mobile-module]").forEach(function (btn) {
-          var active = btn.getAttribute("data-mobile-module") === state.module;
-          btn.classList.toggle("is-active", active);
-          if (active) btn.setAttribute("aria-current", "page");
-          else btn.removeAttribute("aria-current");
-        });
-
-        root.querySelectorAll(".cts-mobile-pages").forEach(function (pages) {
-          pages.hidden = pages.getAttribute("data-module") !== state.module;
-        });
-
-        root.querySelectorAll("[data-mobile-view]").forEach(function (btn) {
-          var active = btn.getAttribute("data-module") === state.module && btn.getAttribute("data-subtab") === state.subtab;
-          btn.classList.toggle("is-active", active);
-          if (active) btn.setAttribute("aria-current", "page");
-          else btn.removeAttribute("aria-current");
         });
 
         var targetView = state.module + "-" + state.subtab;
@@ -15443,22 +15395,6 @@
           if (event && event.currentTarget && typeof event.currentTarget.blur === "function") {
             event.currentTarget.blur();
           }
-          render();
-        });
-      });
-
-      root.querySelectorAll("[data-mobile-module]").forEach(function (btn) {
-        btn.addEventListener("click", function () {
-          state.module = btn.getAttribute("data-mobile-module");
-          state.subtab = defaultSubtab[state.module] || "dashboard";
-          render();
-        });
-      });
-
-      root.querySelectorAll("[data-mobile-view]").forEach(function (btn) {
-        btn.addEventListener("click", function () {
-          state.module = btn.getAttribute("data-module");
-          state.subtab = btn.getAttribute("data-subtab");
           render();
         });
       });
